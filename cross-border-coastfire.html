@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Two Currencies, One Number — Cross-Border CoastFIRE Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --ink: #17212B;
+      --ink-soft: #5B6470;
+      --paper: #F6F1E4;
+      --paper-2: #EFE7D2;
+      --maple: #A9362A;
+      --maple-soft: #F1DAD3;
+      --harbor: #2B5876;
+      --harbor-soft: #D8E4EA;
+      --gold: #B08A2E;
+      --line: #DCD2B8;
+      --good: #3E6B4F;
+      --warn: #A9362A;
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.5;
+    }
+
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px 96px;
+    }
+
+    h1,
+    h2,
+    h3,
+    .display {
+      font-family: 'Fraunces', serif;
+    }
+
+    .mono,
+    .stat-value,
+    input,
+    select,
+    table {
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    label,
+    .field-note,
+    .legend,
+    button,
+    .notes-badge {
+      font-family: 'Inter', sans-serif;
+    }
+
+    header {
+      padding: 56px 0 28px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 12.5px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin-bottom: 14px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: #fff;
+    }
+
+    .chip.ca {
+      background: var(--maple);
+    }
+
+    .chip.us {
+      background: var(--harbor);
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 600;
+      margin: 0 0 10px;
+      letter-spacing: -0.01em;
+    }
+
+    header p.sub {
+      max-width: 640px;
+      color: var(--ink-soft);
+      font-size: 17px;
+      margin: 0;
+    }
+
+    section.intro {
+      padding: 32px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    section.intro p {
+      max-width: 680px;
+      color: var(--ink);
+      font-size: 15.5px;
+    }
+
+    section.intro .disclaimer {
+      margin-top: 20px;
+      padding: 16px 18px;
+      background: var(--paper-2);
+      border-left: 3px solid var(--gold);
+      border-radius: 4px;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+    }
+
+    form {
+      padding: 36px 0;
+    }
+
+    fieldset {
+      border: none;
+      padding: 0;
+      margin: 0 0 36px;
+    }
+
+    legend.section-title {
+      font-family: 'Fraunces', serif;
+      font-size: 21px;
+      font-weight: 600;
+      padding: 0 0 14px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      width: 100%;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    legend.section-title .num {
+      color: var(--ink-soft);
+      font-family: 'IBM Plex Mono';
+      font-size: 14px;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 40px;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px 24px;
+    }
+
+    @media(max-width:760px) {
+      .grid2 {
+        grid-template-columns: 1fr;
+      }
+
+      .grid3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .border-crossing {
+      position: relative;
+    }
+
+    .border-crossing::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      border-left: 2px dashed var(--gold);
+      opacity: .55;
+    }
+
+    @media(max-width:760px) {
+      .border-crossing::before {
+        display: none;
+      }
+    }
+
+    .country-col {
+      padding: 4px 28px;
+    }
+
+    .country-col.left {
+      padding-left: 0;
+    }
+
+    .country-col.right {
+      padding-right: 0;
+    }
+
+    @media(max-width:760px) {
+      .country-col {
+        padding: 24px 0 0;
+      }
+
+      .country-col.left {
+        padding-top: 0;
+      }
+    }
+
+    .country-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .country-head h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+
+    .field .info {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--paper-2);
+      color: var(--ink-soft);
+      font-size: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+      border: 1px solid var(--line);
+      font-weight: 700;
+      flex: none;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      outline: 2px solid var(--harbor);
+      outline-offset: 1px;
+    }
+
+    .field .tag {
+      display: inline-block;
+      margin-left: 6px;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 3px;
+      letter-spacing: .02em;
+    }
+
+    .tag.treaty {
+      background: var(--harbor-soft);
+      color: var(--harbor);
+    }
+
+    .tag.watch {
+      background: var(--maple-soft);
+      color: var(--maple);
+    }
+
+    .assumptions-note {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      margin-top: -6px;
+      margin-bottom: 20px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 14px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      font-size: 14.5px;
+      font-weight: 600;
+      padding: 13px 26px;
+      border-radius: 7px;
+      border: none;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    button.primary:hover {
+      background: #0c141c;
+    }
+
+    button.ghost {
+      background: transparent;
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+    }
+
+    button.ghost:hover {
+      border-color: var(--ink-soft);
+    }
+
+    #results {
+      padding-top: 40px;
+      border-top: 1px solid var(--line);
+    }
+
+    #results[hidden] {
+      display: none;
+    }
+
+    .stamp-row {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      flex: 1;
+      min-width: 300px;
+    }
+
+    @media(max-width:900px) {
+      .stat-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat {
+      background: #fff;
+      padding: 20px;
+    }
+
+    .stat .label {
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--ink-soft);
+      margin-bottom: 8px;
+    }
+
+    .stat .stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .stat .stat-sub {
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      margin-top: 4px;
+    }
+
+    .stamp {
+      width: 150px;
+      flex: none;
+      transform: rotate(-7deg);
+    }
+
+    h2.results-title {
+      font-size: 26px;
+      margin: 0 0 6px;
+    }
+
+    .results-sub {
+      color: var(--ink-soft);
+      font-size: 14px;
+      margin: 0 0 28px;
+    }
+
+    .chart-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px 20px 8px;
+      margin-bottom: 32px;
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 20px;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      margin-bottom: 6px;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .insights {
+      margin-bottom: 32px;
+    }
+
+    .insights ul {
+      padding-left: 0;
+      list-style: none;
+      margin: 0;
+    }
+
+    .insights li {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 14.5px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .insights li:last-child {
+      border-bottom: none;
+    }
+
+    .insights li .mark {
+      flex: none;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .considerations {
+      background: var(--paper-2);
+      border-radius: var(--radius);
+      padding: 24px 26px;
+      margin-bottom: 32px;
+    }
+
+    .considerations h3 {
+      margin: 0 0 4px;
+      font-size: 18px;
+    }
+
+    .considerations .subhead {
+      color: var(--ink-soft);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    .considerations dl {
+      margin: 0;
+    }
+
+    .considerations dt {
+      font-weight: 700;
+      font-size: 13.5px;
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .considerations dt:first-child {
+      margin-top: 0;
+    }
+
+    .considerations dd {
+      margin: 4px 0 0;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 12.5px;
+      min-width: 1100px;
+    }
+
+    thead th {
+      background: var(--ink);
+      color: var(--paper);
+      text-align: right;
+      padding: 10px 12px;
+      position: sticky;
+      top: 0;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    thead th:first-child,
+    thead th:nth-child(2),
+    tbody td:first-child,
+    tbody td:nth-child(2) {
+      text-align: left;
+    }
+
+    tbody td {
+      padding: 8px 12px;
+      text-align: right;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #FBF8F0;
+    }
+
+    tbody tr.coast-row {
+      background: var(--harbor-soft) !important;
+    }
+
+    td.notes {
+      text-align: left;
+      color: var(--ink-soft);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+    }
+
+    .error-banner {
+      background: var(--maple-soft);
+      border: 1px solid var(--maple);
+      color: var(--maple);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      font-size: 13.5px;
+      display: none;
+    }
+
+    .error-banner.show {
+      display: block;
+    }
+
+    .error-banner ul {
+      margin: 6px 0 0;
+      padding-left: 18px;
+    }
+
+    .helper-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .helper-row .field {
+      flex: 1;
+      min-width: 180px;
+      margin-bottom: 0;
+    }
+
+    button.small {
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      background: var(--harbor);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      flex: none;
+    }
+
+    button.small:hover {
+      background: #22475c;
+    }
+
+    .helper-hint {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin: -10px 0 16px;
+    }
+
+    .sensitivity-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 32px;
+    }
+
+    .sensitivity-card h3 {
+      margin: 0 0 4px;
+      font-size: 18px;
+    }
+
+    .sensitivity-card .subhead {
+      color: var(--ink-soft);
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    table.sens {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    table.sens th {
+      background: var(--paper-2);
+      padding: 8px 10px;
+      text-align: right;
+      font-weight: 600;
+    }
+
+    table.sens th:first-child {
+      text-align: left;
+    }
+
+    table.sens td {
+      padding: 8px 10px;
+      text-align: right;
+      border-bottom: 1px solid var(--line);
+    }
+
+    table.sens td:first-child {
+      text-align: left;
+      color: var(--ink-soft);
+    }
+
+    table.sens tr.current-rate {
+      background: var(--harbor-soft);
+      font-weight: 600;
+    }
+
+    .export-row {
+      display: flex;
+      justify-content: flex-end;
+      margin: 12px 0 32px;
+    }
+
+    button.export {
+      background: transparent;
+      border: 1px solid var(--ink);
+      color: var(--ink);
+      padding: 9px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.export:hover {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .save-note {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-top: 10px;
+    }
+
+    table.sens {
+      min-width: 0;
+      width: 100%;
+    }
+
+    table.sens td,
+    table.sens th {
+      word-wrap: break-word;
+      white-space: normal;
+    }
+
+    .sensitivity-card .table-scroll {
+      border: none;
+      border-radius: 0;
+      overflow-x: auto;
+    }
+
+    .page-nav {
+      display: flex;
+      gap: 22px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 13.5px;
+      font-weight: 600;
+      flex-wrap: wrap;
+    }
+
+    .page-nav a {
+      color: var(--ink-soft);
+      text-decoration: none;
+    }
+
+    .page-nav a:hover {
+      color: var(--ink);
+    }
+
+    .help-section {
+      margin: 32px 0;
+    }
+
+    .help-section summary {
+      cursor: pointer;
+      font-family: 'Fraunces', serif;
+      font-size: 21px;
+      font-weight: 600;
+      padding: 14px 0;
+      list-style: none;
+      position: relative;
+    }
+
+    .help-section summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .help-section summary::after {
+      content: '+';
+      position: absolute;
+      right: 0;
+      top: 12px;
+      font-size: 22px;
+      color: var(--gold);
+      transition: transform .15s ease;
+    }
+
+    .help-section[open] summary::after {
+      content: '–';
+    }
+
+    .help-section .help-body {
+      padding: 6px 0 20px;
+    }
+
+    .help-steps {
+      counter-reset: step;
+      margin: 0 0 24px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .help-steps li {
+      counter-increment: step;
+      position: relative;
+      padding: 0 0 16px 34px;
+      font-size: 14.5px;
+      color: var(--ink);
+    }
+
+    .help-steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 22px;
+      height: 22px;
+      background: var(--harbor);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .glossary dt {
+      font-weight: 700;
+      font-size: 13.5px;
+      margin-top: 12px;
+    }
+
+    .glossary dt:first-child {
+      margin-top: 0;
+    }
+
+    .glossary dd {
+      margin: 3px 0 0;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+    }
+
+    .fx-hint-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .fx-hint-row .helper-hint {
+      margin: 0;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    button.small.ghost-small {
+      background: transparent;
+      border: 1px solid var(--harbor);
+      color: var(--harbor);
+    }
+
+    button.small.ghost-small:hover {
+      background: var(--harbor);
+      color: #fff;
+    }
+
+    button.small:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    footer {
+      padding: 32px 0;
+      color: var(--ink-soft);
+      font-size: 12.5px;
+      border-top: 1px solid var(--line);
+      margin-top: 40px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <header>
+      <div class="eyebrow">
+        <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+        <span>&nbsp;·&nbsp;Cross-border planning</span>
+      </div>
+      <h1>Two Currencies,<br>One Number</h1>
+      <p class="sub">A CoastFIRE calculator built for Canadian citizens living and investing in the United States —
+        tracking RRSP, TFSA and non-registered accounts alongside 401(k), IRA, Roth IRA and a US brokerage, in their
+        native currencies.</p>
+    </header>
+
+    <section class="intro">
+      <p><strong>CoastFIRE</strong> is the point where your portfolio is projected to grow, on its own, into everything
+        you'll need for retirement — no further contributions required. Once you're there, you can "coast": cover
+        today's expenses while your accounts do the rest.</p>
+      <p>Living cross-border complicates that math. Your accounts sit in two currencies, under two tax systems, and not
+        every wrapper is treated the same way by both governments. This tool keeps your Canadian and US accounts
+        separate until the very last step, converts only the totals, and flags the account-level quirks that matter for
+        someone in your position.</p>
+      <div class="disclaimer">This tool is not tax, legal, or immigration advice. It doesn't model cross-border taxation
+        — treat every dollar figure below as a <em>pre-tax</em> planning target. Cross-border tax rules (RRSP/TFSA
+        treatment, PFIC, FBAR/FATCA, departure tax, totalization) are genuinely complex and change; work with a
+        cross-border-specialist accountant or financial planner before acting on this.</div>
+    </section>
+
+    <form id="calcForm">
+
+      <div class="error-banner" id="errorBanner">
+        <strong>Please fix the following before calculating:</strong>
+        <ul id="errorList"></ul>
+      </div>
+
+      <fieldset>
+        <legend class="section-title"><span class="num">01</span> Personal information</legend>
+        <div class="grid3">
+          <div class="field">
+            <label>Current age <span class="info" title="Your current age in years.">?</span></label>
+            <input type="number" id="currentAge" value="34" min="16" max="80" step="1" required>
+          </div>
+          <div class="field">
+            <label>Retirement age <span class="info"
+                title="The age you plan to fully retire and begin drawing on your investments.">?</span></label>
+            <input type="number" id="retireAge" value="60" min="17" max="90" step="1" required>
+          </div>
+          <div class="field">
+            <label>Contribution frequency <span class="info"
+                title="How often you add to each account below. Applies to all accounts.">?</span></label>
+            <select id="contribFreq">
+              <option value="monthly" selected>Monthly</option>
+              <option value="annual">Annually</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="section-title"><span class="num">02</span> Accounts — by country</legend>
+        <div class="grid2 border-crossing">
+          <div class="country-col left">
+            <div class="country-head"><span class="chip ca">CA</span>
+              <h3>Canadian accounts (CAD)</h3>
+            </div>
+
+            <div class="field">
+              <label>RRSP balance ($ CAD) <span class="tag treaty">Treaty-protected</span></label>
+              <input type="number" id="rrspBal" value="60000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label>RRSP contribution ($ CAD)</label>
+              <input type="number" id="rrspContrib" value="400" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label>TFSA balance ($ CAD) <span class="tag watch">Not tax-free to IRS</span></label>
+              <input type="number" id="tfsaBal" value="25000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label>TFSA contribution ($ CAD)</label>
+              <input type="number" id="tfsaContrib" value="200" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label>Non-registered (CAD) balance ($)</label>
+              <input type="number" id="nonregCadBal" value="10000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label>Non-registered (CAD) contribution ($)</label>
+              <input type="number" id="nonregCadContrib" value="100" min="0" step="10">
+            </div>
+          </div>
+
+          <div class="country-col right">
+            <div class="country-head"><span class="chip us">US</span>
+              <h3>US accounts (USD)</h3>
+            </div>
+
+            <div class="field">
+              <label>401(k) / 403(b) balance ($ USD)</label>
+              <input type="number" id="k401Bal" value="45000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label>401(k) / 403(b) contribution ($ USD)</label>
+              <input type="number" id="k401Contrib" value="500" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label>Traditional / Rollover IRA balance ($ USD)</label>
+              <input type="number" id="iraBal" value="8000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label>Traditional IRA contribution ($ USD)</label>
+              <input type="number" id="iraContrib" value="50" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label>Roth IRA balance ($ USD)</label>
+              <input type="number" id="rothBal" value="12000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label>Roth IRA contribution ($ USD)</label>
+              <input type="number" id="rothContrib" value="150" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label>Taxable brokerage balance ($ USD)</label>
+              <input type="number" id="taxableUsdBal" value="15000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label>Taxable brokerage contribution ($ USD)</label>
+              <input type="number" id="taxableUsdContrib" value="200" min="0" step="10">
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="section-title"><span class="num">03</span> Currency &amp; growth assumptions</legend>
+        <div class="grid3">
+          <div class="field">
+            <label>Exchange rate <span class="info"
+                title="Used only to convert your combined totals — each account keeps growing in its own currency underneath.">?</span></label>
+            <input type="number" id="exchangeRate" value="0.73" min="0.01" step="0.01">
+            <div class="field-note" style="font-size:12px;color:var(--ink-soft);margin-top:4px;">1 CAD = this many USD
+            </div>
+            <div class="fx-hint-row">
+              <div class="helper-hint" id="fxHint">Fetching live exchange rate...</div>
+              <button type="button" class="small ghost-small" id="fetchFxBtn"
+                style="padding: 4px 8px; font-size: 11px; margin-top: 2px;">Fetch live</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Report combined totals in</label>
+            <select id="reportCurrency">
+              <option value="USD" selected>USD</option>
+              <option value="CAD">CAD</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Stop contributions at CoastFIRE?</label>
+            <select id="stopAtCoast">
+              <option value="no" selected>No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Expected annual investment return (%)</label>
+            <input type="number" id="returnRate" value="7" min="0" step="0.1">
+          </div>
+          <div class="field">
+            <label>Expected annual inflation (%)</label>
+            <input type="number" id="inflationRate" value="2.5" min="0" step="0.1">
+          </div>
+          <div class="field">
+            <label>Annual withdrawal rate (%)</label>
+            <input type="number" id="withdrawalRate" value="4" min="0.5" step="0.1">
+          </div>
+        </div>
+        <div class="assumptions-note">One growth rate is applied across every account — the same portfolio, just in
+          different wrappers and currencies.</div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="section-title"><span class="num">04</span> Retirement needs</legend>
+        <div class="grid3">
+          <div class="field">
+            <label>Monthly expenses in retirement (<span id="expenseCurrencyLabel">USD</span>, today's dollars)</label>
+            <input type="number" id="monthlyExpenses" value="5000" min="0" step="50">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="section-title"><span class="num">05</span> Government benefits</legend>
+
+        <div class="grid2 border-crossing">
+          <div class="country-col left">
+            <div class="country-head"><span class="chip ca">CA</span>
+              <h3>CPP &amp; OAS</h3>
+            </div>
+
+            <div class="field">
+              <label>Expected monthly CPP ($ CAD) <span class="info"
+                  title="2026 max at age 65 is about $1,507.65/mo; the average new beneficiary gets about $925/mo. Based on your actual contribution history.">?</span></label>
+              <input type="number" id="cppMonthly" value="900" min="0" step="10">
+            </div>
+
+            <div class="helper-row">
+              <div class="field">
+                <label>Years of Canadian residency since age 18 <span class="info"
+                    title="OAS pays a full pension after 40 years of Canadian residency since 18. Fewer years means a prorated (1/40 per year) amount. Living in the US, you generally need at least 20 years to receive OAS abroad — the Canada-US Totalization Agreement lets US residency count toward that 20-year threshold, though it doesn't increase the payment itself.">?</span></label>
+                <input type="number" id="oasYears" value="18" min="0" max="40" step="1">
+              </div>
+              <button type="button" class="small" id="estimateOasBtn">Estimate my OAS</button>
+            </div>
+            <div class="helper-hint" id="oasEstimateHint">Based on 18 years, a prorated OAS would be about $334/mo
+              (18/40 × current max). Click "Estimate my OAS" to fill this in — then adjust as needed.</div>
+
+            <div class="field">
+              <label>Expected monthly OAS ($ CAD) <span class="tag watch">Income-tested</span></label>
+              <input type="number" id="oasMonthly" value="334" min="0" step="10">
+            </div>
+          </div>
+
+          <div class="country-col right">
+            <div class="country-head"><span class="chip us">US</span>
+              <h3>Social Security</h3>
+            </div>
+
+            <div class="field">
+              <label>Expected monthly Social Security ($ USD) <span class="info"
+                  title="2026 average retirement benefit is about $2,071-2,083/mo. Max at full retirement age (67) is about $4,152/mo, or $5,181/mo if you delay to 70. Since Jan 2025, WEP/GPO no longer reduce this for people also receiving a foreign pension like CPP.">?</span></label>
+              <input type="number" id="ssMonthly" value="2000" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label>Government benefits start age <span class="info"
+                  title="Applied uniformly to CPP, OAS, and Social Security for simplicity — in reality you can start each independently between roughly 60-70 (CPP/OAS) or 62-70 (Social Security).">?</span></label>
+              <input type="number" id="benefitsStartAge" value="65" min="55" max="70" step="1">
+            </div>
+          </div>
+        </div>
+        <div class="assumptions-note">If you retire before this age, your portfolio needs to cover 100% of expenses
+          until benefits start — that gap is funded from your portfolio in the calculation below.</div>
+      </fieldset>
+
+      <div class="btn-row">
+        <button type="submit" class="primary">Calculate your CoastFIRE path</button>
+        <button type="button" class="ghost" id="resetBtn">Start new calculation</button>
+      </div>
+      <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.
+      </div>
+    </form>
+
+    <div id="results" hidden>
+      <h2 class="results-title">Your cross-border CoastFIRE results</h2>
+      <p class="results-sub">Account balances stay in their native currency below; only the totals are converted, at the
+        exchange rate you set.</p>
+
+      <div class="stamp-row">
+        <div class="stat-cards">
+          <div class="stat">
+            <div class="label">Combined portfolio today</div>
+            <div class="stat-value" id="statCurrent">—</div>
+            <div class="stat-sub" id="statCurrencyNote">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Required at retirement</div>
+            <div class="stat-value" id="statRequired">—</div>
+            <div class="stat-sub">To sustain your monthly expenses</div>
+          </div>
+          <div class="stat">
+            <div class="label">CoastFIRE number today</div>
+            <div class="stat-value" id="statCoastNumber">—</div>
+            <div class="stat-sub">What you'd need right now, untouched</div>
+          </div>
+          <div class="stat">
+            <div class="label">Years until CoastFIRE</div>
+            <div class="stat-value" id="statYearsUntil">—</div>
+            <div class="stat-sub" id="statCoastYear">—</div>
+          </div>
+        </div>
+
+        <svg class="stamp" viewBox="0 0 200 200" id="stampSvg">
+          <defs>
+            <path id="stampArcTop" d="M 24,104 A 78,78 0 0 1 176,104" />
+            <path id="stampArcBottom" d="M 176,104 A 78,78 0 0 1 24,104" />
+          </defs>
+          <circle cx="100" cy="104" r="90" fill="none" stroke="var(--gold)" stroke-width="3" stroke-dasharray="4 4" />
+          <circle cx="100" cy="104" r="78" fill="none" stroke="var(--gold)" stroke-width="1.5" />
+          <text font-size="11.5" fill="var(--gold)" letter-spacing="2" font-family="Inter, sans-serif"
+            font-weight="700">
+            <textPath href="#stampArcTop" startOffset="50%" text-anchor="middle" id="stampTopText">CROSS-BORDER CLEARED
+            </textPath>
+          </text>
+          <text font-size="11.5" fill="var(--gold)" letter-spacing="2" font-family="Inter, sans-serif"
+            font-weight="700">
+            <textPath href="#stampArcBottom" startOffset="50%" text-anchor="middle" id="stampBottomText">COASTFIRE
+              STATUS</textPath>
+          </text>
+          <text id="stampYear" x="100" y="100" font-size="26" fill="var(--gold)" text-anchor="middle"
+            font-family="Fraunces, serif" font-weight="700">—</text>
+          <text id="stampSub" x="100" y="122" font-size="11" fill="var(--gold)" text-anchor="middle"
+            font-family="IBM Plex Mono, monospace">—</text>
+        </svg>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:var(--harbor);"></span>Combined portfolio</span>
+          <span><span class="legend-dot" style="background:var(--maple);"></span>CoastFIRE number</span>
+        </div>
+        <canvas id="chart" height="280"></canvas>
+      </div>
+
+      <div class="sensitivity-card">
+        <h3>Exchange-rate sensitivity</h3>
+        <div class="subhead">Same underlying CAD and USD balances — just re-converted at different exchange rates, so
+          you can see how much currency swings actually move your numbers.</div>
+        <div class="table-scroll">
+          <table class="sens">
+            <thead>
+              <tr>
+                <th>1 CAD =</th>
+                <th>Combined portfolio</th>
+                <th>CoastFIRE number</th>
+              </tr>
+            </thead>
+            <tbody id="sensitivityBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="insights">
+        <h3 style="font-size:18px;">Insights</h3>
+        <ul id="insightsList"></ul>
+      </div>
+
+      <div class="considerations">
+        <h3>Cross-border considerations</h3>
+        <div class="subhead">General information, not tax or legal advice — rules below are commonly cited but you
+          should confirm current treatment with a cross-border specialist.</div>
+        <dl>
+          <dt><span class="tag treaty">Treaty-protected</span> RRSP</dt>
+          <dd>Under the Canada–US tax treaty, the IRS treats your RRSP as a tax-deferred retirement account — growth
+            generally isn't taxed annually as a US person, similar to a traditional IRA.</dd>
+
+          <dt><span class="tag watch">Not tax-free to IRS</span> TFSA</dt>
+          <dd>The US doesn't recognize the TFSA's tax-free status. Growth can be taxable each year, and depending on
+            structure it may trigger extra reporting (e.g. Form 3520/3520-A). Many cross-border planners advise against
+            actively contributing to a TFSA while a US resident.</dd>
+
+          <dt>PFIC exposure — non-registered &amp; RRSP holdings</dt>
+          <dd>Canadian-domiciled mutual funds and ETFs held by a US person can be classified as PFICs, which carry
+            punitive US tax treatment. US-domiciled funds are typically used instead once you're a US resident.</dd>
+
+          <dt>FBAR &amp; FATCA reporting</dt>
+          <dd>Canadian accounts above reporting thresholds generally need to be disclosed annually via FBAR (FinCEN 114)
+            and possibly Form 8938 — separate from your regular tax return.</dd>
+
+          <dt>Currency risk</dt>
+          <dd>Your CAD balances move in USD terms every time the exchange rate moves. This tool applies one static rate
+            you set — real results will vary with the market rate at withdrawal time. See the sensitivity table above.
+          </dd>
+
+          <dt>Totalization Agreement (CPP/OAS/Social Security)</dt>
+          <dd>The Canada-US Totalization Agreement can help you <em>qualify</em> for CPP, OAS, or Social Security by
+            combining your work/residency periods from both countries — for example, using US residency to meet OAS's
+            20-year minimum for payments abroad. It does not increase the benefit amount itself; that's still based on
+            your actual contribution history or Canadian residency years in each country separately.</dd>
+
+          <dt>WEP/GPO repeal (as of Jan 2025)</dt>
+          <dd>The Windfall Elimination Provision and Government Pension Offset used to reduce a US Social Security
+            benefit for people who also received a foreign pension like CPP. The Social Security Fairness Act repealed
+            both, retroactive to January 2024 — so this calculator assumes your Social Security estimate no longer needs
+            a CPP-related reduction. Confirm your own Social Security statement reflects this.</dd>
+
+          <dt>OAS recovery tax (clawback)</dt>
+          <dd>OAS is income-tested: for 2026, it starts getting clawed back once net world income passes roughly
+            $95,300, at 15 cents per dollar above that, fully eliminated somewhere in the $155,000–$161,000 range
+            depending on age. If your retirement income (including RRSP/RRIF withdrawals) will be high, your real OAS
+            may be lower than the flat figure you enter here.</dd>
+
+          <dt>Pre-tax targets</dt>
+          <dd>This calculator doesn't model cross-border taxes, so treat "Required at Retirement" as a pre-tax figure
+            and build in a margin for tax drag on both sides of the border.</dd>
+        </dl>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="font-size:18px;margin:0;">Yearly breakdown</h3>
+        <button type="button" class="export" id="exportCsvBtn">Export CSV</button>
+      </div>
+      <div style="height:12px;"></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Age</th>
+              <th>RRSP</th>
+              <th>TFSA</th>
+              <th>Non-Reg (CAD)</th>
+              <th>CAD Total</th>
+              <th>401(k)</th>
+              <th>IRA</th>
+              <th>Roth IRA</th>
+              <th>Taxable (USD)</th>
+              <th>USD Total</th>
+              <th>Combined</th>
+              <th>CoastFIRE #</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <details class="help-section">
+      <summary>Guide: How to use this tool &amp; interpret your numbers</summary>
+      <div class="help-body">
+        <h4 style="margin-top:0;font-size:16px;">How to Use the Tool</h4>
+        <ol class="help-steps">
+          <li><strong>Enter personal details:</strong> Current age, retirement age, and contribution frequency (monthly
+            or annual).</li>
+          <li><strong>Log your accounts:</strong> Input balances and ongoing contributions for both Canadian (CAD) and
+            US (USD) accounts in their native currencies.</li>
+          <li><strong>Set assumptions:</strong> Investment returns, inflation, SWR (Safe Withdrawal Rate), and target
+            retirement expenses in your reporting currency.</li>
+          <li><strong>Include government benefits:</strong> Input projected CPP, OAS, and US Social Security claims and
+            select the claim start age.</li>
+          <li><strong>Calculate:</strong> View your CoastFIRE year, growth trajectory, and detailed yearly breakdown.
+          </li>
+        </ol>
+
+        <h4 style="margin-top:24px;font-size:16px;">Understanding Your Results</h4>
+        <dl class="glossary">
+          <dt>CoastFIRE Number Today</dt>
+          <dd>The amount your portfolio needs to have right now so that, with no future contributions, it will grow to
+            support your retirement expenses by your retirement age.</dd>
+          <dt>Required at Retirement</dt>
+          <dd>The total pre-tax portfolio size needed at your retirement age. This factors in the "bridge years" before
+            pensions start and the "gap years" after.</dd>
+          <dt>Bridge Years vs. Gap Years</dt>
+          <dd>Years between retirement and receiving government benefits are "bridge years" (100% funded by your
+            portfolio). "Gap years" are post-benefit, where you only cover the difference between expenses and combined
+            pensions.</dd>
+          <dt>Exchange-Rate Sensitivity</dt>
+          <dd>Shows how currency fluctuations affect your target milestones based on CAD vs. USD strength. This
+            demonstrates how much currency swings shift your planning numbers.</dd>
+          <dt>Pre-Tax Planning</dt>
+          <dd>No cross-border tax drag (e.g. TFSA taxability, PFICs) is modeled; all totals are pre-tax planning
+            targets.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <footer>Cross-border CoastFIRE Calculator · Not tax, legal, or immigration advice · Inspired by <a
+        href="https://maplecoastfire.ca" style="color:inherit;">MapleCoastFIRE</a></footer>
+  </div>
+
+  <script>
+    (function () {
+      const $ = id => document.getElementById(id);
+      const num = id => parseFloat($(id).value) || 0;
+      const fmt = (n, cur) => {
+        const sign = n < 0 ? '-' : '';
+        n = Math.abs(Math.round(n));
+        return sign + (cur === 'CAD' ? 'CA$' : '$') + n.toLocaleString('en-US');
+      };
+      const OAS_MAX_MONTHLY = 743.05; // 2026, age 65-74, Service Canada
+
+      $('reportCurrency').addEventListener('change', () => {
+        $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+      });
+
+      $('resetBtn').addEventListener('click', () => {
+        $('calcForm').reset();
+        $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+        $('results').hidden = true;
+        clearSavedInputs();
+      });
+
+      function updateOasHint() {
+        const yrs = Math.min(40, Math.max(0, num('oasYears')));
+        const est = Math.round((yrs / 40) * OAS_MAX_MONTHLY);
+        $('oasEstimateHint').textContent = `Based on ${yrs} years, a prorated OAS would be about $${est}/mo (${yrs}/40 × current max of $${OAS_MAX_MONTHLY}). Click "Estimate my OAS" to fill this in — then adjust as needed.`;
+        return est;
+      }
+      $('oasYears').addEventListener('input', updateOasHint);
+      $('estimateOasBtn').addEventListener('click', () => {
+        $('oasMonthly').value = updateOasHint();
+      });
+      updateOasHint();
+
+      // ---- Validation ----
+      function validate() {
+        const errors = [];
+        const currentAge = num('currentAge'), retireAge = num('retireAge'), benefitsStartAge = num('benefitsStartAge');
+        if (currentAge <= 0) errors.push('Current age must be greater than 0.');
+        if (retireAge <= currentAge) errors.push('Retirement age must be after your current age.');
+        if (benefitsStartAge < currentAge) errors.push('Government benefits start age should be at or after your current age.');
+        if (num('exchangeRate') <= 0) errors.push('Exchange rate must be greater than 0.');
+        if (num('withdrawalRate') <= 0) errors.push('Annual withdrawal rate must be greater than 0%.');
+        if (num('returnRate') < -50) errors.push('Expected annual investment return looks too extreme — double check it.');
+        ['rrspBal', 'tfsaBal', 'nonregCadBal', 'k401Bal', 'iraBal', 'rothBal', 'taxableUsdBal', 'monthlyExpenses'].forEach(id => {
+          if (parseFloat($(id).value) < 0) errors.push('Balances and expenses cannot be negative (' + id + ').');
+        });
+        return errors;
+      }
+      function showErrors(errors) {
+        const banner = $('errorBanner');
+        if (errors.length === 0) { banner.classList.remove('show'); return false; }
+        $('errorList').innerHTML = errors.map(e => `<li>${e}</li>`).join('');
+        banner.classList.add('show');
+        banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return true;
+      }
+
+      // ---- Autosave inputs ----
+      const STORAGE_KEY = 'ccfire:v2';
+      const FIELD_IDS = ['currentAge', 'retireAge', 'contribFreq', 'rrspBal', 'rrspContrib', 'tfsaBal', 'tfsaContrib',
+        'nonregCadBal', 'nonregCadContrib', 'k401Bal', 'k401Contrib', 'iraBal', 'iraContrib', 'rothBal', 'rothContrib',
+        'taxableUsdBal', 'taxableUsdContrib', 'exchangeRate', 'reportCurrency', 'stopAtCoast', 'returnRate', 'inflationRate',
+        'withdrawalRate', 'monthlyExpenses', 'cppMonthly', 'oasYears', 'oasMonthly', 'ssMonthly', 'benefitsStartAge'];
+      function storageAvailable() {
+        try { const k = '__t__'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; }
+        catch (e) { return false; }
+      }
+      const hasStorage = storageAvailable();
+      function saveInputs() {
+        if (!hasStorage) return;
+        try {
+          const data = {};
+          FIELD_IDS.forEach(id => { const el = $(id); if (el) data[id] = el.value; });
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) { /* ignore quota/availability errors */ }
+      }
+      function restoreInputs() {
+        if (!hasStorage) return false;
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return false;
+          const data = JSON.parse(raw);
+          FIELD_IDS.forEach(id => { const el = $(id); if (el && data[id] !== undefined) el.value = data[id]; });
+          return true;
+        } catch (e) { return false; }
+      }
+      function clearSavedInputs() {
+        if (!hasStorage) return;
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
+      }
+      if (!hasStorage) {
+        const note = document.querySelector('.save-note');
+        if (note) note.textContent = "Note: this preview can't save your inputs — they'll persist once you host this page yourself (e.g. on Netlify).";
+      }
+      FIELD_IDS.forEach(id => { const el = $(id); if (el) el.addEventListener('input', saveInputs); });
+
+      function convertToReport(cadAmt, usdAmt, reportCurrency, rate) {
+        if (rate <= 0) rate = 0.0001;
+        return reportCurrency === 'USD' ? (cadAmt * rate + usdAmt) : (usdAmt / rate + cadAmt);
+      }
+
+      function compute() {
+        const currentAge = num('currentAge');
+        const retireAge = num('retireAge');
+        const n = Math.max(0, Math.round(retireAge - currentAge));
+        const freqMult = $('contribFreq').value === 'monthly' ? 12 : 1;
+        const returnRate = num('returnRate') / 100;
+        const inflationRate = num('inflationRate') / 100;
+        const withdrawalRate = Math.max(0.001, num('withdrawalRate') / 100);
+        const stopAtCoast = $('stopAtCoast').value;
+        const reportCurrency = $('reportCurrency').value;
+        const exchangeRate = num('exchangeRate') || 0.73;
+        const monthlyExpenses = num('monthlyExpenses');
+        const cppMonthly = num('cppMonthly'), oasMonthly = num('oasMonthly'), ssMonthly = num('ssMonthly');
+        const benefitsStartAge = num('benefitsStartAge');
+
+        const bal = {
+          rrsp: num('rrspBal'), tfsa: num('tfsaBal'), nonregCad: num('nonregCadBal'),
+          k401: num('k401Bal'), ira: num('iraBal'), roth: num('rothBal'), taxableUsd: num('taxableUsdBal')
+        };
+        const contribAnnual = {
+          rrsp: num('rrspContrib') * freqMult, tfsa: num('tfsaContrib') * freqMult, nonregCad: num('nonregCadContrib') * freqMult,
+          k401: num('k401Contrib') * freqMult, ira: num('iraContrib') * freqMult, roth: num('rothContrib') * freqMult, taxableUsd: num('taxableUsdContrib') * freqMult
+        };
+
+        const futureMonthlyExpense = monthlyExpenses * Math.pow(1 + inflationRate, n);
+        const futureAnnualExpense = futureMonthlyExpense * 12;
+
+        // Government benefits, converted to the reporting currency (treated as already
+        // being in "retirement-year" dollars, since CPP/OAS/SS are indexed and typically
+        // entered as the amount you'd expect when you claim them).
+        const annualGovBenefit = convertToReport((cppMonthly + oasMonthly) * 12, ssMonthly * 12, reportCurrency, exchangeRate);
+        const annualGapAfterBenefits = Math.max(0, futureAnnualExpense - annualGovBenefit);
+        const bridgeYears = Math.max(0, benefitsStartAge - retireAge);
+
+        // Bridge years (retirement -> benefits start): portfolio funds 100% of expenses.
+        const pvBridge = bridgeYears > 0
+          ? (returnRate > 0
+            ? futureAnnualExpense * (1 - Math.pow(1 + returnRate, -bridgeYears)) / returnRate
+            : futureAnnualExpense * bridgeYears)
+          : 0;
+        // After benefits start: portfolio only needs to cover the gap, valued back to retirement age.
+        const pvPostBenefit = (annualGapAfterBenefits / withdrawalRate) / Math.pow(1 + returnRate, bridgeYears);
+
+        const requiredAtRetirement = pvBridge + pvPostBenefit;
+        const coastNumberAt = yrsRemaining => requiredAtRetirement / Math.pow(1 + returnRate, Math.max(0, yrsRemaining));
+
+        const currentYear = new Date().getFullYear();
+        let coastedFlag = false, coastYearIndex = null;
+        const rows = [];
+
+        for (let i = 0; i <= n; i++) {
+          const age = currentAge + i;
+          const yrsRemaining = n - i;
+          const cadTotal = bal.rrsp + bal.tfsa + bal.nonregCad;
+          const usdTotal = bal.k401 + bal.ira + bal.roth + bal.taxableUsd;
+          const combined = convertToReport(cadTotal, usdTotal, reportCurrency, exchangeRate);
+          const coastNum = coastNumberAt(yrsRemaining);
+
+          let notes = '';
+          if (!coastedFlag && combined >= coastNum) {
+            coastedFlag = true;
+            coastYearIndex = i;
+            notes = 'Reached CoastFIRE number';
+          } else if (coastedFlag && stopAtCoast === 'yes') {
+            notes = 'Coasting — contributions paused';
+          } else if (coastedFlag) {
+            notes = 'Past CoastFIRE number';
+          }
+
+          rows.push({
+            year: currentYear + i, age,
+            rrsp: bal.rrsp, tfsa: bal.tfsa, nonregCad: bal.nonregCad, cadTotal,
+            k401: bal.k401, ira: bal.ira, roth: bal.roth, taxableUsd: bal.taxableUsd, usdTotal,
+            combined, coastNum, notes, isCoastRow: notes === 'Reached CoastFIRE number'
+          });
+
+          if (i < n) {
+            const mult = (stopAtCoast === 'yes' && coastedFlag) ? 0 : 1;
+            bal.rrsp = bal.rrsp * (1 + returnRate) + contribAnnual.rrsp * mult;
+            bal.tfsa = bal.tfsa * (1 + returnRate) + contribAnnual.tfsa * mult;
+            bal.nonregCad = bal.nonregCad * (1 + returnRate) + contribAnnual.nonregCad * mult;
+            bal.k401 = bal.k401 * (1 + returnRate) + contribAnnual.k401 * mult;
+            bal.ira = bal.ira * (1 + returnRate) + contribAnnual.ira * mult;
+            bal.roth = bal.roth * (1 + returnRate) + contribAnnual.roth * mult;
+            bal.taxableUsd = bal.taxableUsd * (1 + returnRate) + contribAnnual.taxableUsd * mult;
+          }
+        }
+
+        return {
+          currentAge, retireAge, n, reportCurrency, exchangeRate, requiredAtRetirement,
+          coastNumberToday: coastNumberAt(n), rows, coastYearIndex, currentYear, stopAtCoast,
+          annualGovBenefit, annualGapAfterBenefits, bridgeYears, futureAnnualExpense,
+          cppMonthly, oasMonthly, ssMonthly, returnRate, withdrawalRate,
+          cadTotalToday: rows[0].cadTotal, usdTotalToday: rows[0].usdTotal
+        };
+      }
+
+      // Recompute the two headline totals at an arbitrary exchange rate, holding every
+      // other input fixed — used for the sensitivity table.
+      function computeAtRate(res, rate) {
+        const combined = convertToReport(res.cadTotalToday, res.usdTotalToday, res.reportCurrency, rate);
+        const annualGov = convertToReport((res.cppMonthly + res.oasMonthly) * 12, res.ssMonthly * 12, res.reportCurrency, rate);
+        const annualGap = Math.max(0, res.futureAnnualExpense - annualGov);
+        const pvBridge = res.bridgeYears > 0
+          ? (res.returnRate > 0
+            ? res.futureAnnualExpense * (1 - Math.pow(1 + res.returnRate, -res.bridgeYears)) / res.returnRate
+            : res.futureAnnualExpense * res.bridgeYears)
+          : 0;
+        const pvPostBenefit = (annualGap / res.withdrawalRate) / Math.pow(1 + res.returnRate, res.bridgeYears);
+        const required = pvBridge + pvPostBenefit;
+        const coastNumber = required / Math.pow(1 + res.returnRate, res.n);
+        return { combined, coastNumber };
+      }
+
+      function drawChart(rows, reportCurrency) {
+        const canvas = $('chart');
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = canvas.parentElement.clientWidth - 40;
+        const cssH = 260;
+        canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+        canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, cssW, cssH);
+
+        const padL = 60, padR = 12, padT = 14, padB = 26;
+        const w = cssW - padL - padR, h = cssH - padT - padB;
+        const maxVal = Math.max(...rows.map(r => Math.max(r.combined, r.coastNum))) * 1.08 || 1;
+        const xFor = i => padL + (rows.length <= 1 ? 0 : (i / (rows.length - 1)) * w);
+        const yFor = v => padT + h - (v / maxVal) * h;
+
+        ctx.strokeStyle = '#DCD2B8';
+        ctx.fillStyle = '#5B6470';
+        ctx.font = '11px IBM Plex Mono, monospace';
+        ctx.lineWidth = 1;
+        for (let g = 0; g <= 4; g++) {
+          const val = (maxVal / 4) * g;
+          const y = yFor(val);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
+          ctx.fillText((reportCurrency === 'CAD' ? 'CA$' : '$') + Math.round(val / 1000) + 'k', 4, y + 4);
+        }
+
+        const drawLine = (key, color) => {
+          ctx.beginPath();
+          ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+          rows.forEach((r, i) => {
+            const x = xFor(i), y = yFor(r[key]);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        };
+        drawLine('coastNum', '#A9362A');
+        drawLine('combined', '#2B5876');
+
+        ctx.fillStyle = '#5B6470';
+        const step = Math.max(1, Math.round(rows.length / 6));
+        rows.forEach((r, i) => {
+          if (i % step === 0 || i === rows.length - 1) {
+            ctx.fillText('Age ' + r.age, xFor(i) - 14, cssH - 6);
+          }
+        });
+      }
+
+      function doRender() {
+        const res = compute();
+        $('results').hidden = false;
+
+        const first = res.rows[0];
+        $('statCurrent').textContent = fmt(first.combined, res.reportCurrency);
+        $('statCurrencyNote').textContent = 'CAD converted at 1 CAD = ' + res.exchangeRate + ' USD';
+        $('statRequired').textContent = fmt(res.requiredAtRetirement, res.reportCurrency);
+        $('statCoastNumber').textContent = fmt(res.coastNumberToday, res.reportCurrency);
+
+        const stampYear = $('stampYear'), stampSub = $('stampSub');
+        const stampTop = $('stampTopText'), stampBottom = $('stampBottomText');
+        const svg = $('stampSvg');
+
+        if (res.coastYearIndex !== null) {
+          $('statYearsUntil').textContent = res.coastYearIndex;
+          $('statCoastYear').textContent = 'Reached in ' + (res.currentYear + res.coastYearIndex) + ' (age ' + (res.currentAge + res.coastYearIndex) + ')';
+          stampYear.textContent = res.currentYear + res.coastYearIndex;
+          stampSub.textContent = 'AGE ' + (res.currentAge + res.coastYearIndex);
+          stampTop.textContent = 'CROSS-BORDER CLEARED';
+          stampBottom.textContent = 'COASTFIRE STATUS';
+          svg.querySelectorAll('circle').forEach(c => c.setAttribute('stroke', '#B08A2E'));
+          svg.querySelectorAll('text').forEach(t => t.setAttribute('fill', '#B08A2E'));
+        } else {
+          $('statYearsUntil').textContent = '—';
+          $('statCoastYear').textContent = 'Not reached by retirement age at current contributions';
+          stampYear.textContent = 'N/A';
+          stampSub.textContent = 'NOT YET';
+          stampTop.textContent = 'BORDER NOT CLEARED';
+          stampBottom.textContent = 'INCREASE SAVINGS';
+          svg.querySelectorAll('circle').forEach(c => c.setAttribute('stroke', '#5B6470'));
+          svg.querySelectorAll('text').forEach(t => t.setAttribute('fill', '#5B6470'));
+        }
+
+        drawChart(res.rows, res.reportCurrency);
+
+        const insights = [];
+        insights.push(`Your combined portfolio today is ${fmt(first.combined, res.reportCurrency)}, converted using 1 CAD = ${res.exchangeRate} USD.`);
+        insights.push(`To sustain ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month in retirement (today's dollars) at a ${num('withdrawalRate')}% withdrawal rate, you'll need about ${fmt(res.requiredAtRetirement, res.reportCurrency)} by age ${res.retireAge}.`);
+        if (res.coastYearIndex !== null) {
+          insights.push(`At your current contribution rate, you're projected to hit your CoastFIRE number around ${res.currentYear + res.coastYearIndex} (age ${res.currentAge + res.coastYearIndex}) — ${res.coastYearIndex} year${res.coastYearIndex === 1 ? '' : 's'} from now.`);
+          if (res.stopAtCoast === 'yes') {
+            insights.push(`Contributions are modeled to pause once you reach that number — the projection after that point relies purely on market growth.`);
+          }
+        } else {
+          insights.push(`At your current contribution rate, you're not projected to reach your CoastFIRE number by age ${res.retireAge}. Try increasing contributions, extending your timeline, or revisiting your expected return.`);
+        }
+        if (first.tfsa > 0) {
+          insights.push(`Your TFSA balance is growing in this model like any other account — but remember it isn't tax-sheltered from the IRS. Its real after-tax value in the US may be lower than shown.`);
+        }
+        if (res.bridgeYears > 0) {
+          insights.push(`Government benefits start ${res.bridgeYears} year${res.bridgeYears === 1 ? '' : 's'} after your planned retirement age — that gap is funded 100% from your portfolio in this model before CPP, OAS, and Social Security kick in.`);
+        }
+        if (res.annualGovBenefit > 0) {
+          insights.push(`Once claimed, your combined CPP + OAS + Social Security is projected to cover ${fmt(res.annualGovBenefit / 12, res.reportCurrency)}/month of your ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month expense target (today's dollars) — reducing how much your portfolio alone needs to fund.`);
+        }
+        $('insightsList').innerHTML = insights.map(t => `<li><span class="mark">→</span><span>${t}</span></li>`).join('');
+
+        const baseRate = res.exchangeRate;
+        const rateOffsets = [-0.05, -0.02, 0, 0.02, 0.05];
+        $('sensitivityBody').innerHTML = rateOffsets.map(off => {
+          const rate = Math.max(0.01, Math.round((baseRate + off) * 1000) / 1000);
+          const at = computeAtRate(res, rate);
+          const isCurrent = off === 0;
+          return `<tr class="${isCurrent ? 'current-rate' : ''}">
+        <td>${rate.toFixed(3)} USD${isCurrent ? ' (your rate)' : ''}</td>
+        <td>${fmt(at.combined, res.reportCurrency)}</td>
+        <td>${fmt(at.coastNumber, res.reportCurrency)}</td>
+      </tr>`;
+        }).join('');
+
+        const tbody = $('tableBody');
+        tbody.innerHTML = res.rows.map(r => `
+      <tr class="${r.isCoastRow ? 'coast-row' : ''}">
+        <td>${r.year}</td><td>${r.age}</td>
+        <td>${fmt(r.rrsp, 'CAD')}</td><td>${fmt(r.tfsa, 'CAD')}</td><td>${fmt(r.nonregCad, 'CAD')}</td><td>${fmt(r.cadTotal, 'CAD')}</td>
+        <td>${fmt(r.k401, 'USD')}</td><td>${fmt(r.ira, 'USD')}</td><td>${fmt(r.roth, 'USD')}</td><td>${fmt(r.taxableUsd, 'USD')}</td><td>${fmt(r.usdTotal, 'USD')}</td>
+        <td><strong>${fmt(r.combined, res.reportCurrency)}</strong></td><td>${fmt(r.coastNum, res.reportCurrency)}</td>
+        <td class="notes">${r.notes}</td>
+      </tr>
+    `).join('');
+
+        $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function validateAndRender() {
+        const errors = validate();
+        if (showErrors(errors)) return;
+        doRender();
+      }
+
+      $('calcForm').addEventListener('submit', e => {
+        e.preventDefault();
+        saveInputs();
+        validateAndRender();
+      });
+
+      window.addEventListener('resize', () => {
+        if (!$('results').hidden) drawChart(compute().rows, $('reportCurrency').value);
+      });
+
+      $('exportCsvBtn').addEventListener('click', () => {
+        const res = compute();
+        const headers = ['Year', 'Age', 'RRSP (CAD)', 'TFSA (CAD)', 'Non-Reg CAD', 'CAD Total', '401k (USD)', 'IRA (USD)', 'Roth IRA (USD)', 'Taxable USD', 'USD Total', 'Combined (' + res.reportCurrency + ')', 'CoastFIRE Number', 'Notes'];
+        const lines = [headers.join(',')];
+        res.rows.forEach(r => {
+          lines.push([r.year, r.age, Math.round(r.rrsp), Math.round(r.tfsa), Math.round(r.nonregCad), Math.round(r.cadTotal),
+          Math.round(r.k401), Math.round(r.ira), Math.round(r.roth), Math.round(r.taxableUsd), Math.round(r.usdTotal),
+          Math.round(r.combined), Math.round(r.coastNum), '"' + r.notes.replace(/"/g, "'") + '"'].join(','));
+        });
+        const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'coastfire-breakdown.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      // Restore any saved inputs, then show an example/initial result on load
+      restoreInputs();
+      $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+      updateOasHint();
+      validateAndRender();
+
+      // Fetch exchange rate on load
+      async function fetchExchangeRate(isInitialLoad = false) {
+        const hintEl = $('fxHint');
+        const btnEl = $('fetchFxBtn');
+        if (!hintEl || !btnEl) return;
+
+        hintEl.textContent = 'Fetching live rate...';
+        btnEl.disabled = true;
+
+        try {
+          const response = await fetch('https://api.frankfurter.app/latest?from=CAD&to=USD');
+          if (!response.ok) throw new Error('API response not OK');
+          const data = await response.json();
+          const rate = data.rates.USD;
+          if (!rate || typeof rate !== 'number') throw new Error('Invalid rate format');
+
+          const hasSaved = hasStorage && localStorage.getItem(STORAGE_KEY);
+
+          if (isInitialLoad && hasSaved) {
+            const dataObj = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            const savedRateStr = dataObj ? dataObj.exchangeRate : '';
+            const savedRate = parseFloat(savedRateStr);
+
+            if (!savedRateStr || savedRate === 0.73) {
+              $('exchangeRate').value = rate.toFixed(4);
+              hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)`;
+              saveInputs();
+              validateAndRender();
+            } else {
+              hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD available.`;
+              btnEl.textContent = 'Apply live';
+            }
+          } else {
+            $('exchangeRate').value = rate.toFixed(4);
+            hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)`;
+            btnEl.textContent = 'Fetch live';
+            saveInputs();
+            validateAndRender();
+          }
+        } catch (err) {
+          console.error('Error fetching exchange rate:', err);
+          hintEl.textContent = 'Failed to load live rate. Using saved rate.';
+        } finally {
+          btnEl.disabled = false;
+        }
+      }
+
+      $('fetchFxBtn').addEventListener('click', () => {
+        fetchExchangeRate(false);
+      });
+
+      fetchExchangeRate(true);
+    })();
+  </script>
+</body>
+
+</html>
