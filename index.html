@@ -15,6 +15,7 @@
       --ink-soft: #5B6470;
       --paper: #F6F1E4;
       --paper-2: #EFE7D2;
+      --surface: #ffffff;
       --maple: #A9362A;
       --maple-soft: #F1DAD3;
       --harbor: #2B5876;
@@ -24,6 +25,22 @@
       --good: #3E6B4F;
       --warn: #A9362A;
       --radius: 10px;
+    }
+
+    [data-theme="dark"] {
+      --ink: #EAE3D2;
+      --ink-soft: #A79F8C;
+      --paper: #12161B;
+      --paper-2: #1B2027;
+      --surface: #1B2027;
+      --maple: #E07A67;
+      --maple-soft: #3A2620;
+      --harbor: #7FB1CE;
+      --harbor-soft: #1E313C;
+      --gold: #D8B563;
+      --line: #333A43;
+      --good: #6FAE85;
+      --warn: #E07A67;
     }
 
     * {
@@ -284,7 +301,7 @@
       padding: 10px 12px;
       border: 1px solid var(--line);
       border-radius: 6px;
-      background: #fff;
+      background: var(--surface);
       color: var(--ink);
       font-size: 14px;
     }
@@ -395,7 +412,7 @@
     }
 
     .stat {
-      background: #fff;
+      background: var(--surface);
       padding: 20px;
     }
 
@@ -437,7 +454,7 @@
     }
 
     .chart-card {
-      background: #fff;
+      background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 20px 20px 8px;
@@ -569,7 +586,7 @@
     }
 
     tbody tr:nth-child(even) {
-      background: #FBF8F0;
+      background: var(--paper-2);
     }
 
     tbody tr.coast-row {
@@ -640,7 +657,7 @@
     }
 
     .sensitivity-card {
-      background: #fff;
+      background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 20px;
@@ -877,6 +894,70 @@
       border-top: 1px solid var(--line);
       margin-top: 40px;
     }
+
+    body { transition: background .2s ease, color .2s ease; }
+
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    button.theme-toggle {
+      background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+      padding: 8px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600;
+      flex: none; white-space: nowrap;
+    }
+    button.theme-toggle:hover { border-color: var(--gold); }
+
+    nav.page-nav {
+      display: flex; gap: 22px; padding: 14px 0; border-bottom: 1px solid var(--line);
+      font-size: 13.5px; font-weight: 600; flex-wrap: wrap;
+    }
+    nav.page-nav a { color: var(--ink-soft); text-decoration: none; }
+    nav.page-nav a:hover { color: var(--ink); }
+
+    .preset-row { display: flex; align-items: center; gap: 10px; margin: -8px 0 20px; flex-wrap: wrap; }
+    .preset-row .preset-label { font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
+    button.preset-btn {
+      padding: 7px 13px; font-size: 12.5px; font-weight: 600; border-radius: 16px;
+      background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+    }
+    button.preset-btn:hover { border-color: var(--harbor); color: var(--harbor); }
+    button.preset-btn.active { background: var(--harbor); border-color: var(--harbor); color: #fff; }
+
+    .progress-card {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 18px 20px; margin-bottom: 32px;
+    }
+    .progress-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+    .progress-label #progressPct { font-family: 'IBM Plex Mono', monospace; color: var(--harbor); }
+    .progress-track { background: var(--paper-2); border-radius: 20px; height: 14px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; width: 0%; border-radius: 20px;
+      background: linear-gradient(90deg, var(--harbor), var(--gold));
+      transition: width .5s ease;
+    }
+    .progress-fill.reached { background: linear-gradient(90deg, var(--good), var(--gold)); }
+    .progress-note { font-size: 12px; color: var(--ink-soft); margin-top: 8px; }
+
+    .chart-wrap { position: relative; }
+    .chart-tooltip {
+      position: absolute; display: none; background: var(--ink); color: var(--paper);
+      padding: 9px 12px; border-radius: 7px; font-size: 12px; pointer-events: none;
+      white-space: nowrap; z-index: 5; box-shadow: 0 6px 16px rgba(0,0,0,.2); top: 8px;
+    }
+    .chart-tooltip .tip-age { font-weight: 700; margin-bottom: 5px; color: var(--gold); font-family: 'IBM Plex Mono', monospace; }
+    .chart-tooltip .tip-line { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+    .tip-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; }
+
+    .share-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .share-feedback { font-size: 12.5px; color: var(--good); font-weight: 600; opacity: 0; transition: opacity .3s ease; }
+
+    @media print {
+      nav.page-nav, form, .help-section, .btn-row, .save-note, .export-row,
+      #exportCsvBtn, button, .fx-hint-row, .share-row { display: none !important; }
+      body { background: #fff; color: #000; }
+      #results { border-top: none; padding-top: 0; }
+      .table-scroll { overflow: visible; border: none; }
+      .chart-tooltip { display: none !important; }
+      .wrap { max-width: 100%; padding: 0 12px; }
+    }
   </style>
 </head>
 
@@ -884,14 +965,25 @@
   <div class="wrap">
 
     <header>
-      <div class="eyebrow">
-        <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
-        <span>&nbsp;·&nbsp;Cross-border planning</span>
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">A CoastFIRE calculator built for Canadian citizens living and investing in the United States —
+            tracking RRSP, TFSA and non-registered accounts alongside 401(k), IRA, Roth IRA and a US brokerage, in their
+            native currencies.</p>
+        </div>
+        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
       </div>
-      <h1>Two Currencies,<br>One Number</h1>
-      <p class="sub">A CoastFIRE calculator built for Canadian citizens living and investing in the United States —
-        tracking RRSP, TFSA and non-registered accounts alongside 401(k), IRA, Roth IRA and a US brokerage, in their
-        native currencies.</p>
+      <nav class="page-nav">
+        <a href="#calcForm">Calculator</a>
+        <a href="#results">Results</a>
+        <a href="#considerationsSection">Cross-Border Notes</a>
+        <a href="#helpSection">How to Use</a>
+      </nav>
     </header>
 
     <section class="intro">
@@ -1020,6 +1112,12 @@
 
       <fieldset>
         <legend class="section-title"><span class="num">03</span> Currency &amp; growth assumptions</legend>
+        <div class="preset-row">
+          <span class="preset-label">Quick scenarios:</span>
+          <button type="button" class="preset-btn" data-preset="conservative">Conservative (5% / 3%)</button>
+          <button type="button" class="preset-btn active" data-preset="base">Base case (7% / 2.5%)</button>
+          <button type="button" class="preset-btn" data-preset="optimistic">Optimistic (9% / 2%)</button>
+        </div>
         <div class="grid3">
           <div class="field">
             <label>Exchange rate <span class="info"
@@ -1132,6 +1230,11 @@
         <button type="submit" class="primary">Calculate your CoastFIRE path</button>
         <button type="button" class="ghost" id="resetBtn">Start new calculation</button>
       </div>
+      <div class="share-row" style="margin-top:14px;">
+        <button type="button" class="ghost" id="shareLinkBtn">🔗 Copy shareable link</button>
+        <button type="button" class="ghost" id="printBtn">🖨️ Print summary</button>
+        <span class="share-feedback" id="shareFeedback">Link copied!</span>
+      </div>
       <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.
       </div>
     </form>
@@ -1189,12 +1292,21 @@
         </svg>
       </div>
 
+      <div class="progress-card">
+        <div class="progress-label"><span>Progress to your CoastFIRE number (today)</span><span id="progressPct">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-note" id="progressNote">—</div>
+      </div>
+
       <div class="chart-card">
         <div class="chart-legend">
           <span><span class="legend-dot" style="background:var(--harbor);"></span>Combined portfolio</span>
           <span><span class="legend-dot" style="background:var(--maple);"></span>CoastFIRE number</span>
         </div>
-        <canvas id="chart" height="280"></canvas>
+        <div class="chart-wrap">
+          <canvas id="chart" height="280"></canvas>
+          <div class="chart-tooltip" id="chartTooltip"></div>
+        </div>
       </div>
 
       <div class="sensitivity-card">
@@ -1220,7 +1332,7 @@
         <ul id="insightsList"></ul>
       </div>
 
-      <div class="considerations">
+      <div class="considerations" id="considerationsSection">
         <h3>Cross-border considerations</h3>
         <div class="subhead">General information, not tax or legal advice — rules below are commonly cited but you
           should confirm current treatment with a cross-border specialist.</div>
@@ -1301,7 +1413,7 @@
       </div>
     </div>
 
-    <details class="help-section">
+    <details class="help-section" id="helpSection">
       <summary>Guide: How to use this tool &amp; interpret your numbers</summary>
       <div class="help-body">
         <h4 style="margin-top:0;font-size:16px;">How to Use the Tool</h4>
@@ -1355,6 +1467,27 @@
       };
       const OAS_MAX_MONTHLY = 743.05; // 2026, age 65-74, Service Canada
 
+      // ---- Theme (dark mode) ----
+      const THEME_KEY = 'ccfire:theme';
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const btn = $('themeToggle');
+        if (btn) btn.textContent = theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode';
+      }
+      function initTheme() {
+        let theme = null;
+        try { theme = localStorage.getItem(THEME_KEY); } catch (e) { }
+        if (!theme) theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        applyTheme(theme);
+      }
+      $('themeToggle').addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        try { localStorage.setItem(THEME_KEY, next); } catch (e) { }
+        if (!$('results').hidden) drawChart(chartRows, chartReportCurrency);
+      });
+      initTheme();
+
       $('reportCurrency').addEventListener('change', () => {
         $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
       });
@@ -1364,6 +1497,32 @@
         $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
         $('results').hidden = true;
         clearSavedInputs();
+      });
+
+      // ---- Scenario presets ----
+      const PRESETS = {
+        conservative: { returnRate: 5, inflationRate: 3 },
+        base: { returnRate: 7, inflationRate: 2.5 },
+        optimistic: { returnRate: 9, inflationRate: 2 }
+      };
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const p = PRESETS[btn.dataset.preset];
+          if (!p) return;
+          $('returnRate').value = p.returnRate;
+          $('inflationRate').value = p.inflationRate;
+          document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          saveInputs();
+          validateAndRender();
+        });
+      });
+      // If return/inflation are hand-edited, no preset is authoritative anymore
+      ['returnRate', 'inflationRate'].forEach(id => {
+        $(id).addEventListener('input', () => {
+          const match = Object.entries(PRESETS).find(([, p]) => p.returnRate == num('returnRate') && p.inflationRate == num('inflationRate'));
+          document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', match && b.dataset.preset === match[0]));
+        });
       });
 
       function updateOasHint() {
@@ -1560,7 +1719,14 @@
         return { combined, coastNumber };
       }
 
+      function cssVar(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      }
+
+      let chartRows = [], chartReportCurrency = 'USD', chartGeom = null;
+
       function drawChart(rows, reportCurrency) {
+        chartRows = rows; chartReportCurrency = reportCurrency;
         const canvas = $('chart');
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.parentElement.clientWidth - 40;
@@ -1576,9 +1742,13 @@
         const maxVal = Math.max(...rows.map(r => Math.max(r.combined, r.coastNum))) * 1.08 || 1;
         const xFor = i => padL + (rows.length <= 1 ? 0 : (i / (rows.length - 1)) * w);
         const yFor = v => padT + h - (v / maxVal) * h;
+        chartGeom = { padL, padR, padT, padB, w, h, cssW, cssH, maxVal };
 
-        ctx.strokeStyle = '#DCD2B8';
-        ctx.fillStyle = '#5B6470';
+        const lineColor = cssVar('--line'), softColor = cssVar('--ink-soft');
+        const mapleColor = cssVar('--maple'), harborColor = cssVar('--harbor');
+
+        ctx.strokeStyle = lineColor;
+        ctx.fillStyle = softColor;
         ctx.font = '11px IBM Plex Mono, monospace';
         ctx.lineWidth = 1;
         for (let g = 0; g <= 4; g++) {
@@ -1597,10 +1767,10 @@
           });
           ctx.stroke();
         };
-        drawLine('coastNum', '#A9362A');
-        drawLine('combined', '#2B5876');
+        drawLine('coastNum', mapleColor);
+        drawLine('combined', harborColor);
 
-        ctx.fillStyle = '#5B6470';
+        ctx.fillStyle = softColor;
         const step = Math.max(1, Math.round(rows.length / 6));
         rows.forEach((r, i) => {
           if (i % step === 0 || i === rows.length - 1) {
@@ -1608,6 +1778,65 @@
           }
         });
       }
+
+      // ---- Interactive hover: crosshair + tooltip ----
+      function chartPointerHandler(clientX) {
+        if (!chartGeom || !chartRows.length) return;
+        const canvas = $('chart');
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = clientX - rect.left;
+        const { padL, padT, h, w, maxVal, cssW } = chartGeom;
+        let idx = Math.round(((mouseX - padL) / w) * (chartRows.length - 1));
+        idx = Math.max(0, Math.min(chartRows.length - 1, idx));
+        const row = chartRows[idx];
+        const x = padL + (chartRows.length <= 1 ? 0 : (idx / (chartRows.length - 1)) * w);
+        const yFor = v => padT + h - (v / maxVal) * h;
+        const yC = yFor(row.combined), yK = yFor(row.coastNum);
+
+        drawChart(chartRows, chartReportCurrency);
+        const ctx = canvas.getContext('2d');
+        const harborColor = cssVar('--harbor'), mapleColor = cssVar('--maple'), softColor = cssVar('--ink-soft');
+
+        ctx.save();
+        ctx.strokeStyle = softColor;
+        ctx.globalAlpha = 0.5;
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + h); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+
+        [{ y: yK, color: mapleColor }, { y: yC, color: harborColor }].forEach(pt => {
+          ctx.beginPath(); ctx.fillStyle = pt.color;
+          ctx.arc(x, pt.y, 4.5, 0, Math.PI * 2); ctx.fill();
+          ctx.lineWidth = 1.5; ctx.strokeStyle = cssVar('--surface'); ctx.stroke();
+        });
+        ctx.restore();
+
+        const tip = $('chartTooltip');
+        tip.innerHTML = `<div class="tip-age">Age ${row.age} · ${row.year}</div>
+          <div class="tip-line"><span class="tip-dot" style="background:${harborColor}"></span>Portfolio: <strong>${fmt(row.combined, chartReportCurrency)}</strong></div>
+          <div class="tip-line"><span class="tip-dot" style="background:${mapleColor}"></span>Coast #: <strong>${fmt(row.coastNum, chartReportCurrency)}</strong></div>`;
+        tip.style.display = 'block';
+        let left = x + 14;
+        if (left + 170 > cssW) left = x - 182;
+        tip.style.left = Math.max(0, left) + 'px';
+      }
+      (function initChartHover() {
+        const canvas = $('chart');
+        canvas.addEventListener('mousemove', e => chartPointerHandler(e.clientX));
+        canvas.addEventListener('mouseleave', () => {
+          if (chartRows.length) drawChart(chartRows, chartReportCurrency);
+          $('chartTooltip').style.display = 'none';
+        });
+        canvas.addEventListener('touchmove', e => {
+          if (e.touches && e.touches[0]) { chartPointerHandler(e.touches[0].clientX); e.preventDefault(); }
+        }, { passive: false });
+        canvas.addEventListener('touchend', () => {
+          if (chartRows.length) drawChart(chartRows, chartReportCurrency);
+          $('chartTooltip').style.display = 'none';
+        });
+      })();
 
       function doRender() {
         const res = compute();
@@ -1618,6 +1847,15 @@
         $('statCurrencyNote').textContent = 'CAD converted at 1 CAD = ' + res.exchangeRate + ' USD';
         $('statRequired').textContent = fmt(res.requiredAtRetirement, res.reportCurrency);
         $('statCoastNumber').textContent = fmt(res.coastNumberToday, res.reportCurrency);
+
+        const pct = res.coastNumberToday > 0 ? Math.max(0, Math.min(100, Math.round((first.combined / res.coastNumberToday) * 100))) : 0;
+        const fill = $('progressFill');
+        fill.style.width = pct + '%';
+        fill.classList.toggle('reached', pct >= 100);
+        $('progressPct').textContent = pct + '%';
+        $('progressNote').textContent = pct >= 100
+          ? `You're already past your CoastFIRE number today — ${fmt(first.combined - res.coastNumberToday, res.reportCurrency)} ahead of target.`
+          : `${fmt(res.coastNumberToday - first.combined, res.reportCurrency)} to go, based on today's balances.`;
 
         const stampYear = $('stampYear'), stampSub = $('stampSub');
         const stampTop = $('stampTopText'), stampBottom = $('stampBottomText');
@@ -1727,17 +1965,65 @@
         URL.revokeObjectURL(url);
       });
 
-      // Restore any saved inputs, then show an example/initial result on load
-      restoreInputs();
+      // ---- Shareable permalink ----
+      function buildShareUrl() {
+        const params = new URLSearchParams();
+        FIELD_IDS.forEach(id => { const el = $(id); if (el) params.set(id, el.value); });
+        return window.location.origin + window.location.pathname + '?' + params.toString();
+      }
+      function showShareFeedback(msg) {
+        const el = $('shareFeedback');
+        el.textContent = msg;
+        el.style.opacity = 1;
+        setTimeout(() => { el.style.opacity = 0; }, 2500);
+      }
+      $('shareLinkBtn').addEventListener('click', async () => {
+        const url = buildShareUrl();
+        try {
+          await navigator.clipboard.writeText(url);
+          showShareFeedback('Link copied — paste it anywhere to share this exact scenario.');
+        } catch (e) {
+          window.prompt('Copy this link to share your scenario:', url);
+        }
+      });
+      function applyQueryParams() {
+        const params = new URLSearchParams(window.location.search);
+        let applied = false;
+        FIELD_IDS.forEach(id => {
+          if (params.has(id)) {
+            const el = $(id);
+            if (el) { el.value = params.get(id); applied = true; }
+          }
+        });
+        return applied;
+      }
+
+      // ---- Print summary ----
+      $('printBtn').addEventListener('click', () => window.print());
+
+      // Restore inputs: a shared link (query params) takes priority over local autosave
+      const loadedFromLink = applyQueryParams();
+      if (loadedFromLink) { saveInputs(); } else { restoreInputs(); }
       $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
       updateOasHint();
       validateAndRender();
 
       // Fetch exchange rate on load
+      let liveFetchedRate = null;
       async function fetchExchangeRate(isInitialLoad = false) {
         const hintEl = $('fxHint');
         const btnEl = $('fetchFxBtn');
         if (!hintEl || !btnEl) return;
+
+        // If we already have a live rate cached and the user just wants to apply it, skip the network call.
+        if (!isInitialLoad && liveFetchedRate && btnEl.textContent === 'Apply live') {
+          $('exchangeRate').value = liveFetchedRate.toFixed(4);
+          hintEl.textContent = `Live rate: 1 CAD = ${liveFetchedRate.toFixed(4)} USD (applied)`;
+          btnEl.textContent = 'Refresh live rate';
+          saveInputs();
+          validateAndRender();
+          return;
+        }
 
         hintEl.textContent = 'Fetching live rate...';
         btnEl.disabled = true;
@@ -1748,10 +2034,11 @@
           const data = await response.json();
           const rate = data.rates.USD;
           if (!rate || typeof rate !== 'number') throw new Error('Invalid rate format');
+          liveFetchedRate = rate;
 
           const hasSaved = hasStorage && localStorage.getItem(STORAGE_KEY);
 
-          if (isInitialLoad && hasSaved) {
+          if (isInitialLoad && hasSaved && !loadedFromLink) {
             const dataObj = JSON.parse(localStorage.getItem(STORAGE_KEY));
             const savedRateStr = dataObj ? dataObj.exchangeRate : '';
             const savedRate = parseFloat(savedRateStr);
@@ -1759,22 +2046,23 @@
             if (!savedRateStr || savedRate === 0.73) {
               $('exchangeRate').value = rate.toFixed(4);
               hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)`;
+              btnEl.textContent = 'Refresh live rate';
               saveInputs();
               validateAndRender();
             } else {
-              hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD available.`;
+              hintEl.textContent = `Live rate available: 1 CAD = ${rate.toFixed(4)} USD.`;
               btnEl.textContent = 'Apply live';
             }
           } else {
             $('exchangeRate').value = rate.toFixed(4);
             hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)`;
-            btnEl.textContent = 'Fetch live';
+            btnEl.textContent = 'Refresh live rate';
             saveInputs();
             validateAndRender();
           }
         } catch (err) {
           console.error('Error fetching exchange rate:', err);
-          hintEl.textContent = 'Failed to load live rate. Using saved rate.';
+          hintEl.textContent = "Couldn't fetch a live rate — enter one manually (your bank or Bank of Canada both publish current rates).";
         } finally {
           btnEl.disabled = false;
         }
