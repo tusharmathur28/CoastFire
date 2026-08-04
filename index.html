@@ -21,8 +21,10 @@
       --harbor: #2B5876;
       --harbor-soft: #D8E4EA;
       --gold: #B08A2E;
+      --gold-soft: #F3E7C9;
       --line: #DCD2B8;
       --good: #3E6B4F;
+      --good-soft: #DCEFE3;
       --warn: #A9362A;
       --radius: 10px;
     }
@@ -38,8 +40,10 @@
       --harbor: #7FB1CE;
       --harbor-soft: #1E313C;
       --gold: #D8B563;
+      --gold-soft: #332B1A;
       --line: #333A43;
       --good: #6FAE85;
+      --good-soft: #1E2E24;
       --warn: #E07A67;
     }
 
@@ -381,6 +385,21 @@
       margin-bottom: 20px;
     }
 
+    .section-explainer {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      margin: -8px 0 20px;
+      max-width: 640px;
+    }
+
+    .label-plain {
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      font-weight: 400;
+      margin-top: -3px;
+      margin-bottom: 6px;
+    }
+
     .btn-row {
       display: flex;
       gap: 14px;
@@ -581,25 +600,45 @@
       margin-bottom: 16px;
     }
 
-    .considerations dl {
-      margin: 0;
+    .considerations-legend {
+      display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-soft);
+      margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px dashed var(--line);
     }
+    .considerations-legend span { display: flex; align-items: center; gap: 5px; }
 
-    .considerations dt {
+    .consideration-item {
+      background: var(--surface);
+      border-left: 4px solid var(--line);
+      border-radius: 0 8px 8px 0;
+      padding: 13px 16px;
+      margin-top: 10px;
+    }
+    .considerations-legend + .consideration-item { margin-top: 0; }
+    .consideration-item.level-good { border-left-color: var(--good); }
+    .consideration-item.level-warning { border-left-color: var(--warn); }
+    .consideration-item.level-action { border-left-color: var(--gold); }
+    .consideration-item.level-info { border-left-color: var(--harbor); }
+
+    .ci-title {
       font-weight: 700;
       font-size: 13.5px;
-      margin-top: 14px;
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
-
-    .considerations dt:first-child {
-      margin-top: 0;
+    .ci-icon { flex: none; font-size: 14px; }
+    .ci-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+      padding: 2px 8px; border-radius: 10px; flex: none;
     }
+    .level-good .ci-badge { background: var(--good-soft); color: var(--good); }
+    .level-warning .ci-badge { background: var(--maple-soft); color: var(--maple); }
+    .level-action .ci-badge { background: var(--gold-soft); color: var(--gold); }
+    .level-info .ci-badge { background: var(--harbor-soft); color: var(--harbor); }
 
-    .considerations dd {
-      margin: 4px 0 0;
+    .ci-body {
+      margin: 6px 0 0;
       font-size: 13.5px;
       color: var(--ink-soft);
     }
@@ -1191,6 +1230,8 @@
 
       <fieldset>
         <legend class="section-title"><span class="num">01</span> Personal information</legend>
+        <div class="section-explainer">These three basics set your timeline — how many years your money has to grow,
+          and how often it gets topped up.</div>
         <div class="grid3">
           <div class="field">
             <label>Current age <span class="info" title="Your current age in years.">?</span></label>
@@ -1214,6 +1255,9 @@
 
       <fieldset>
         <legend class="section-title"><span class="num">02</span> Accounts — by country</legend>
+        <div class="section-explainer">List what you already have, in whichever currency each account actually lives
+          in. Canadian accounts stay in CAD, US accounts stay in USD — we only combine them into one number at the very
+          end.</div>
         <div class="grid2 border-crossing">
           <div class="country-col left">
             <div class="country-head"><span class="chip ca">CA</span>
@@ -1222,6 +1266,7 @@
 
             <div class="field">
               <label>RRSP balance ($ CAD) <span class="tag treaty">Treaty-protected</span></label>
+              <div class="label-plain">Canada's employer-style retirement account — similar to a 401(k)</div>
               <input type="number" id="rrspBal" value="60000" min="0" step="100">
             </div>
             <div class="field">
@@ -1231,6 +1276,7 @@
 
             <div class="field">
               <label>TFSA balance ($ CAD) <span class="tag watch">Not tax-free to IRS</span></label>
+              <div class="label-plain">Canada's flexible tax-free savings account — just not tax-free to the IRS</div>
               <input type="number" id="tfsaBal" value="25000" min="0" step="100">
             </div>
             <div class="field">
@@ -1240,6 +1286,7 @@
 
             <div class="field">
               <label>Non-registered (CAD) balance ($)</label>
+              <div class="label-plain">A regular taxable investment account — no special tax treatment</div>
               <input type="number" id="nonregCadBal" value="10000" min="0" step="100">
             </div>
             <div class="field">
@@ -1255,6 +1302,7 @@
 
             <div class="field">
               <label>401(k) / 403(b) balance ($ USD)</label>
+              <div class="label-plain">Your US employer-sponsored retirement plan</div>
               <input type="number" id="k401Bal" value="45000" min="0" step="100">
             </div>
             <div class="field">
@@ -1264,6 +1312,7 @@
 
             <div class="field">
               <label>Traditional / Rollover IRA balance ($ USD)</label>
+              <div class="label-plain">A US tax-deferred retirement account you contribute to yourself</div>
               <input type="number" id="iraBal" value="8000" min="0" step="100">
             </div>
             <div class="field">
@@ -1273,6 +1322,7 @@
 
             <div class="field">
               <label>Roth IRA balance ($ USD)</label>
+              <div class="label-plain">Funded with after-tax dollars — growth and withdrawals are generally tax-free</div>
               <input type="number" id="rothBal" value="12000" min="0" step="100">
             </div>
             <div class="field">
@@ -1282,6 +1332,7 @@
 
             <div class="field">
               <label>Taxable brokerage balance ($ USD)</label>
+              <div class="label-plain">A regular taxable investment account — no special tax treatment</div>
               <input type="number" id="taxableUsdBal" value="15000" min="0" step="100">
             </div>
             <div class="field">
@@ -1294,6 +1345,9 @@
 
       <fieldset>
         <legend class="section-title"><span class="num">03</span> Currency &amp; growth assumptions</legend>
+        <div class="section-explainer">These assumptions do more to move your result than anything else here. If
+          you're not sure what to use, the presets below are a reasonable starting point — you can always come back
+          and adjust later.</div>
         <div class="preset-row">
           <span class="preset-label">Quick scenarios:</span>
           <button type="button" class="preset-btn" data-preset="conservative">Conservative (5% / 3%)</button>
@@ -1304,6 +1358,7 @@
           <div class="field">
             <label>Exchange rate <span class="info"
                 title="Used only to convert your combined totals — each account keeps growing in its own currency underneath.">?</span></label>
+            <div class="label-plain">How many US dollars one Canadian dollar buys right now</div>
             <input type="number" id="exchangeRate" value="0.73" min="0.01" step="0.01">
             <div class="field-note" style="font-size:12px;color:var(--ink-soft);margin-top:4px;">1 CAD = this many USD
             </div>
@@ -1315,6 +1370,7 @@
           </div>
           <div class="field">
             <label>Report combined totals in</label>
+            <div class="label-plain">Which currency you'd like your big-picture numbers shown in</div>
             <select id="reportCurrency">
               <option value="USD" selected>USD</option>
               <option value="CAD">CAD</option>
@@ -1322,6 +1378,7 @@
           </div>
           <div class="field">
             <label>Stop contributions at CoastFIRE?</label>
+            <div class="label-plain">Once you hit your number, should we assume you stop actively saving?</div>
             <select id="stopAtCoast">
               <option value="no" selected>No</option>
               <option value="yes">Yes</option>
@@ -1351,6 +1408,8 @@
 
       <fieldset>
         <legend class="section-title"><span class="num">04</span> Retirement needs</legend>
+        <div class="section-explainer">What you expect to spend each month once retired, in today's dollars — we'll
+          automatically adjust this for inflation between now and your retirement date.</div>
         <div class="grid3">
           <div class="field">
             <label>Monthly expenses in retirement (<span id="expenseCurrencyLabel">USD</span>, today's dollars)</label>
@@ -1363,6 +1422,9 @@
         <summary class="section-title"><span class="num">05</span> Government benefits
           <span class="collapse-teaser">optional — click to expand</span></summary>
         <div class="collapsible-body">
+          <div class="section-explainer">Optional, but including CPP, OAS, and Social Security can meaningfully lower
+            how much your portfolio alone needs to cover. Don't know your numbers yet? It's completely fine to leave
+            this collapsed and come back later.</div>
 
           <div class="grid2 border-crossing">
             <div class="country-col left">
@@ -1415,6 +1477,7 @@
               <div class="field">
                 <label>Government benefits start age <span class="info"
                     title="Applied uniformly to CPP, OAS, and Social Security for simplicity — in reality you can start each independently between roughly 60-70 (CPP/OAS) or 62-70 (Social Security).">?</span></label>
+                <div class="label-plain">The age you'll start collecting CPP, OAS, and Social Security</div>
                 <input type="number" id="benefitsStartAge" value="65" min="55" max="70" step="1">
               </div>
             </div>
@@ -1604,51 +1667,78 @@
         <h3>Cross-border considerations</h3>
         <div class="subhead">General information, not tax or legal advice — rules below are commonly cited but you
           should confirm current treatment with a cross-border specialist.</div>
-        <dl>
-          <dt><span class="tag treaty">Treaty-protected</span> RRSP</dt>
-          <dd>Under the Canada–US tax treaty, the IRS treats your RRSP as a tax-deferred retirement account — growth
-            generally isn't taxed annually as a US person, similar to a traditional IRA.</dd>
 
-          <dt><span class="tag watch">Not tax-free to IRS</span> TFSA</dt>
-          <dd>The US doesn't recognize the TFSA's tax-free status. Growth can be taxable each year, and depending on
-            structure it may trigger extra reporting (e.g. Form 3520/3520-A). Many cross-border planners advise against
-            actively contributing to a TFSA while a US resident.</dd>
+        <div class="considerations-legend">
+          <span><span class="ci-icon">✅</span> Good news</span>
+          <span><span class="ci-icon">⚠️</span> Watch out — could cost you</span>
+          <span><span class="ci-icon">📋</span> Action / reporting required</span>
+          <span><span class="ci-icon">ℹ️</span> Good to know</span>
+        </div>
 
-          <dt>PFIC exposure — non-registered &amp; RRSP holdings</dt>
-          <dd>Canadian-domiciled mutual funds and ETFs held by a US person can be classified as PFICs, which carry
-            punitive US tax treatment. US-domiciled funds are typically used instead once you're a US resident.</dd>
+        <div class="consideration-item level-good">
+          <div class="ci-title"><span class="ci-icon">✅</span>RRSP <span class="ci-badge">Treaty-protected</span></div>
+          <div class="ci-body">Under the Canada–US tax treaty, the IRS treats your RRSP as a tax-deferred retirement
+            account — growth generally isn't taxed annually as a US person, similar to a traditional IRA.</div>
+        </div>
 
-          <dt>FBAR &amp; FATCA reporting</dt>
-          <dd>Canadian accounts above reporting thresholds generally need to be disclosed annually via FBAR (FinCEN 114)
-            and possibly Form 8938 — separate from your regular tax return.</dd>
+        <div class="consideration-item level-warning">
+          <div class="ci-title"><span class="ci-icon">⚠️</span>TFSA <span class="ci-badge">Not tax-free to IRS</span></div>
+          <div class="ci-body">The US doesn't recognize the TFSA's tax-free status. Growth can be taxable each year, and
+            depending on structure it may trigger extra reporting (e.g. Form 3520/3520-A). Many cross-border planners
+            advise against actively contributing to a TFSA while a US resident.</div>
+        </div>
 
-          <dt>Currency risk</dt>
-          <dd>Your CAD balances move in USD terms every time the exchange rate moves. This tool applies one static rate
-            you set — real results will vary with the market rate at withdrawal time. See the sensitivity table above.
-          </dd>
+        <div class="consideration-item level-warning">
+          <div class="ci-title"><span class="ci-icon">⚠️</span>PFIC exposure <span class="ci-badge">Non-reg &amp; RRSP holdings</span></div>
+          <div class="ci-body">Canadian-domiciled mutual funds and ETFs held by a US person can be classified as PFICs,
+            which carry punitive US tax treatment. US-domiciled funds are typically used instead once you're a US
+            resident.</div>
+        </div>
 
-          <dt>Totalization Agreement (CPP/OAS/Social Security)</dt>
-          <dd>The Canada-US Totalization Agreement can help you <em>qualify</em> for CPP, OAS, or Social Security by
-            combining your work/residency periods from both countries — for example, using US residency to meet OAS's
-            20-year minimum for payments abroad. It does not increase the benefit amount itself; that's still based on
-            your actual contribution history or Canadian residency years in each country separately.</dd>
+        <div class="consideration-item level-action">
+          <div class="ci-title"><span class="ci-icon">📋</span>FBAR &amp; FATCA reporting <span class="ci-badge">Required</span></div>
+          <div class="ci-body">Canadian accounts above reporting thresholds generally need to be disclosed annually via
+            FBAR (FinCEN 114) and possibly Form 8938 — separate from your regular tax return.</div>
+        </div>
 
-          <dt>WEP/GPO repeal (as of Jan 2025)</dt>
-          <dd>The Windfall Elimination Provision and Government Pension Offset used to reduce a US Social Security
-            benefit for people who also received a foreign pension like CPP. The Social Security Fairness Act repealed
-            both, retroactive to January 2024 — so this calculator assumes your Social Security estimate no longer needs
-            a CPP-related reduction. Confirm your own Social Security statement reflects this.</dd>
+        <div class="consideration-item level-info">
+          <div class="ci-title"><span class="ci-icon">ℹ️</span>Currency risk</div>
+          <div class="ci-body">Your CAD balances move in USD terms every time the exchange rate moves. This tool
+            applies one static rate you set — real results will vary with the market rate at withdrawal time. See the
+            sensitivity table above.</div>
+        </div>
 
-          <dt>OAS recovery tax (clawback)</dt>
-          <dd>OAS is income-tested: for 2026, it starts getting clawed back once net world income passes roughly
-            $95,300, at 15 cents per dollar above that, fully eliminated somewhere in the $155,000–$161,000 range
-            depending on age. If your retirement income (including RRSP/RRIF withdrawals) will be high, your real OAS
-            may be lower than the flat figure you enter here.</dd>
+        <div class="consideration-item level-info">
+          <div class="ci-title"><span class="ci-icon">ℹ️</span>Totalization Agreement <span class="ci-badge">CPP/OAS/Social Security</span></div>
+          <div class="ci-body">The Canada-US Totalization Agreement can help you <em>qualify</em> for CPP, OAS, or
+            Social Security by combining your work/residency periods from both countries — for example, using US
+            residency to meet OAS's 20-year minimum for payments abroad. It does not increase the benefit amount
+            itself; that's still based on your actual contribution history or Canadian residency years in each country
+            separately.</div>
+        </div>
 
-          <dt>Pre-tax targets</dt>
-          <dd>This calculator doesn't model cross-border taxes, so treat "Required at Retirement" as a pre-tax figure
-            and build in a margin for tax drag on both sides of the border.</dd>
-        </dl>
+        <div class="consideration-item level-good">
+          <div class="ci-title"><span class="ci-icon">✅</span>WEP/GPO repeal <span class="ci-badge">As of Jan 2025</span></div>
+          <div class="ci-body">The Windfall Elimination Provision and Government Pension Offset used to reduce a US
+            Social Security benefit for people who also received a foreign pension like CPP. The Social Security
+            Fairness Act repealed both, retroactive to January 2024 — so this calculator assumes your Social Security
+            estimate no longer needs a CPP-related reduction. Confirm your own Social Security statement reflects
+            this.</div>
+        </div>
+
+        <div class="consideration-item level-warning">
+          <div class="ci-title"><span class="ci-icon">⚠️</span>OAS recovery tax <span class="ci-badge">Clawback</span></div>
+          <div class="ci-body">OAS is income-tested: for 2026, it starts getting clawed back once net world income
+            passes roughly $95,300, at 15 cents per dollar above that, fully eliminated somewhere in the $155,000–
+            $161,000 range depending on age. If your retirement income (including RRSP/RRIF withdrawals) will be high,
+            your real OAS may be lower than the flat figure you enter here.</div>
+        </div>
+
+        <div class="consideration-item level-action">
+          <div class="ci-title"><span class="ci-icon">📋</span>Pre-tax targets</div>
+          <div class="ci-body">This calculator doesn't model cross-border taxes, so treat "Required at Retirement" as a
+            pre-tax figure and build in a margin for tax drag on both sides of the border.</div>
+        </div>
       </div>
 
       <details class="card-collapsible" id="breakdownDetails">
