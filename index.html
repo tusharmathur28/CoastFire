@@ -1077,7 +1077,7 @@
 
     @media print {
       nav.page-nav, form, .help-section, .btn-row, .save-note, .export-row,
-      #exportCsvBtn, button, .fx-hint-row, .share-row { display: none !important; }
+      #exportCsvBtn, button, .fx-hint-row, .share-row, .tool-section { display: none !important; }
       body { background: #fff; color: #000; }
       #results { border-top: none; padding-top: 0; }
       .table-scroll { overflow: visible; border: none; }
@@ -1168,6 +1168,63 @@
     }
     .income-stack-card h3 { margin: 0 0 4px; font-size: 18px; }
     .income-stack-card .subhead { color: var(--ink-soft); font-size: 13px; margin-bottom: 6px; }
+
+    /* ---- Standalone tool sections (Departure Tax, Benefit Timing) ---- */
+    .tool-section { padding: 48px 0; border-top: 1px solid var(--line); }
+    .tool-header { margin-bottom: 6px; }
+    .tool-header h2 { font-size: 26px; margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
+    .tool-header .tool-sub { color: var(--ink-soft); font-size: 14.5px; max-width: 680px; margin: 0 0 28px; }
+
+    .tool-card {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 24px; margin-bottom: 24px;
+    }
+    .tool-card h3 { margin: 0 0 4px; font-size: 17px; }
+    .tool-card .card-sub { color: var(--ink-soft); font-size: 13px; margin-bottom: 18px; }
+
+    .prefill-note {
+      font-size: 12px; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; margin: -8px 0 16px;
+    }
+    .prefill-note .pn-icon { color: var(--gold); }
+
+    .reassurance-box {
+      background: var(--good-soft); border-left: 4px solid var(--good); border-radius: 0 8px 8px 0;
+      padding: 14px 16px; font-size: 13.5px; color: var(--ink); margin-bottom: 20px;
+    }
+    .reassurance-box strong { color: var(--good); }
+
+    .result-strip {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
+      background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .result-strip .rs-stat { background: var(--surface); padding: 16px 18px; }
+    .result-strip .rs-stat .rs-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 6px; }
+    .result-strip .rs-stat .rs-value { font-family: 'IBM Plex Mono', monospace; font-size: 19px; font-weight: 600; }
+
+    .deferral-note {
+      font-size: 13px; padding: 12px 14px; border-radius: 8px; margin-bottom: 16px;
+    }
+    .deferral-note.auto { background: var(--good-soft); color: var(--good); }
+    .deferral-note.security { background: var(--gold-soft); color: var(--gold); }
+
+    .claim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+    @media(max-width:760px) { .claim-grid { grid-template-columns: 1fr; } }
+    .claim-col { background: var(--paper-2); border-radius: 8px; padding: 16px; }
+    .claim-col h4 { margin: 0 0 12px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .claim-col .claim-amount { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; margin-top: 10px; }
+    .claim-col .claim-factor { font-size: 12px; color: var(--ink-soft); }
+
+    table.strategy-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+    table.strategy-table th { background: var(--paper-2); padding: 8px 10px; text-align: right; font-weight: 600; }
+    table.strategy-table th:first-child, table.strategy-table td:first-child { text-align: left; }
+    table.strategy-table td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); }
+    table.strategy-table tr.your-choice { background: var(--harbor-soft); font-weight: 600; }
+
+    .apply-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+    .apply-row button { background: var(--gold); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+    .apply-row button:hover { background: #96792a; }
+    .apply-feedback { font-size: 12.5px; color: var(--good); font-weight: 600; opacity: 0; transition: opacity .3s ease; }
   </style>
 </head>
 
@@ -1191,6 +1248,8 @@
       <nav class="page-nav">
         <a href="#calcForm">Calculator</a>
         <a href="#results">Results</a>
+        <a href="#departureTaxSection">Departure Tax</a>
+        <a href="#claimingAgeSection">Benefit Timing</a>
         <a href="#considerationsSection">Cross-Border Notes</a>
         <a href="#helpSection">How to Use</a>
       </nav>
@@ -1778,6 +1837,185 @@
       </details>
     </div>
 
+    <section class="tool-section" id="departureTaxSection">
+      <div class="tool-header">
+        <h2>🛫 Departure Tax Estimator</h2>
+        <p class="tool-sub">When a Canadian resident emigrates, the CRA treats most of your property as if you sold it
+          at fair market value on your departure date — even though you haven't actually sold anything. This estimates
+          that one-time bill. General information only, not tax advice; confirm your numbers with a cross-border
+          accountant before you file.</p>
+      </div>
+
+      <div class="tool-card">
+        <h3>What's excluded — the good news first</h3>
+        <div class="card-sub">Registered accounts, Canadian real estate, and pension entitlements are exempt from
+          departure tax entirely.</div>
+        <div class="reassurance-box" id="departureExemptBox">
+          Loading your account balances…
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <h3>What's actually taxed</h3>
+        <div class="card-sub">Non-registered investments, foreign real estate, crypto, and private business shares are
+          generally caught by the deemed disposition. Enter fair market value (what it's worth today) and adjusted
+          cost base (what you originally paid) for each.</div>
+
+        <div class="prefill-note"><span class="pn-icon">↺</span>Fair market value below is pre-filled from your
+          Non-Registered (CAD) balance in the main calculator — adjust as needed.</div>
+
+        <div class="grid3">
+          <div class="field">
+            <label>Non-registered CAD investments — fair market value</label>
+            <input type="number" id="dtNonregFmv" value="10000" min="0" step="100">
+          </div>
+          <div class="field">
+            <label>Non-registered CAD investments — adjusted cost base <span class="info"
+                title="What you originally paid for these investments, including reinvested distributions. Your gain is FMV minus this.">?</span></label>
+            <input type="number" id="dtNonregAcb" value="7000" min="0" step="100">
+          </div>
+          <div class="field"></div>
+          <div class="field">
+            <label>Other property (foreign real estate, crypto, private shares) — fair market value</label>
+            <input type="number" id="dtOtherFmv" value="0" min="0" step="100">
+          </div>
+          <div class="field">
+            <label>Other property — adjusted cost base</label>
+            <input type="number" id="dtOtherAcb" value="0" min="0" step="100">
+          </div>
+          <div class="field"></div>
+          <div class="field">
+            <label>Your expected marginal tax rate in your departure year (%) <span class="info"
+                title="Your combined federal + provincial marginal tax rate for the year you leave. This varies widely by province and income — Ontario's top combined rate is roughly 53.5%; someone mid-career might be closer to 30-40%.">?</span></label>
+            <input type="number" id="dtMarginalRate" value="35" min="0" max="60" step="1">
+            <div class="typical-range">Not sure? Rough starting points: ~20-25% for modest income, ~35-45% for mid-to-upper income, ~50-54% at the very top bracket depending on province.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <h3>Estimated departure tax</h3>
+        <div class="card-sub">Canada's capital gains inclusion rate is 50% for 2026 — half of your gain is added to
+          income and taxed at your marginal rate.</div>
+        <div class="result-strip">
+          <div class="rs-stat">
+            <div class="rs-label">Total capital gain</div>
+            <div class="rs-value" id="dtGain">—</div>
+          </div>
+          <div class="rs-stat">
+            <div class="rs-label">Taxable amount (50%)</div>
+            <div class="rs-value" id="dtTaxable">—</div>
+          </div>
+          <div class="rs-stat">
+            <div class="rs-label">Estimated tax owing</div>
+            <div class="rs-value" id="dtTaxOwing">—</div>
+          </div>
+        </div>
+        <div class="deferral-note" id="dtDeferralNote">—</div>
+
+        <div class="considerations-legend" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">
+          <span>Also worth knowing:</span>
+        </div>
+        <div class="consideration-item level-info">
+          <div class="ci-title"><span class="ci-icon">ℹ️</span>60-month short-term resident rule</div>
+          <div class="ci-body">If you were resident in Canada for less than 60 months in the 10 years before departure,
+            property you owned before becoming a Canadian resident is generally exempt entirely — a common situation
+            for people who moved to Canada as adults and later left.</div>
+        </div>
+        <div class="consideration-item level-good">
+          <div class="ci-title"><span class="ci-icon">✅</span>Spousal rollover option</div>
+          <div class="ci-body">If your spouse or common-law partner remains a Canadian resident, capital property can
+            sometimes be transferred to them at cost base before you leave, deferring the gain until they eventually
+            sell it.</div>
+        </div>
+        <div class="consideration-item level-action">
+          <div class="ci-title"><span class="ci-icon">📋</span>Forms to know</div>
+          <div class="ci-body">T1161 (list of properties, required if total property exceeds $25,000), T1243 (deemed
+            disposition calculation), and T1244 (election to defer the tax) are filed with your final Canadian return
+            in your departure year.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool-section" id="claimingAgeSection">
+      <div class="tool-header">
+        <h2>📅 When Should You Claim CPP, OAS &amp; Social Security?</h2>
+        <p class="tool-sub">Claiming earlier means smaller checks for longer; delaying means bigger checks for fewer
+          years. This shows the trade-off using your own numbers — and remember, the Totalization Agreement helps you
+          qualify across both countries but doesn't change these per-country reduction and delay formulas.</p>
+      </div>
+
+      <div class="tool-card">
+        <div class="prefill-note"><span class="pn-icon">↺</span>Amounts below are pre-filled from your Government
+          Benefits inputs above (CPP/OAS assumed to be "at 65" amounts, Social Security assumed to be your "at full
+          retirement age 67" amount).</div>
+        <div class="grid3">
+          <div class="field">
+            <label>CPP amount at age 65 ($ CAD)</label>
+            <input type="number" id="claimCppBase" value="900" min="0" step="10">
+          </div>
+          <div class="field">
+            <label>OAS amount at age 65 ($ CAD)</label>
+            <input type="number" id="claimOasBase" value="334" min="0" step="10">
+          </div>
+          <div class="field">
+            <label>Social Security amount at full retirement age 67 ($ USD)</label>
+            <input type="number" id="claimSsBase" value="2000" min="0" step="10">
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <h3>Pick a claiming age for each</h3>
+        <div class="claim-grid">
+          <div class="claim-col">
+            <h4><span class="chip ca">CA</span> CPP (60-70)</h4>
+            <input type="range" id="claimCppAge" min="60" max="70" step="1" value="65" style="width:100%;accent-color:var(--harbor);">
+            <div class="slider-val" id="claimCppAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 65</div>
+            <div class="claim-amount" id="claimCppAmount">—</div>
+            <div class="claim-factor" id="claimCppFactor">—</div>
+          </div>
+          <div class="claim-col">
+            <h4><span class="chip ca">CA</span> OAS (65-70)</h4>
+            <input type="range" id="claimOasAge" min="65" max="70" step="1" value="65" style="width:100%;accent-color:var(--harbor);">
+            <div class="slider-val" id="claimOasAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 65</div>
+            <div class="claim-amount" id="claimOasAmount">—</div>
+            <div class="claim-factor" id="claimOasFactor">—</div>
+          </div>
+          <div class="claim-col">
+            <h4><span class="chip us">US</span> Social Security (62-70)</h4>
+            <input type="range" id="claimSsAge" min="62" max="70" step="1" value="67" style="width:100%;accent-color:var(--harbor);">
+            <div class="slider-val" id="claimSsAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 67</div>
+            <div class="claim-amount" id="claimSsAmount">—</div>
+            <div class="claim-factor" id="claimSsFactor">—</div>
+          </div>
+        </div>
+        <div class="field" style="max-width:280px;">
+          <label>Plan to age (life expectancy assumption)</label>
+          <input type="number" id="claimPlanToAge" value="90" min="70" max="105" step="1">
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <h3>Earliest vs. standard vs. latest vs. your choice</h3>
+        <div class="card-sub">Lifetime total assumes you live to the "plan to age" above — a longer life favors
+          delaying, a shorter one favors claiming early.</div>
+        <div id="claimStrategyTables"></div>
+        <div class="assumptions-note" id="claimBreakevenNote"></div>
+      </div>
+
+      <div class="tool-card">
+        <h3>Use these choices in your CoastFIRE plan</h3>
+        <div class="card-sub">This copies your chosen ages and adjusted amounts back into the Government Benefits
+          section above (using the latest of your three claiming ages as the single "benefits start age," since the
+          main calculator assumes one unified start age for simplicity).</div>
+        <div class="apply-row">
+          <button type="button" id="applyClaimingBtn">Apply to my CoastFIRE plan</button>
+          <span class="apply-feedback" id="applyClaimingFeedback">Applied — scroll up to see your updated results.</span>
+        </div>
+      </div>
+    </section>
+
     <details class="help-section" id="helpSection">
       <summary>Guide: How to use this tool &amp; interpret your numbers</summary>
       <div class="help-body">
@@ -1864,6 +2102,9 @@
         clearSavedInputs();
         syncSlidersFromFields();
         showBanner();
+        prefillDepartureAndClaimingTools();
+        renderDepartureTax();
+        renderClaimingTool();
       });
 
       // ---- Scenario presets ----
@@ -2726,6 +2967,9 @@
         showBanner();
         saveInputs();
         validateAndRender();
+        prefillDepartureAndClaimingTools();
+        renderDepartureTax();
+        renderClaimingTool();
         window.scrollTo({ top: $('calcForm').offsetTop - 20, behavior: 'smooth' });
       });
 
@@ -2751,12 +2995,178 @@
       let bannerDismissedBefore = false;
       try { bannerDismissedBefore = hasStorage && localStorage.getItem(BANNER_DISMISS_KEY) === '1'; } catch (e) { }
 
+      // ==================================================================
+      // Departure Tax Estimator
+      // ==================================================================
+      const DEFERRAL_TAX_THRESHOLD = 16500; // approx. federal tax owing (~$100k gain) before CRA requires security
+
+      function renderDepartureTax() {
+        const nonregGain = Math.max(0, num('dtNonregFmv') - num('dtNonregAcb'));
+        const otherGain = Math.max(0, num('dtOtherFmv') - num('dtOtherAcb'));
+        const totalGain = nonregGain + otherGain;
+        const taxable = totalGain * 0.5;
+        const rate = Math.max(0, Math.min(100, num('dtMarginalRate'))) / 100;
+        const taxOwing = taxable * rate;
+
+        $('dtGain').textContent = fmt(totalGain, 'CAD');
+        $('dtTaxable').textContent = fmt(taxable, 'CAD');
+        $('dtTaxOwing').textContent = fmt(taxOwing, 'CAD');
+
+        const note = $('dtDeferralNote');
+        if (taxOwing === 0) {
+          note.className = 'deferral-note auto';
+          note.textContent = 'No estimated gain, no estimated tax — nothing to defer.';
+        } else if (taxOwing < DEFERRAL_TAX_THRESHOLD) {
+          note.className = 'deferral-note auto';
+          note.textContent = `✅ Your estimated tax owing is under roughly $${DEFERRAL_TAX_THRESHOLD.toLocaleString()} CAD — you'd likely qualify for automatic deferral under subsection 220(4.5) by filing Form T1244, with no security required, until you actually sell.`;
+        } else {
+          note.className = 'deferral-note security';
+          note.textContent = `📋 Your estimated tax owing is above roughly $${DEFERRAL_TAX_THRESHOLD.toLocaleString()} CAD — you can still elect to defer under Form T1244, but the CRA will likely require you to post security to guarantee the debt.`;
+        }
+
+        const rrsp = num('rrspBal'), tfsa = num('tfsaBal');
+        $('departureExemptBox').innerHTML = `<strong>Excluded from departure tax:</strong> your RRSP
+          (${fmt(rrsp, 'CAD')}) and TFSA (${fmt(tfsa, 'CAD')}) from the calculator above — plus Canadian real estate,
+          CPP/QPP entitlements, employer pension rights, and personal-use property under $10,000. None of that is
+          included in the estimate below.`;
+      }
+
+      ['dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'dtMarginalRate'].forEach(id => {
+        $(id).addEventListener('input', renderDepartureTax);
+      });
+      // Keep the exclusion reassurance box in sync if the user edits RRSP/TFSA back in the main form
+      ['rrspBal', 'tfsaBal'].forEach(id => $(id).addEventListener('input', renderDepartureTax));
+
+      // ==================================================================
+      // CPP / OAS / Social Security Claiming-Age Optimizer
+      // ==================================================================
+      function cppFactor(age) {
+        if (age < 65) return 1 - 0.006 * (65 - age) * 12;
+        if (age > 65) return 1 + 0.007 * (age - 65) * 12;
+        return 1;
+      }
+      function oasFactor(age) {
+        if (age > 65) return 1 + 0.006 * (age - 65) * 12;
+        return 1;
+      }
+      function ssFactor(age) {
+        const FRA = 67;
+        if (age < FRA) {
+          const monthsEarly = (FRA - age) * 12;
+          const first36 = Math.min(monthsEarly, 36);
+          const extra = Math.max(0, monthsEarly - 36);
+          return 1 - (first36 * (5 / 9) / 100 + extra * (5 / 12) / 100);
+        }
+        if (age > FRA) return 1 + (age - FRA) * 12 * (2 / 3) / 100;
+        return 1;
+      }
+
+      function breakevenAge(ageEarly, amtEarly, ageLate, amtLate) {
+        if (amtLate <= amtEarly) return null;
+        return (amtLate * ageLate - amtEarly * ageEarly) / (amtLate - amtEarly);
+      }
+
+      function strategyTableHtml(label, baseAmount, factorFn, minAge, maxAge, chosenAge, planToAge, currency) {
+        const strategies = [
+          { name: 'Earliest possible', age: minAge },
+          { name: 'Standard age', age: (label === 'Social Security' ? 67 : 65) },
+          { name: 'Latest possible', age: maxAge },
+          { name: 'Your choice', age: chosenAge, highlight: true }
+        ];
+        // De-duplicate rows that land on the same age (e.g., chosen = standard)
+        const seen = new Set();
+        const rows = strategies.filter(s => {
+          const key = s.age + (s.highlight ? '-choice' : '');
+          if (seen.has(s.age) && !s.highlight) return true; // still show standard/earliest/latest even if equal, but mark choice separately
+          seen.add(s.age);
+          return true;
+        });
+        const rowsHtml = rows.map(s => {
+          const amt = baseAmount * factorFn(s.age);
+          const lifetime = amt * 12 * Math.max(0, planToAge - s.age);
+          return `<tr class="${s.highlight ? 'your-choice' : ''}">
+            <td>${s.name}</td><td>Age ${s.age}</td><td>${fmt(amt, currency)}/mo</td><td>${fmt(lifetime, currency)}</td>
+          </tr>`;
+        }).join('');
+        return `<h4 style="font-size:14px;margin:0 0 8px;">${label}</h4>
+          <table class="strategy-table">
+            <thead><tr><th>Strategy</th><th>Claim age</th><th>Monthly</th><th>Lifetime total to age ${planToAge}</th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>`;
+      }
+
+      function renderClaimingTool() {
+        const cppAge = parseInt($('claimCppAge').value, 10);
+        const oasAge = parseInt($('claimOasAge').value, 10);
+        const ssAge = parseInt($('claimSsAge').value, 10);
+        const planToAge = num('claimPlanToAge') || 90;
+
+        $('claimCppAgeVal').textContent = 'Age ' + cppAge;
+        $('claimOasAgeVal').textContent = 'Age ' + oasAge;
+        $('claimSsAgeVal').textContent = 'Age ' + ssAge;
+
+        const cppBase = num('claimCppBase'), oasBase = num('claimOasBase'), ssBase = num('claimSsBase');
+        const cppF = cppFactor(cppAge), oasF = oasFactor(oasAge), ssF = ssFactor(ssAge);
+        const cppAmt = cppBase * cppF, oasAmt = oasBase * oasF, ssAmt = ssBase * ssF;
+
+        $('claimCppAmount').textContent = fmt(cppAmt, 'CAD') + '/mo';
+        $('claimOasAmount').textContent = fmt(oasAmt, 'CAD') + '/mo';
+        $('claimSsAmount').textContent = fmt(ssAmt, 'USD') + '/mo';
+        $('claimCppFactor').textContent = (cppF >= 1 ? '+' : '') + Math.round((cppF - 1) * 100) + '% vs. age 65';
+        $('claimOasFactor').textContent = (oasF >= 1 ? '+' : '') + Math.round((oasF - 1) * 100) + '% vs. age 65';
+        $('claimSsFactor').textContent = (ssF >= 1 ? '+' : '') + Math.round((ssF - 1) * 100) + '% vs. age 67';
+
+        $('claimStrategyTables').innerHTML =
+          strategyTableHtml('CPP', cppBase, cppFactor, 60, 70, cppAge, planToAge, 'CAD') +
+          strategyTableHtml('OAS', oasBase, oasFactor, 65, 70, oasAge, planToAge, 'CAD') +
+          strategyTableHtml('Social Security', ssBase, ssFactor, 62, 70, ssAge, planToAge, 'USD');
+
+        const cppEarly = cppBase * cppFactor(60), cppLate = cppBase * cppFactor(70);
+        const cppBE = breakevenAge(60, cppEarly, 70, cppLate);
+        const ssEarly = ssBase * ssFactor(62), ssLate = ssBase * ssFactor(70);
+        const ssBE = breakevenAge(62, ssEarly, 70, ssLate);
+        let note = '';
+        if (cppBE) note += `If you delay CPP from 60 to 70, delaying comes out ahead once you live past about age ${Math.round(cppBE)}. `;
+        if (ssBE) note += `For Social Security, delaying from 62 to 70 comes out ahead once you live past about age ${Math.round(ssBE)}.`;
+        $('claimBreakevenNote').textContent = note || 'Adjust the sliders above to compare strategies.';
+      }
+
+      ['claimCppAge', 'claimOasAge', 'claimSsAge', 'claimCppBase', 'claimOasBase', 'claimSsBase', 'claimPlanToAge'].forEach(id => {
+        $(id).addEventListener('input', renderClaimingTool);
+      });
+
+      $('applyClaimingBtn').addEventListener('click', () => {
+        const cppAge = parseInt($('claimCppAge').value, 10);
+        const oasAge = parseInt($('claimOasAge').value, 10);
+        const ssAge = parseInt($('claimSsAge').value, 10);
+        $('cppMonthly').value = Math.round(num('claimCppBase') * cppFactor(cppAge));
+        $('oasMonthly').value = Math.round(num('claimOasBase') * oasFactor(oasAge));
+        $('ssMonthly').value = Math.round(num('claimSsBase') * ssFactor(ssAge));
+        $('benefitsStartAge').value = Math.max(cppAge, oasAge, ssAge);
+        saveInputs();
+        validateAndRender();
+        const fb = $('applyClaimingFeedback');
+        fb.style.opacity = 1;
+        setTimeout(() => { fb.style.opacity = 0; }, 3000);
+      });
+
+      // One-time prefill of the two new tools from the main calculator's current values
+      function prefillDepartureAndClaimingTools() {
+        $('dtNonregFmv').value = $('nonregCadBal').value;
+        $('claimCppBase').value = $('cppMonthly').value;
+        $('claimOasBase').value = $('oasMonthly').value;
+        $('claimSsBase').value = $('ssMonthly').value;
+      }
+
       // Restore inputs: a shared link (query params) takes priority over local autosave
       const loadedFromLink = applyQueryParams();
       if (loadedFromLink) { saveInputs(); } else { restoreInputs(); }
       $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
       updateOasHint();
       syncSlidersFromFields();
+      prefillDepartureAndClaimingTools();
+      renderDepartureTax();
+      renderClaimingTool();
       (function syncPresetActiveOnLoad() {
         const match = Object.entries(PRESETS).find(([, p]) => p.returnRate == num('returnRate') && p.inflationRate == num('inflationRate'));
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', match && b.dataset.preset === match[0]));
