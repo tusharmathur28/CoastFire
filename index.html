@@ -3028,7 +3028,8 @@
         drawIncomeStack(res);
       }
 
-      function doRender() {
+      function doRender(scrollToResults) {
+        if (scrollToResults === undefined) scrollToResults = true;
         const res = compute();
         lastRes = res;
         $('results').hidden = false;
@@ -3125,13 +3126,13 @@
       </tr>
     `).join('');
 
-        $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (scrollToResults) $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
 
-      function validateAndRender() {
+      function validateAndRender(scrollToResults) {
         const errors = validate();
         if (showErrors(errors)) return;
-        doRender();
+        doRender(scrollToResults);
       }
 
       $('calcForm').addEventListener('submit', e => {
@@ -3622,17 +3623,18 @@
         $('wizardContinueBtn').textContent = wizardStep === 4 ? 'Finish' : 'Continue';
       }
 
-      function showWizardStep(n) {
+      function showWizardStep(n, isInitial) {
         wizardStep = Math.max(1, Math.min(4, n));
         applyStepVisibility(wizardStep);
         if (wizardStep === 2) expandExtraAccounts();
         updateWizardChrome();
+        if (isInitial) return; // first paint: don't scroll or steal focus, just show step 1 where it sits
         $('wizardChrome').scrollIntoView({ behavior: 'smooth', block: 'start' });
         // Focus the first input/select of the newly-shown step for keyboard users
         const stepFields = document.querySelectorAll(`#calcForm [data-step="${wizardStep}"]`);
         for (const group of stepFields) {
           const firstField = group.matches('input, select') ? group : group.querySelector('input, select');
-          if (firstField) { firstField.focus(); break; }
+          if (firstField) { firstField.focus({ preventScroll: false }); break; }
         }
       }
 
@@ -3669,7 +3671,7 @@
         $('wizardChrome').classList.remove('checklist-mode');
         $('wizardNavRow').hidden = false;
         hideBanner();
-        showWizardStep(1);
+        showWizardStep(1, true);
       }
 
       $('wizardContinueBtn').addEventListener('click', () => {
@@ -3728,7 +3730,7 @@
         // Results stay hidden until the wizard is completed or skipped — no auto-render here.
       } else {
         if (loadedFromLink || hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
-        validateAndRender();
+        validateAndRender(false); // initial page load — show results in place, don't jump the page
       }
 
       // Fetch exchange rate on load
@@ -3771,7 +3773,7 @@
               hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)`;
               btnEl.textContent = 'Refresh live rate';
               saveInputs();
-              validateAndRender();
+              validateAndRender(!isInitialLoad);
             } else {
               hintEl.textContent = `Live rate available: 1 CAD = ${rate.toFixed(4)} USD.`;
               btnEl.textContent = 'Apply live';
@@ -3781,7 +3783,7 @@
             hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)`;
             btnEl.textContent = 'Refresh live rate';
             saveInputs();
-            validateAndRender();
+            validateAndRender(!isInitialLoad);
           }
         } catch (err) {
           console.error('Error fetching exchange rate:', err);
