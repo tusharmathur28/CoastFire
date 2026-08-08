@@ -587,6 +587,20 @@
     .result-headline .rh-icon { margin-right: 8px; }
     .result-headline.not-yet { border-left-color: var(--ink-soft); }
 
+    .tool-directory { margin-bottom: 28px; }
+    .tool-directory-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;
+    }
+    .tool-directory-card {
+      display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+      padding: 16px; text-decoration: none; color: var(--ink); transition: border-color .15s ease;
+    }
+    .tool-directory-card:hover { border-color: var(--harbor); }
+    .tool-directory-card .tdc-icon { font-size: 22px; margin-bottom: 8px; }
+    .tool-directory-card .tdc-title { font-weight: 700; font-size: 13.5px; margin-bottom: 4px; }
+    .tool-directory-card .tdc-sub { font-size: 12px; color: var(--ink-soft); line-height: 1.4; }
+    .tool-directory-card .tdc-arrow { color: var(--harbor); font-size: 12px; font-weight: 700; margin-top: 8px; display: block; }
+
     .chart-card {
       background: var(--surface);
       border: 1px solid var(--line);
@@ -672,6 +686,16 @@
       margin-top: 10px;
     }
     .considerations-legend + .consideration-item { margin-top: 0; }
+
+    .action-items-summary {
+      font-size: 14px; color: var(--ink-soft); margin-bottom: 18px;
+    }
+    .action-items-summary strong { color: var(--ink); }
+    .action-items-empty {
+      background: var(--good-soft); border-radius: 8px; padding: 16px 18px; color: var(--good); font-size: 13.5px;
+    }
+    .ci-body .ci-link { color: var(--harbor); font-weight: 600; text-decoration: none; }
+    .ci-body .ci-link:hover { text-decoration: underline; }
     .consideration-item.level-good { border-left-color: var(--good); }
     .consideration-item.level-warning { border-left-color: var(--warn); }
     .consideration-item.level-action { border-left-color: var(--gold); }
@@ -908,6 +932,20 @@
       padding: 8px 12px;
     }
     .sample-banner .sb-dismiss:hover { background: transparent; border-color: var(--ink-soft); color: var(--ink); }
+
+    .scenarios-panel {
+      background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+      padding: 16px 18px; margin: 20px 0; display: flex; flex-direction: column; gap: 10px;
+    }
+    .scenarios-panel h4 { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .scenarios-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .scenarios-row select, .scenarios-row input[type="text"] {
+      flex: 1; min-width: 180px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px;
+      background: var(--surface); color: var(--ink); font-size: 13px; font-family: 'Inter', sans-serif;
+    }
+    .scenarios-row button { flex: none; }
+    .scenario-feedback { font-size: 12.5px; color: var(--good); font-weight: 600; opacity: 0; transition: opacity .3s ease; }
+    .scenarios-panel .sp-note { font-size: 11.5px; color: var(--ink-soft); }
 
     .not-sure-hint {
       font-size: 12px; color: var(--ink-soft); margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -1405,6 +1443,7 @@
       <nav class="page-nav">
         <a href="#calcForm">Calculator</a>
         <a href="#results">Results</a>
+        <a href="#actionItemsSection">Action Items</a>
         <a href="#departureTaxSection">Departure Tax</a>
         <a href="#claimingAgeSection">Benefit Timing</a>
         <a href="#movingBackSection">Moving Back to Canada</a>
@@ -1436,6 +1475,22 @@
       </div>
       <button type="button" id="loadExampleBtn">Reload example</button>
       <button type="button" class="sb-dismiss" id="dismissSampleBtn">Got it</button>
+    </div>
+
+    <div class="scenarios-panel" id="scenariosPanel">
+      <h4>💾 My Scenarios</h4>
+      <div class="scenarios-row">
+        <select id="scenariosSelect"><option value="">— Select a saved scenario —</option></select>
+        <button type="button" class="ghost" id="loadScenarioBtn">Load</button>
+        <button type="button" class="ghost" id="deleteScenarioBtn">Delete</button>
+      </div>
+      <div class="scenarios-row">
+        <input type="text" id="scenarioNameInput" placeholder="Name this scenario, e.g. &quot;Retire at 55&quot;" maxlength="40">
+        <button type="button" class="primary" id="saveScenarioBtn">Save current as scenario</button>
+      </div>
+      <div class="sp-note">Save as many scenarios as you like — e.g. "Retire at 55" vs "Retire at 60" — then load
+        either one any time to compare. Saved in this browser only.</div>
+      <span class="scenario-feedback" id="scenarioFeedback">Saved!</span>
     </div>
 
     <form id="calcForm">
@@ -1811,6 +1866,35 @@
         exchange rate you set.</p>
 
       <div class="result-headline" id="resultHeadline"></div>
+
+      <div class="tool-directory">
+        <div class="tool-directory-grid">
+          <a class="tool-directory-card" href="#actionItemsSection">
+            <div class="tdc-icon">✅</div>
+            <div class="tdc-title">Your Action Items</div>
+            <div class="tdc-sub">A prioritized checklist of deadlines and to-dos based on what you've entered.</div>
+            <span class="tdc-arrow">Jump to checklist →</span>
+          </a>
+          <a class="tool-directory-card" href="#departureTaxSection">
+            <div class="tdc-icon">🛫</div>
+            <div class="tdc-title">Departure Tax Estimator</div>
+            <div class="tdc-sub">Leaving Canada? Estimate the one-time deemed-disposition tax bill.</div>
+            <span class="tdc-arrow">Try it →</span>
+          </a>
+          <a class="tool-directory-card" href="#claimingAgeSection">
+            <div class="tdc-icon">📅</div>
+            <div class="tdc-title">Benefit Claiming-Age Optimizer</div>
+            <div class="tdc-sub">Compare claiming CPP, OAS &amp; Social Security early vs. late.</div>
+            <span class="tdc-arrow">Try it →</span>
+          </a>
+          <a class="tool-directory-card" href="#movingBackSection">
+            <div class="tdc-icon">🍁</div>
+            <div class="tdc-title">Moving Back to Canada</div>
+            <div class="tdc-sub">Re-entering Canada? See what happens to each account and whether exit-tax rules apply.</div>
+            <span class="tdc-arrow">Try it →</span>
+          </a>
+        </div>
+      </div>
 
       <div class="stamp-row">
         <div class="stat-cards">
@@ -2357,6 +2441,19 @@
       </div>
     </section>
 
+    <section class="tool-section" id="actionItemsSection">
+      <div class="tool-header">
+        <h2>✅ Your Action Items</h2>
+        <p class="tool-sub">A prioritized checklist built from what you've actually entered across every tool on
+          this site — deadlines, elections, and forms worth putting on your radar. Not a substitute for professional
+          advice, just a way to keep track of what to bring up.</p>
+      </div>
+      <div class="tool-card">
+        <div class="action-items-summary" id="actionItemsSummary"></div>
+        <div id="actionItemsList"></div>
+      </div>
+    </section>
+
     <details class="help-section" id="helpSection">
       <summary>Guide: How to use this tool &amp; interpret your numbers</summary>
       <div class="help-body">
@@ -2448,6 +2545,7 @@
         renderDepartureTax();
         renderClaimingTool();
         renderMovingBack();
+        renderActionItems();
       });
 
       // ---- Scenario presets ----
@@ -2605,6 +2703,88 @@
         if (note) note.textContent = "Note: this preview can't save your inputs — they'll persist once you host this page yourself (e.g. on Netlify).";
       }
       FIELD_IDS.forEach(id => { const el = $(id); if (el) el.addEventListener('input', saveInputs); });
+
+      // ==================================================================
+      // Multiple named scenarios (separate from the single autosave slot)
+      // ==================================================================
+      const SCENARIOS_KEY = 'ccfire:scenarios';
+      function loadScenariosStore() {
+        if (!hasStorage) return {};
+        try {
+          const raw = localStorage.getItem(SCENARIOS_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+      function saveScenariosStore(store) {
+        if (!hasStorage) return;
+        try { localStorage.setItem(SCENARIOS_KEY, JSON.stringify(store)); } catch (e) { }
+      }
+      function refreshScenariosSelect() {
+        const store = loadScenariosStore();
+        const select = $('scenariosSelect');
+        const names = Object.keys(store).sort((a, b) => a.localeCompare(b));
+        const prevValue = select.value;
+        select.innerHTML = '<option value="">— Select a saved scenario —</option>' +
+          names.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n}</option>`).join('');
+        if (names.includes(prevValue)) select.value = prevValue;
+      }
+      function captureCurrentScenario() {
+        const snap = {};
+        FIELD_IDS.forEach(id => { const el = $(id); if (el) snap[id] = el.value; });
+        return snap;
+      }
+      function applyScenario(snap) {
+        FIELD_IDS.forEach(id => { const el = $(id); if (el && snap[id] !== undefined) el.value = snap[id]; });
+      }
+      function showScenarioFeedback(msg) {
+        const el = $('scenarioFeedback');
+        el.textContent = msg;
+        el.style.opacity = 1;
+        setTimeout(() => { el.style.opacity = 0; }, 3000);
+      }
+
+      $('saveScenarioBtn').addEventListener('click', () => {
+        const name = $('scenarioNameInput').value.trim();
+        if (!name) { showScenarioFeedback('Give your scenario a name first.'); return; }
+        const store = loadScenariosStore();
+        store[name] = captureCurrentScenario();
+        saveScenariosStore(store);
+        refreshScenariosSelect();
+        $('scenariosSelect').value = name;
+        $('scenarioNameInput').value = '';
+        showScenarioFeedback(`Saved "${name}".`);
+      });
+
+      $('loadScenarioBtn').addEventListener('click', () => {
+        const name = $('scenariosSelect').value;
+        if (!name) { showScenarioFeedback('Select a scenario to load first.'); return; }
+        const store = loadScenariosStore();
+        if (!store[name]) return;
+        applyScenario(store[name]);
+        $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+        updateOasHint();
+        syncSlidersFromFields();
+        prefillDepartureAndClaimingTools();
+        renderDepartureTax();
+        renderClaimingTool();
+        renderMovingBack();
+        renderActionItems();
+        saveInputs();
+        validateAndRender();
+        showScenarioFeedback(`Loaded "${name}".`);
+      });
+
+      $('deleteScenarioBtn').addEventListener('click', () => {
+        const name = $('scenariosSelect').value;
+        if (!name) { showScenarioFeedback('Select a scenario to delete first.'); return; }
+        const store = loadScenariosStore();
+        delete store[name];
+        saveScenariosStore(store);
+        refreshScenariosSelect();
+        showScenarioFeedback(`Deleted "${name}".`);
+      });
+
+      refreshScenariosSelect();
 
       function convertToReport(cadAmt, usdAmt, reportCurrency, rate) {
         if (rate <= 0) rate = 0.0001;
@@ -3168,6 +3348,7 @@
         $('results').hidden = false;
         renderDepartureTax();
         renderMovingBack();
+        renderActionItems();
 
         const first = res.rows[0];
         $('statCurrent').textContent = fmt(first.combined, res.reportCurrency);
@@ -3353,6 +3534,7 @@
         renderDepartureTax();
         renderClaimingTool();
         renderMovingBack();
+        renderActionItems();
         window.scrollTo({ top: $('calcForm').offsetTop - 20, behavior: 'smooth' });
       });
 
@@ -3517,6 +3699,46 @@
         doc.line(marginX, y, pageW - marginX, y);
         y += 16;
         tableRow('Combined portfolio (' + res.reportCurrency + ')', fmt(first.combined, res.reportCurrency), { bold: true });
+        y += 10;
+
+        // ---- Departure Tax (only if there's a meaningful gain on the books) ----
+        const dtGain = Math.max(0, num('dtNonregFmv') - num('dtNonregAcb')) + Math.max(0, num('dtOtherFmv') - num('dtOtherAcb'));
+        if (dtGain > 0) {
+          const dtTaxable = dtGain * 0.5;
+          const dtRate = Math.max(0, Math.min(100, num('dtMarginalRate'))) / 100;
+          const dtOwing = dtTaxable * dtRate;
+          sectionHeader('Departure Tax Estimate (if leaving Canada)');
+          bodyLine('Estimated capital gain', fmt(dtGain, 'CAD'));
+          bodyLine('Taxable amount (50% inclusion)', fmt(dtTaxable, 'CAD'));
+          bodyLine('Estimated tax owing', fmt(dtOwing, 'CAD'));
+          bodyLine('Deferral likely available (Form T1244)', dtOwing < DEFERRAL_TAX_THRESHOLD ? 'Yes, without security' : 'Yes, may require posted security');
+          y += 8;
+        }
+
+        // ---- Claiming-age choices (only if benefit amounts were entered) ----
+        const claimCppBase = num('claimCppBase'), claimOasBase = num('claimOasBase'), claimSsBase = num('claimSsBase');
+        if (claimCppBase > 0 || claimOasBase > 0 || claimSsBase > 0) {
+          sectionHeader('Benefit Claiming-Age Choices');
+          if (claimCppBase > 0) bodyLine('CPP, claiming at age ' + $('claimCppAge').value, fmt(claimCppBase * cppFactor(parseInt($('claimCppAge').value, 10)), 'CAD') + '/mo');
+          if (claimOasBase > 0) bodyLine('OAS, claiming at age ' + $('claimOasAge').value, fmt(claimOasBase * oasFactor(parseInt($('claimOasAge').value, 10)), 'CAD') + '/mo');
+          if (claimSsBase > 0) bodyLine('Social Security, claiming at age ' + $('claimSsAge').value, fmt(claimSsBase * ssFactor(parseInt($('claimSsAge').value, 10)), 'USD') + '/mo');
+          y += 8;
+        }
+
+        // ---- Moving Back to Canada (only if there's something relevant to say) ----
+        const mbIsCitizen = $('mbIsCitizen').value === 'yes';
+        const mbHasGreenCard = $('mbHasGreenCard').value === 'yes';
+        if (mbIsCitizen || mbHasGreenCard || first.rrsp > 0 || first.tfsa > 0 || first.roth > 0) {
+          sectionHeader('Moving Back to Canada — Key Flags');
+          bodyLine('US citizen', mbIsCitizen ? 'Yes — US filing continues for life' : 'No');
+          if (mbHasGreenCard) {
+            const gcYears = num('mbGreenCardYears');
+            bodyLine('Green Card, years held (of 15)', String(gcYears) + (gcYears >= 8 ? ' — past Long-Term Resident threshold' : ''));
+          }
+          if (first.tfsa > 0) bodyLine('TFSA note', 'Room does not accrue while non-resident');
+          if (first.roth > 0) bodyLine('Roth IRA note', 'Needs one-time treaty election if returning to Canada');
+          y += 8;
+        }
 
         addFooter();
         doc.save('coastfire-summary.pdf');
@@ -3801,6 +4023,112 @@
       });
 
       // ==================================================================
+      // Action Items — aggregated across every tool, computed fresh from source data
+      // ==================================================================
+      function renderActionItems() {
+        const items = []; // { level, icon, title, body, anchor, anchorLabel }
+        const add = (level, icon, title, body, anchor, anchorLabel) => items.push({ level, icon, title, body, anchor, anchorLabel });
+
+        const tfsa = num('tfsaBal'), fhsa = num('fhsaBal'), resp = num('respBal'), rrsp = num('rrspBal');
+        const nonregCad = num('nonregCadBal'), roth = num('rothBal');
+        const cpp = num('cppMonthly'), oas = num('oasMonthly'), ss = num('ssMonthly');
+        const dtGain = Math.max(0, num('dtNonregFmv') - num('dtNonregAcb')) + Math.max(0, num('dtOtherFmv') - num('dtOtherAcb'));
+        const totalCadProperty = num('dtNonregFmv') + num('dtOtherFmv');
+        const isCitizen = $('mbIsCitizen').value === 'yes';
+        const hasGreenCard = $('mbHasGreenCard').value === 'yes';
+        const gcYears = num('mbGreenCardYears');
+
+        if (tfsa > 0) {
+          add('warning', '⚠️', 'Confirm your TFSA\'s US tax treatment',
+            `Your TFSA (${fmt(tfsa, 'CAD')}) isn't recognized as tax-free by the IRS — growth can be taxable
+            annually and may need extra reporting. Worth a direct conversation with your accountant.`,
+            '#considerationsSection', 'See Cross-Border Notes');
+        }
+        if (fhsa > 0) {
+          add('warning', '⚠️', 'FHSA has no IRS guidance yet',
+            `Your FHSA (${fmt(fhsa, 'CAD')}) is new enough that the IRS hasn't issued formal guidance — treat its
+            US tax treatment as unresolved until you've discussed it with a cross-border specialist.`,
+            '#considerationsSection', 'See Cross-Border Notes');
+        }
+        if (resp > 0) {
+          add('warning', '⚠️', 'RESP may require foreign trust reporting',
+            `Your RESP (${fmt(resp, 'CAD')}) isn't tax-deferred to the IRS and can trigger Form 3520/3520-A
+            reporting — confirm your filing requirements.`,
+            '#considerationsSection', 'See Cross-Border Notes');
+        }
+        if (rrsp + tfsa + nonregCad + fhsa + resp > 0) {
+          add('action', '📋', 'Check your FBAR / FATCA filing requirement',
+            `If your combined Canadian financial accounts exceed $10,000 USD at any point in the year, you likely
+            need to file an FBAR (FinCEN 114), and possibly Form 8938 — separate from your regular tax return.`,
+            '#considerationsSection', 'See Cross-Border Notes');
+        }
+        if (dtGain > 0) {
+          add('action', '📋', 'You have an estimated departure-tax gain on the books',
+            `Based on what you entered, you have roughly ${fmt(dtGain, 'CAD')} in unrealized capital gains that
+            would be subject to departure tax if you left Canada. Consider whether filing Form T1244 to defer the
+            tax makes sense for you.`,
+            '#departureTaxSection', 'Open Departure Tax Estimator');
+        }
+        if (totalCadProperty > 25000) {
+          add('action', '📋', 'You may need to file Form T1161',
+            `Your total property subject to departure tax (${fmt(totalCadProperty, 'CAD')}) is over the $25,000 CAD
+            threshold that requires listing everything on Form T1161 when you leave Canada.`,
+            '#departureTaxSection', 'Open Departure Tax Estimator');
+        }
+        if (cpp > 0 || oas > 0 || ss > 0) {
+          add('info', 'ℹ️', 'Review your government-benefit claiming age',
+            `You've entered CPP, OAS, or Social Security amounts — when you claim each one can meaningfully change
+            your lifetime total. Worth a few minutes in the claiming-age comparison.`,
+            '#claimingAgeSection', 'Open Benefit Timing Optimizer');
+        }
+        if (isCitizen) {
+          add('action', '📋', 'Your US filing obligations don\'t end when you leave',
+            `As a US citizen, you'll keep filing US tax returns for life, regardless of where you live — that only
+            changes if you formally renounce citizenship, a separate and much bigger decision.`,
+            '#movingBackSection', 'Open Moving Back to Canada');
+        }
+        if (hasGreenCard && gcYears >= 8) {
+          add('warning', '⚠️', 'Review potential exit-tax exposure',
+            `You've held Green Card status for ${gcYears} of the last 15 years — past the threshold where exit-tax
+            rules can apply if you formally terminate it. Worth reviewing before you make that decision.`,
+            '#movingBackSection', 'Open Moving Back to Canada');
+        }
+        if (roth > 0) {
+          add('info', 'ℹ️', 'Remember the Roth IRA election if you move back to Canada',
+            `Your Roth IRA (${fmt(roth, 'USD')}) isn't automatically protected from Canadian tax the way a
+            Traditional IRA is. If you ever move back to Canada, you'll need a one-time treaty election filed by a
+            specific deadline to keep it tax-free.`,
+            '#movingBackSection', 'Open Moving Back to Canada');
+        }
+
+        const order = { warning: 0, action: 1, info: 2, good: 3 };
+        items.sort((a, b) => order[a.level] - order[b.level]);
+
+        if (items.length === 0) {
+          $('actionItemsSummary').textContent = '';
+          $('actionItemsList').innerHTML = `<div class="action-items-empty">Nothing urgent yet — as you fill in
+            accounts, government benefits, and the other tools, relevant action items will show up here
+            automatically.</div>`;
+          return;
+        }
+
+        const urgent = items.filter(i => i.level === 'warning' || i.level === 'action').length;
+        $('actionItemsSummary').innerHTML = `<strong>${items.length} item${items.length === 1 ? '' : 's'}</strong>
+          based on what you've entered${urgent > 0 ? `, including <strong>${urgent}</strong> worth prioritizing` : ''}.`;
+        $('actionItemsList').innerHTML = items.map(it =>
+          ciHtml(it.level, it.icon, it.title, it.body + (it.anchor ? ` <a class="ci-link" href="${it.anchor}">${it.anchorLabel} →</a>` : ''))
+        ).join('');
+      }
+
+      [
+        'tfsaBal', 'fhsaBal', 'respBal', 'rrspBal', 'nonregCadBal', 'rothBal', 'cppMonthly', 'oasMonthly', 'ssMonthly',
+        'dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'mbIsCitizen', 'mbHasGreenCard', 'mbGreenCardYears'
+      ].forEach(id => {
+        $(id).addEventListener('input', renderActionItems);
+        $(id).addEventListener('change', renderActionItems);
+      });
+
+      // ==================================================================
       // Guided onboarding wizard
       // ==================================================================
       const WIZARD_SEEN_KEY = 'ccfire:wizardSeen';
@@ -3952,6 +4280,7 @@
       renderDepartureTax();
       renderClaimingTool();
       renderMovingBack();
+        renderActionItems();
       (function syncPresetActiveOnLoad() {
         const match = Object.entries(PRESETS).find(([, p]) => p.returnRate == num('returnRate') && p.inflationRate == num('inflationRate'));
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', match && b.dataset.preset === match[0]));
