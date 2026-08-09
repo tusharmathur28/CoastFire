@@ -947,6 +947,19 @@
     .scenario-feedback { font-size: 12.5px; color: var(--good); font-weight: 600; opacity: 0; transition: opacity .3s ease; }
     .scenarios-panel .sp-note { font-size: 11.5px; color: var(--ink-soft); }
 
+    .back-to-top {
+      position: fixed; bottom: 22px; right: 22px; z-index: 30;
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--ink); color: var(--paper); border: none;
+      font-size: 18px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transform: translateY(8px);
+      transition: opacity .2s ease, transform .2s ease, visibility .2s;
+    }
+    .back-to-top.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    .back-to-top:hover { background: var(--harbor); }
+    @media print { .back-to-top { display: none !important; } }
+
     .not-sure-hint {
       font-size: 12px; color: var(--ink-soft); margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     }
@@ -1417,7 +1430,9 @@
     body.wizard-mode legend.section-title,
     body.wizard-mode summary.section-title,
     body.wizard-mode .section-explainer,
-    body.wizard-mode .sample-banner {
+    body.wizard-mode .sample-banner,
+    body.wizard-mode .scenarios-panel,
+    body.wizard-mode .tool-section {
       display: none !important;
     }
   </style>
@@ -1532,16 +1547,16 @@
           and how often it gets topped up.</div>
         <div class="grid3" data-step="1">
           <div class="field">
-            <label>Current age <span class="info" title="Your current age in years.">?</span></label>
+            <label for="currentAge">Current age <span class="info" title="Your current age in years.">?</span></label>
             <input type="number" id="currentAge" value="34" min="16" max="80" step="1" required>
           </div>
           <div class="field">
-            <label>Retirement age <span class="info"
+            <label for="retireAge">Retirement age <span class="info"
                 title="The age you plan to fully retire and begin drawing on your investments.">?</span></label>
             <input type="number" id="retireAge" value="60" min="17" max="90" step="1" required>
           </div>
           <div class="field">
-            <label>Contribution frequency <span class="info"
+            <label for="contribFreq">Contribution frequency <span class="info"
                 title="How often you add to each account below. Applies to all accounts.">?</span></label>
             <select id="contribFreq">
               <option value="monthly" selected>Monthly</option>
@@ -1563,36 +1578,36 @@
             </div>
 
             <div class="field">
-              <label>RRSP balance ($ CAD) <span class="tag treaty">Treaty-protected</span></label>
+              <label for="rrspBal">RRSP balance ($ CAD) <span class="tag treaty">Treaty-protected</span></label>
               <div class="label-plain">Canada's employer-style retirement account — similar to a 401(k)</div>
               <input type="number" id="rrspBal" value="60000" min="0" step="100">
             </div>
             <div class="field">
-              <label>RRSP contribution ($ CAD)</label>
+              <label for="rrspContrib">RRSP contribution ($ CAD)</label>
               <input type="number" id="rrspContrib" value="400" min="0" step="10">
             </div>
             <div class="field employer-match-field">
-              <label>+ Employer match ($ CAD, if any)</label>
+              <label for="rrspMatch">+ Employer match ($ CAD, if any)</label>
               <input type="number" id="rrspMatch" value="0" min="0" step="10">
             </div>
 
             <div class="field">
-              <label>TFSA balance ($ CAD) <span class="tag watch">Not tax-free to IRS</span></label>
+              <label for="tfsaBal">TFSA balance ($ CAD) <span class="tag watch">Not tax-free to IRS</span></label>
               <div class="label-plain">Canada's flexible tax-free savings account — just not tax-free to the IRS</div>
               <input type="number" id="tfsaBal" value="25000" min="0" step="100">
             </div>
             <div class="field">
-              <label>TFSA contribution ($ CAD)</label>
+              <label for="tfsaContrib">TFSA contribution ($ CAD)</label>
               <input type="number" id="tfsaContrib" value="200" min="0" step="10">
             </div>
 
             <div class="field">
-              <label>Non-registered (CAD) balance ($)</label>
+              <label for="nonregCadBal">Non-registered (CAD) balance ($)</label>
               <div class="label-plain">A regular taxable investment account — no special tax treatment</div>
               <input type="number" id="nonregCadBal" value="10000" min="0" step="100">
             </div>
             <div class="field">
-              <label>Non-registered (CAD) contribution ($)</label>
+              <label for="nonregCadContrib">Non-registered (CAD) contribution ($)</label>
               <input type="number" id="nonregCadContrib" value="100" min="0" step="10">
             </div>
           </div>
@@ -1603,46 +1618,46 @@
             </div>
 
             <div class="field">
-              <label>401(k) / 403(b) balance ($ USD)</label>
+              <label for="k401Bal">401(k) / 403(b) balance ($ USD)</label>
               <div class="label-plain">Your US employer-sponsored retirement plan</div>
               <input type="number" id="k401Bal" value="45000" min="0" step="100">
             </div>
             <div class="field">
-              <label>401(k) / 403(b) contribution ($ USD)</label>
+              <label for="k401Contrib">401(k) / 403(b) contribution ($ USD)</label>
               <input type="number" id="k401Contrib" value="500" min="0" step="10">
             </div>
             <div class="field employer-match-field">
-              <label>+ Employer match ($ USD, if any)</label>
+              <label for="k401Match">+ Employer match ($ USD, if any)</label>
               <input type="number" id="k401Match" value="0" min="0" step="10">
             </div>
 
             <div class="field">
-              <label>Traditional / Rollover IRA balance ($ USD)</label>
+              <label for="iraBal">Traditional / Rollover IRA balance ($ USD)</label>
               <div class="label-plain">A US tax-deferred retirement account you contribute to yourself</div>
               <input type="number" id="iraBal" value="8000" min="0" step="100">
             </div>
             <div class="field">
-              <label>Traditional IRA contribution ($ USD)</label>
+              <label for="iraContrib">Traditional IRA contribution ($ USD)</label>
               <input type="number" id="iraContrib" value="50" min="0" step="10">
             </div>
 
             <div class="field">
-              <label>Roth IRA balance ($ USD)</label>
+              <label for="rothBal">Roth IRA balance ($ USD)</label>
               <div class="label-plain">Funded with after-tax dollars — growth and withdrawals are generally tax-free</div>
               <input type="number" id="rothBal" value="12000" min="0" step="100">
             </div>
             <div class="field">
-              <label>Roth IRA contribution ($ USD)</label>
+              <label for="rothContrib">Roth IRA contribution ($ USD)</label>
               <input type="number" id="rothContrib" value="150" min="0" step="10">
             </div>
 
             <div class="field">
-              <label>Taxable brokerage balance ($ USD)</label>
+              <label for="taxableUsdBal">Taxable brokerage balance ($ USD)</label>
               <div class="label-plain">A regular taxable investment account — no special tax treatment</div>
               <input type="number" id="taxableUsdBal" value="15000" min="0" step="100">
             </div>
             <div class="field">
-              <label>Taxable brokerage contribution ($ USD)</label>
+              <label for="taxableUsdContrib">Taxable brokerage contribution ($ USD)</label>
               <input type="number" id="taxableUsdContrib" value="200" min="0" step="10">
             </div>
           </div>
@@ -1655,37 +1670,37 @@
         <div class="grid2 border-crossing extra-accounts-body" id="extraAccountsBody" data-step="2" hidden>
           <div class="country-col left">
             <div class="field">
-              <label>FHSA balance ($ CAD) <span class="tag uncertain">Uncertain US treatment</span></label>
+              <label for="fhsaBal">FHSA balance ($ CAD) <span class="tag uncertain">Uncertain US treatment</span></label>
               <div class="label-plain">Canada's First Home Savings Account — the IRS has issued no guidance yet; many
                 cross-border preparers treat it cautiously, similar to (or more uncertain than) a TFSA.</div>
               <input type="number" id="fhsaBal" value="0" min="0" step="100">
             </div>
             <div class="field">
-              <label>FHSA contribution ($ CAD)</label>
+              <label for="fhsaContrib">FHSA contribution ($ CAD)</label>
               <input type="number" id="fhsaContrib" value="0" min="0" step="10">
             </div>
 
             <div class="field">
-              <label>RESP balance ($ CAD) <span class="tag watch">Not tax-free to IRS</span></label>
+              <label for="respBal">RESP balance ($ CAD) <span class="tag watch">Not tax-free to IRS</span></label>
               <div class="label-plain">Education savings account with government matching (CESG) — like the TFSA,
                 not recognized as tax-deferred by the IRS and can carry foreign trust reporting exposure.</div>
               <input type="number" id="respBal" value="0" min="0" step="100">
             </div>
             <div class="field">
-              <label>RESP contribution ($ CAD)</label>
+              <label for="respContrib">RESP contribution ($ CAD)</label>
               <input type="number" id="respContrib" value="0" min="0" step="10">
             </div>
           </div>
 
           <div class="country-col right">
             <div class="field">
-              <label>HSA balance ($ USD) <span class="tag good-tag">No cross-border issue</span></label>
+              <label for="hsaBal">HSA balance ($ USD) <span class="tag good-tag">No cross-border issue</span></label>
               <div class="label-plain">US-only triple-tax-advantaged medical savings account — no treaty or reporting
                 complication, since it isn't a foreign account.</div>
               <input type="number" id="hsaBal" value="0" min="0" step="100">
             </div>
             <div class="field">
-              <label>HSA contribution ($ USD) <span class="info"
+              <label for="hsaContrib">HSA contribution ($ USD) <span class="info"
                   title="2026 IRS limits: $4,400/year self-only coverage, $8,750/year family coverage, plus a $1,000 catch-up at age 55+.">?</span></label>
               <input type="number" id="hsaContrib" value="0" min="0" step="10">
             </div>
@@ -1706,7 +1721,7 @@
         </div>
         <div class="grid3">
           <div class="field" data-step="3">
-            <label>Exchange rate <span class="info"
+            <label for="exchangeRate">Exchange rate <span class="info"
                 title="Used only to convert your combined totals — each account keeps growing in its own currency underneath.">?</span></label>
             <div class="label-plain">How many US dollars one Canadian dollar buys right now</div>
             <input type="number" id="exchangeRate" value="0.73" min="0.01" step="0.01">
@@ -1719,7 +1734,7 @@
             </div>
           </div>
           <div class="field" data-step="1">
-            <label>Report combined totals in</label>
+            <label for="reportCurrency">Report combined totals in</label>
             <div class="label-plain">Which currency you'd like your big-picture numbers shown in</div>
             <select id="reportCurrency">
               <option value="USD" selected>USD</option>
@@ -1727,7 +1742,7 @@
             </select>
           </div>
           <div class="field" data-step="3">
-            <label>Stop contributions at CoastFIRE?</label>
+            <label for="stopAtCoast">Stop contributions at CoastFIRE?</label>
             <div class="label-plain">Once you hit your number, should we assume you stop actively saving?</div>
             <select id="stopAtCoast">
               <option value="no" selected>No</option>
@@ -1735,18 +1750,18 @@
             </select>
           </div>
           <div class="field" data-step="3">
-            <label>Expected annual investment return (%)</label>
+            <label for="returnRate">Expected annual investment return (%)</label>
             <input type="number" id="returnRate" value="7" min="0" step="0.1">
             <div class="typical-range">Not sure? A diversified stock/bond portfolio has historically averaged
               roughly 5–8% — the presets above pick reasonable low/mid/high values for you.</div>
           </div>
           <div class="field" data-step="3">
-            <label>Expected annual inflation (%)</label>
+            <label for="inflationRate">Expected annual inflation (%)</label>
             <input type="number" id="inflationRate" value="2.5" min="0" step="0.1">
             <div class="typical-range">Not sure? 2–3% matches the long-run average for both Canada and the US.</div>
           </div>
           <div class="field" data-step="3">
-            <label>Annual withdrawal rate (%)</label>
+            <label for="withdrawalRate">Annual withdrawal rate (%)</label>
             <input type="number" id="withdrawalRate" value="4" min="0.5" step="0.1">
             <div class="typical-range">Not sure? 4% is the classic "safe withdrawal rate" rule of thumb — how much
               of your portfolio you draw down each year in retirement.</div>
@@ -1762,7 +1777,7 @@
           automatically adjust this for inflation between now and your retirement date.</div>
         <div class="grid3" data-step="1">
           <div class="field">
-            <label>Monthly expenses in retirement (<span id="expenseCurrencyLabel">USD</span>, today's dollars)</label>
+            <label for="monthlyExpenses">Monthly expenses in retirement (<span id="expenseCurrencyLabel">USD</span>, today's dollars)</label>
             <input type="number" id="monthlyExpenses" value="5000" min="0" step="50">
           </div>
         </div>
@@ -1783,7 +1798,7 @@
               </div>
 
               <div class="field">
-                <label>Expected monthly CPP ($ CAD) <span class="info"
+                <label for="cppMonthly">Expected monthly CPP ($ CAD) <span class="info"
                     title="2026 max at age 65 is about $1,507.65/mo; the average new beneficiary gets about $925/mo. Based on your actual contribution history.">?</span></label>
                 <input type="number" id="cppMonthly" value="900" min="0" step="10">
                 <div class="not-sure-hint">Not sure? The average new CPP recipient gets about $925/mo — check your real
@@ -1794,7 +1809,7 @@
 
               <div class="helper-row">
                 <div class="field">
-                  <label>Years of Canadian residency since age 18 <span class="info"
+                  <label for="oasYears">Years of Canadian residency since age 18 <span class="info"
                       title="OAS pays a full pension after 40 years of Canadian residency since 18. Fewer years means a prorated (1/40 per year) amount. Living in the US, you generally need at least 20 years to receive OAS abroad — the Canada-US Totalization Agreement lets US residency count toward that 20-year threshold, though it doesn't increase the payment itself.">?</span></label>
                   <input type="number" id="oasYears" value="18" min="0" max="40" step="1">
                 </div>
@@ -1804,7 +1819,7 @@
                 (18/40 × current max). Click "Estimate my OAS" to fill this in — then adjust as needed.</div>
 
               <div class="field">
-                <label>Expected monthly OAS ($ CAD) <span class="tag watch">Income-tested</span></label>
+                <label for="oasMonthly">Expected monthly OAS ($ CAD) <span class="tag watch">Income-tested</span></label>
                 <input type="number" id="oasMonthly" value="334" min="0" step="10">
               </div>
             </div>
@@ -1815,7 +1830,7 @@
               </div>
 
               <div class="field">
-                <label>Expected monthly Social Security ($ USD) <span class="info"
+                <label for="ssMonthly">Expected monthly Social Security ($ USD) <span class="info"
                     title="2026 average retirement benefit is about $2,071-2,083/mo. Max at full retirement age (67) is about $4,152/mo, or $5,181/mo if you delay to 70. Since Jan 2025, WEP/GPO no longer reduce this for people also receiving a foreign pension like CPP.">?</span></label>
                 <input type="number" id="ssMonthly" value="2000" min="0" step="10">
                 <div class="not-sure-hint">Not sure? The average retirement benefit is about $2,071/mo — check your real
@@ -1825,7 +1840,7 @@
               </div>
 
               <div class="field">
-                <label>Government benefits start age <span class="info"
+                <label for="benefitsStartAge">Government benefits start age <span class="info"
                     title="Applied uniformly to CPP, OAS, and Social Security for simplicity — in reality you can start each independently between roughly 60-70 (CPP/OAS) or 62-70 (Social Security).">?</span></label>
                 <div class="label-plain">The age you'll start collecting CPP, OAS, and Social Security</div>
                 <input type="number" id="benefitsStartAge" value="65" min="55" max="70" step="1">
@@ -1982,12 +1997,12 @@
       <div class="slider-panel">
         <h4>Quick adjust — drag to see the projection update live</h4>
         <div class="slider-row">
-          <label>Expected return (%)</label>
+          <label for="returnRateSlider">Expected return (%)</label>
           <input type="range" id="returnRateSlider" min="0" max="12" step="0.5" value="7">
           <span class="slider-val" id="returnRateSliderVal">7%</span>
         </div>
         <div class="slider-row">
-          <label>Retirement age</label>
+          <label for="retireAgeSlider">Retirement age</label>
           <input type="range" id="retireAgeSlider" min="45" max="75" step="1" value="60">
           <span class="slider-val" id="retireAgeSliderVal">60</span>
         </div>
@@ -2210,26 +2225,26 @@
 
         <div class="grid3">
           <div class="field">
-            <label>Non-registered CAD investments — fair market value</label>
+            <label for="dtNonregFmv">Non-registered CAD investments — fair market value</label>
             <input type="number" id="dtNonregFmv" value="10000" min="0" step="100">
           </div>
           <div class="field">
-            <label>Non-registered CAD investments — adjusted cost base <span class="info"
+            <label for="dtNonregAcb">Non-registered CAD investments — adjusted cost base <span class="info"
                 title="What you originally paid for these investments, including reinvested distributions. Your gain is FMV minus this.">?</span></label>
             <input type="number" id="dtNonregAcb" value="7000" min="0" step="100">
           </div>
           <div class="field"></div>
           <div class="field">
-            <label>Other property (foreign real estate, crypto, private shares) — fair market value</label>
+            <label for="dtOtherFmv">Other property (foreign real estate, crypto, private shares) — fair market value</label>
             <input type="number" id="dtOtherFmv" value="0" min="0" step="100">
           </div>
           <div class="field">
-            <label>Other property — adjusted cost base</label>
+            <label for="dtOtherAcb">Other property — adjusted cost base</label>
             <input type="number" id="dtOtherAcb" value="0" min="0" step="100">
           </div>
           <div class="field"></div>
           <div class="field">
-            <label>Your expected marginal tax rate in your departure year (%) <span class="info"
+            <label for="dtMarginalRate">Your expected marginal tax rate in your departure year (%) <span class="info"
                 title="Your combined federal + provincial marginal tax rate for the year you leave. This varies widely by province and income — Ontario's top combined rate is roughly 53.5%; someone mid-career might be closer to 30-40%.">?</span></label>
             <input type="number" id="dtMarginalRate" value="35" min="0" max="60" step="1">
             <div class="typical-range">Not sure? Rough starting points: ~20-25% for modest income, ~35-45% for mid-to-upper income, ~50-54% at the very top bracket depending on province.</div>
@@ -2295,15 +2310,15 @@
           retirement age 67" amount).</div>
         <div class="grid3">
           <div class="field">
-            <label>CPP amount at age 65 ($ CAD)</label>
+            <label for="claimCppBase">CPP amount at age 65 ($ CAD)</label>
             <input type="number" id="claimCppBase" value="900" min="0" step="10">
           </div>
           <div class="field">
-            <label>OAS amount at age 65 ($ CAD)</label>
+            <label for="claimOasBase">OAS amount at age 65 ($ CAD)</label>
             <input type="number" id="claimOasBase" value="334" min="0" step="10">
           </div>
           <div class="field">
-            <label>Social Security amount at full retirement age 67 ($ USD)</label>
+            <label for="claimSsBase">Social Security amount at full retirement age 67 ($ USD)</label>
             <input type="number" id="claimSsBase" value="2000" min="0" step="10">
           </div>
         </div>
@@ -2335,7 +2350,7 @@
           </div>
         </div>
         <div class="field" style="max-width:280px;">
-          <label>Plan to age (life expectancy assumption)</label>
+          <label for="claimPlanToAge">Plan to age (life expectancy assumption)</label>
           <input type="number" id="claimPlanToAge" value="90" min="70" max="105" step="1">
         </div>
       </div>
@@ -2374,7 +2389,7 @@
           you leave.</div>
         <div class="grid3">
           <div class="field">
-            <label>Are you a US citizen? <span class="info"
+            <label for="mbIsCitizen">Are you a US citizen? <span class="info"
                 title="Citizenship-based taxation means US citizens must file US tax returns for life, no matter where they live, unless they formally renounce citizenship.">?</span></label>
             <select id="mbIsCitizen">
               <option value="no" selected>No</option>
@@ -2382,7 +2397,7 @@
             </select>
           </div>
           <div class="field">
-            <label>Do you hold a US Green Card? <span class="info"
+            <label for="mbHasGreenCard">Do you hold a US Green Card? <span class="info"
                 title="Held separately from citizenship. Long-term Green Card holders can be subject to the same exit tax rules as citizens who renounce.">?</span></label>
             <select id="mbHasGreenCard">
               <option value="no" selected>No</option>
@@ -2390,16 +2405,16 @@
             </select>
           </div>
           <div class="field">
-            <label>Years held, out of the last 15</label>
+            <label for="mbGreenCardYears">Years held, out of the last 15</label>
             <input type="number" id="mbGreenCardYears" value="0" min="0" max="15" step="1">
           </div>
           <div class="field">
-            <label>Approx. worldwide net worth ($ USD) <span class="info"
+            <label for="mbNetWorth">Approx. worldwide net worth ($ USD) <span class="info"
                 title="All assets minus debts, worldwide — not just US assets. This only matters if you hold a Green Card for 8+ of the last 15 years.">?</span></label>
             <input type="number" id="mbNetWorth" value="0" min="0" step="10000">
           </div>
           <div class="field">
-            <label>Avg. annual US federal tax paid, last 5 years ($ USD) <span class="info"
+            <label for="mbTaxLiability">Avg. annual US federal tax paid, last 5 years ($ USD) <span class="info"
                 title="Your average net US income tax liability, not your income. Only relevant for long-term Green Card holders.">?</span></label>
             <input type="number" id="mbTaxLiability" value="0" min="0" step="1000">
           </div>
@@ -2497,7 +2512,8 @@
         href="https://maplecoastfire.ca" style="color:inherit;">MapleCoastFIRE</a></footer>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js"></script>
+  <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
+
   <script>
     (function () {
       const $ = id => document.getElementById(id);
@@ -3457,11 +3473,33 @@
         validateAndRender();
       });
 
+      let resizeDebounceTimer = null;
       window.addEventListener('resize', () => {
-        if (!$('results').hidden && lastRes) {
-          renderMainChart(lastRes);
-          drawIncomeStack(lastRes);
-        }
+        clearTimeout(resizeDebounceTimer);
+        resizeDebounceTimer = setTimeout(() => {
+          if (!$('results').hidden && lastRes) {
+            renderMainChart(lastRes);
+            drawIncomeStack(lastRes);
+          }
+        }, 150);
+      });
+
+      // ---- Back to top ----
+      const backToTopBtn = $('backToTopBtn');
+      let backToTopTicking = false;
+      window.addEventListener('scroll', () => {
+        if (backToTopTicking) return;
+        backToTopTicking = true;
+        requestAnimationFrame(() => {
+          backToTopBtn.classList.toggle('visible', window.scrollY > 600);
+          backToTopTicking = false;
+        });
+      });
+      backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+      // Pressing Enter in the scenario name field saves, same as clicking the button
+      $('scenarioNameInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); $('saveScenarioBtn').click(); }
       });
 
       $('exportCsvBtn').addEventListener('click', () => {
@@ -3555,8 +3593,40 @@
       $('printBtn').addEventListener('click', () => window.print());
 
       // ---- PDF report generation ----
-      function generatePdfReport() {
+      // Load jsPDF on demand — only when someone actually clicks the PDF button — so a third-party
+      // library never blocks the rest of the app from initializing.
+      let jsPdfLoadPromise = null;
+      function loadJsPdfIfNeeded() {
+        if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+        if (jsPdfLoadPromise) return jsPdfLoadPromise;
+        jsPdfLoadPromise = new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js';
+          script.onload = () => resolve();
+          script.onerror = () => { jsPdfLoadPromise = null; reject(new Error('jsPDF failed to load')); };
+          document.body.appendChild(script);
+        });
+        return jsPdfLoadPromise;
+      }
+
+      async function handleDownloadPdfClick() {
         if (!lastRes) { alert('Please calculate your results first.'); return; }
+        const btn = $('downloadPdfBtn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Preparing PDF…';
+        btn.disabled = true;
+        try {
+          await loadJsPdfIfNeeded();
+          buildPdfDocument();
+        } catch (e) {
+          alert("Couldn't load the PDF library — check your internet connection and try again.");
+        } finally {
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      }
+
+      function buildPdfDocument() {
         if (!window.jspdf || !window.jspdf.jsPDF) {
           alert("Couldn't load the PDF library — check your internet connection and try again.");
           return;
@@ -3743,7 +3813,7 @@
         addFooter();
         doc.save('coastfire-summary.pdf');
       }
-      $('downloadPdfBtn').addEventListener('click', generatePdfReport);
+      $('downloadPdfBtn').addEventListener('click', handleDownloadPdfClick);
 
       // A genuinely fresh visitor (no saved scenario, not opening a shared link) sees the sample banner;
       // a returning user with their own saved numbers, or someone opening a shared link, does not.
