@@ -1,31 +1,23 @@
 Here are 10 concrete ways to make the Cross-Border CoastFIRE Calculator more useful and user-friendly:
 
-1. Side-by-side scenario comparison
-Let users load two saved scenarios at once and see key metrics (CoastFIRE age/number, required nest egg, portfolio path) in a simple comparison table or dual charts. The existing “My Scenarios” panel already stores data—extending it to compare would make what-if planning far more powerful.
 
-2. Clearer progressive disclosure + sticky summary
-Keep the guided wizard, but after completion show a persistent “Your current snapshot” bar (current portfolio, years to CoastFIRE, key flags) that stays visible while scrolling or editing. This reduces the need to jump back to Results constantly.
-
-3. Inline help that expands in place
-Replace many of the small “i” tooltips and dense Cross-Border Notes with expandable panels or a slide-out drawer that gives short plain-language explanations + “why it matters for CoastFIRE” right next to the relevant field or result. Users stay in flow instead of hunting through long sections.
-
-4. Mobile-first table and chart redesign
-The detailed year-by-year table is currently very wide. Add a mobile card view (one year per card) and make charts fully responsive with touch-friendly tooltips. Also ensure the sticky wizard chrome and back-to-top button don’t collide on small screens.
-
-5. One-click “what if I change X?” sensitivity controls
-Expand the existing sensitivity table into interactive sliders (return rate, inflation, expense, FX rate, contribution levels) that instantly update the headline CoastFIRE number and progress bar. Users can explore risk without re-running the full form.
-
-6. Smarter defaults and “typical range” guidance everywhere
-Many fields already show “use average” buttons. Extend this pattern: show typical ranges for Canadian vs US expense levels, realistic contribution room, and benefit amounts, and offer one-tap “fill typical values for my age/income band” presets.
-
-7. Export & share improvements
-In addition to the PDF, offer a clean printable one-page summary, CSV of the projection table, and a shareable link that includes a short summary card (so recipients immediately see the key number). Add an optional “anonymized” share mode that strips personal notes.
-
-8. Action Items as a prioritized checklist with progress
-Turn the current Action Items list into a checkable to-do list that users can mark done. Persist completion state and show a simple “X of Y addressed” indicator. Link each item more tightly to the relevant tool (e.g., “Estimate RRSP withholding → open tool with numbers pre-filled”).
-
-9. Accessibility & keyboard polish
-Ensure every interactive element (wizard pills, collapsible sections, chart tooltips, scenario controls) is fully keyboard-navigable and properly labeled for screen readers. Add visible focus styles that work in both light and dark themes, and make sure live FX rate updates and result changes are announced.
-
-10. Lightweight educational layer + glossary
-Add a short “Key concepts” section or contextual glossary (CoastFIRE vs traditional FIRE, why TFSA is treated differently in the US, departure tax vs exit tax, etc.) that can be opened without leaving the calculator. Pair it with 2–3 short annotated example scenarios users can load to see how the numbers behave.
+Side-by-Side Scenario Comparison
+Let users select two saved scenarios and view key results (CoastFIRE age/number, required nest egg, portfolio path, years to coast) in a single comparison table or dual charts.
+Full Scenario Export / Import (JSON + CSV)
+Allow users to download and re-upload complete scenarios. Protects against cache clearing, enables backups, and makes sharing full input sets easy and reliable.
+Interactive Sensitivity Controls + Tax-Drag Multiplier
+Add live sliders for return rate, inflation, expenses, FX rate, and contributions. Include a simple “tax drag” toggle (e.g. 0–25%) that adjusts the required nest egg so users can model more realistic post-tax outcomes without a full tax engine.
+Sticky Snapshot Bar + Progressive Disclosure
+After the wizard (or on load), show a persistent summary bar with current portfolio, years to CoastFIRE, and top flags. Keep the form clean while giving constant orientation.
+Action Items as a Checkable Checklist
+Convert the existing Action Items into a persistent to-do list users can mark complete. Track progress (“3 of 7 addressed”) and keep deep links into the relevant tools.
+Stronger Mobile Experience
+Redesign the wide projection table into mobile-friendly cards and make all charts fully responsive with touch-friendly tooltips. Ensure the sticky chrome and controls work cleanly on small screens.
+Live Visual Feedback & Contextual Nudges
+Add real-time field highlighting or gentle inline warnings when values look unusual for cross-border situations (e.g. large TFSA contributions, missing Roth election risk, high unrealized gains). Educate while the user is still entering data.
+Improved Sharing & One-Page Summary
+Enhance shareable links with a clear summary card and offer a clean one-page printable/PDF summary in addition to the existing detailed PDF and CSV export of the projection table.
+Smarter Defaults & Typical-Range Helpers
+Expand “use average” and range hints across more fields. Offer age- or income-band presets that fill realistic contribution, expense, and benefit values with one click.
+Accessibility Polish + Lightweight Educational Layer
+Ensure full keyboard navigation, proper ARIA labels, and visible focus states in both themes. Add a short contextual glossary / “Key concepts” panel (CoastFIRE basics, TFSA treatment, departure vs exit tax, etc.) that users can open without leaving the calculator.
