@@ -1186,7 +1186,8 @@
 
     @media print {
       nav.page-nav, form, .help-section, .btn-row, .save-note, .export-row,
-      #exportCsvBtn, button, .fx-hint-row, .share-row, .tool-section { display: none !important; }
+      #exportCsvBtn, button, .fx-hint-row, .share-row, .tool-section,
+      .scenarios-panel, .tool-directory { display: none !important; }
       body { background: #fff; color: #000; }
       #results { border-top: none; padding-top: 0; }
       .table-scroll { overflow: visible; border: none; }
@@ -1976,10 +1977,10 @@
       <div class="composition-card">
         <div class="composition-head">
           <h3>Where your money sits today</h3>
-          <div class="view-tabs" id="donutTabs">
-            <button type="button" data-view="account" class="active">By account</button>
-            <button type="button" data-view="currency">By currency</button>
-            <button type="button" data-view="tax">By tax treatment</button>
+          <div class="view-tabs" id="donutTabs" role="tablist" aria-label="Portfolio composition view">
+            <button type="button" data-view="account" class="active" role="tab" aria-selected="true">By account</button>
+            <button type="button" data-view="currency" role="tab" aria-selected="false">By currency</button>
+            <button type="button" data-view="tax" role="tab" aria-selected="false">By tax treatment</button>
           </div>
         </div>
         <div class="composition-body">
@@ -2022,10 +2023,10 @@
             <span><span class="legend-dot" style="background:var(--maple);"></span>CoastFIRE number</span>
           </div>
           <div class="chart-legend" id="chartLegendMulti" style="display:none;"></div>
-          <div class="view-tabs" id="chartModeTabs">
-            <button type="button" data-mode="single" class="active">Projection</button>
-            <button type="button" data-mode="range">Scenario range</button>
-            <button type="button" data-mode="coast">Coast on vs off</button>
+          <div class="view-tabs" id="chartModeTabs" role="tablist" aria-label="Chart view mode">
+            <button type="button" data-mode="single" class="active" role="tab" aria-selected="true">Projection</button>
+            <button type="button" data-mode="range" role="tab" aria-selected="false">Scenario range</button>
+            <button type="button" data-mode="coast" role="tab" aria-selected="false">Coast on vs off</button>
           </div>
         </div>
         <div class="chart-wrap">
@@ -2637,14 +2638,12 @@
       });
 
       $('resetBtn').addEventListener('click', () => {
-        $('calcForm').reset();
+        applyScenario(DEFAULT_FIELD_VALUES);
         $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
         $('results').hidden = true;
         clearSavedInputs();
         syncSlidersFromFields();
         showBanner();
-        prefillDepartureAndClaimingTools();
-        prefillRrspWithholding();
         renderRrspWithholding();
         renderDepartureTax();
         renderClaimingTool();
@@ -2774,7 +2773,15 @@
         'nonregCadBal', 'nonregCadContrib', 'fhsaBal', 'fhsaContrib', 'respBal', 'respContrib',
         'k401Bal', 'k401Contrib', 'k401Match', 'iraBal', 'iraContrib', 'rothBal', 'rothContrib',
         'taxableUsdBal', 'taxableUsdContrib', 'hsaBal', 'hsaContrib', 'exchangeRate', 'reportCurrency', 'stopAtCoast', 'returnRate', 'inflationRate',
-        'withdrawalRate', 'monthlyExpenses', 'cppMonthly', 'oasYears', 'oasMonthly', 'ssMonthly', 'benefitsStartAge'];
+        'withdrawalRate', 'monthlyExpenses', 'cppMonthly', 'oasYears', 'oasMonthly', 'ssMonthly', 'benefitsStartAge',
+        // Departure Tax Estimator
+        'dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'dtMarginalRate',
+        // Claiming-Age Optimizer
+        'claimCppBase', 'claimOasBase', 'claimSsBase', 'claimCppAge', 'claimOasAge', 'claimSsAge', 'claimPlanToAge',
+        // Moving Back to Canada
+        'mbIsCitizen', 'mbHasGreenCard', 'mbGreenCardYears', 'mbNetWorth', 'mbTaxLiability',
+        // RRSP Withholding Tax
+        'rwWithdrawalType', 'rwRrspAtRetirement'];
       function storageAvailable() {
         try { const k = '__t__'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; }
         catch (e) { return false; }
@@ -2840,6 +2847,9 @@
       function applyScenario(snap) {
         FIELD_IDS.forEach(id => { const el = $(id); if (el && snap[id] !== undefined) el.value = snap[id]; });
       }
+      // Snapshot of every field's original HTML value, captured before any restore/prefill can change them —
+      // this is what "reset" and "reload example" restore to, covering every tool, not just the core form.
+      const DEFAULT_FIELD_VALUES = captureCurrentScenario();
       function showScenarioFeedback(msg) {
         const el = $('scenarioFeedback');
         el.textContent = msg;
@@ -2868,8 +2878,6 @@
         $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
         updateOasHint();
         syncSlidersFromFields();
-        prefillDepartureAndClaimingTools();
-        prefillRrspWithholding();
         renderRrspWithholding();
         renderDepartureTax();
         renderClaimingTool();
@@ -3171,7 +3179,11 @@
       document.querySelectorAll('#chartModeTabs button').forEach(btn => {
         btn.addEventListener('click', () => {
           chartMode = btn.dataset.mode;
-          document.querySelectorAll('#chartModeTabs button').forEach(b => b.classList.toggle('active', b === btn));
+          document.querySelectorAll('#chartModeTabs button').forEach(b => {
+            const isActive = b === btn;
+            b.classList.toggle('active', isActive);
+            b.setAttribute('aria-selected', String(isActive));
+          });
           if (lastRes) renderMainChart(lastRes);
         });
       });
@@ -3336,7 +3348,11 @@
       document.querySelectorAll('#donutTabs button').forEach(btn => {
         btn.addEventListener('click', () => {
           donutMode = btn.dataset.view;
-          document.querySelectorAll('#donutTabs button').forEach(b => b.classList.toggle('active', b === btn));
+          document.querySelectorAll('#donutTabs button').forEach(b => {
+            const isActive = b === btn;
+            b.classList.toggle('active', isActive);
+            b.setAttribute('aria-selected', String(isActive));
+          });
           if (lastRes) renderDonut(lastRes, donutMode);
         });
       });
@@ -3651,20 +3667,18 @@
         try { if (hasStorage) localStorage.setItem(BANNER_DISMISS_KEY, '1'); } catch (e) { }
       });
       $('loadExampleBtn').addEventListener('click', () => {
-        $('calcForm').reset();
+        applyScenario(DEFAULT_FIELD_VALUES);
         $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
         updateOasHint();
         syncSlidersFromFields();
         showBanner();
-        saveInputs();
-        validateAndRender();
-        prefillDepartureAndClaimingTools();
-        prefillRrspWithholding();
         renderRrspWithholding();
         renderDepartureTax();
         renderClaimingTool();
         renderMovingBack();
         renderActionItems();
+        saveInputs();
+        validateAndRender();
         window.scrollTo({ top: $('calcForm').offsetTop - 20, behavior: 'smooth' });
       });
 
@@ -4430,6 +4444,8 @@
         markWizardSeen();
         if (!bannerDismissedBefore) showBanner();
         switchChromeToChecklistMode();
+        prefillDepartureAndClaimingTools();
+        prefillRrspWithholding();
         saveInputs();
         validateAndRender();
       }
@@ -4484,13 +4500,6 @@
       $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
       updateOasHint();
       syncSlidersFromFields();
-      prefillDepartureAndClaimingTools();
-        prefillRrspWithholding();
-        renderRrspWithholding();
-      renderDepartureTax();
-      renderClaimingTool();
-      renderMovingBack();
-        renderActionItems();
       (function syncPresetActiveOnLoad() {
         const match = Object.entries(PRESETS).find(([, p]) => p.returnRate == num('returnRate') && p.inflationRate == num('inflationRate'));
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', match && b.dataset.preset === match[0]));
@@ -4499,6 +4508,18 @@
       let wizardSeenBefore = false;
       try { wizardSeenBefore = hasStorage && localStorage.getItem(WIZARD_SEEN_KEY) === '1'; } catch (e) { }
       const shouldShowWizard = !loadedFromLink && !hadSavedDataBeforeLoad && !wizardSeenBefore && !bannerDismissedBefore;
+
+      // Only re-derive sub-tool defaults when nothing was actually restored — a wizard visitor's sub-tools
+      // get prefilled once, correctly, inside finishWizard() instead (after they've entered real data).
+      if (!shouldShowWizard && !hadSavedDataBeforeLoad && !loadedFromLink) {
+        prefillDepartureAndClaimingTools();
+        prefillRrspWithholding();
+      }
+      renderRrspWithholding();
+      renderDepartureTax();
+      renderClaimingTool();
+      renderMovingBack();
+      renderActionItems();
 
       if (shouldShowWizard) {
         startWizard();
