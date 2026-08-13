@@ -22,6 +22,7 @@
       --harbor-soft: #D8E4EA;
       --gold: #B08A2E;
       --gold-soft: #F3E7C9;
+      --gold-text-on-soft: #7E6321;
       --line: #DCD2B8;
       --good: #3E6B4F;
       --good-soft: #DCEFE3;
@@ -41,6 +42,7 @@
       --harbor-soft: #1E313C;
       --gold: #D8B563;
       --gold-soft: #332B1A;
+      --gold-text-on-soft: #D8B563;
       --line: #333A43;
       --good: #6FAE85;
       --good-soft: #1E2E24;
@@ -54,6 +56,13 @@
     html {
       scroll-behavior: smooth;
     }
+
+    .skip-link {
+      position: absolute; left: -9999px; top: 0; z-index: 100;
+      background: var(--ink); color: var(--paper); padding: 12px 20px;
+      border-radius: 0 0 8px 0; font-weight: 700; font-size: 14px; text-decoration: none;
+    }
+    .skip-link:focus { left: 0; }
 
     body {
       margin: 0;
@@ -221,7 +230,7 @@
       right: 4px;
       top: 0;
       font-size: 22px;
-      color: var(--gold);
+      color: var(--gold-text-on-soft);
     }
     details.collapsible-section[open] summary.section-title::after { content: '–'; }
     details.collapsible-section .collapse-teaser {
@@ -243,7 +252,7 @@
     }
     .card-collapsible summary::-webkit-details-marker { display: none; }
     .card-collapsible summary h3 { margin: 0; font-size: 18px; }
-    .card-collapsible summary .toggle-icon { color: var(--gold); font-size: 20px; flex: none; }
+    .card-collapsible summary .toggle-icon { color: var(--gold-text-on-soft); font-size: 20px; flex: none; }
     .card-collapsible[open] summary .toggle-icon::before { content: '–'; }
     .card-collapsible:not([open]) summary .toggle-icon::before { content: '+'; }
     .card-collapsible:not([open]) .subhead,
@@ -402,7 +411,7 @@
 
     .tag.uncertain {
       background: var(--gold-soft);
-      color: var(--gold);
+      color: var(--gold-text-on-soft);
     }
 
     .tag.good-tag {
@@ -651,7 +660,7 @@
     .insights li .mark {
       flex: none;
       font-weight: 700;
-      color: var(--gold);
+      color: var(--gold-text-on-soft);
     }
 
     .considerations {
@@ -689,8 +698,12 @@
 
     .action-items-summary {
       font-size: 14px; color: var(--ink-soft); margin-bottom: 18px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
     .action-items-summary strong { color: var(--ink); }
+    .action-items-progress {
+      width: 140px; height: 8px; accent-color: var(--good);
+    }
     .action-items-empty {
       background: var(--good-soft); border-radius: 8px; padding: 16px 18px; color: var(--good); font-size: 13.5px;
     }
@@ -700,6 +713,20 @@
     .consideration-item.level-warning { border-left-color: var(--warn); }
     .consideration-item.level-action { border-left-color: var(--gold); }
     .consideration-item.level-info { border-left-color: var(--harbor); }
+
+    .ci-checkbox-row {
+      display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 0;
+    }
+    .ci-checkbox {
+      flex: none; width: 18px; height: 18px; margin-top: 1px; accent-color: var(--good); cursor: pointer;
+    }
+    .consideration-item.checked-off {
+      opacity: .6;
+    }
+    .consideration-item.checked-off .ci-title {
+      text-decoration: line-through; text-decoration-color: var(--ink-soft);
+    }
+    #actionItemsList .ci-body { margin-left: 28px; margin-top: 6px; }
 
     .ci-title {
       font-weight: 700;
@@ -716,7 +743,7 @@
     }
     .level-good .ci-badge { background: var(--good-soft); color: var(--good); }
     .level-warning .ci-badge { background: var(--maple-soft); color: var(--maple); }
-    .level-action .ci-badge { background: var(--gold-soft); color: var(--gold); }
+    .level-action .ci-badge { background: var(--gold-soft); color: var(--gold-text-on-soft); }
     .level-info .ci-badge { background: var(--harbor-soft); color: var(--harbor); }
 
     .ci-body {
@@ -1031,7 +1058,7 @@
       right: 0;
       top: 12px;
       font-size: 22px;
-      color: var(--gold);
+      color: var(--gold-text-on-soft);
       transition: transform .15s ease;
     }
 
@@ -1318,7 +1345,7 @@
     .prefill-note {
       font-size: 12px; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; margin: -8px 0 16px;
     }
-    .prefill-note .pn-icon { color: var(--gold); }
+    .prefill-note .pn-icon { color: var(--gold-text-on-soft); }
 
     .reassurance-box {
       background: var(--good-soft); border-left: 4px solid var(--good); border-radius: 0 8px 8px 0;
@@ -1339,7 +1366,7 @@
       font-size: 13px; padding: 12px 14px; border-radius: 8px; margin-bottom: 16px;
     }
     .deferral-note.auto { background: var(--good-soft); color: var(--good); }
-    .deferral-note.security { background: var(--gold-soft); color: var(--gold); }
+    .deferral-note.security { background: var(--gold-soft); color: var(--gold-text-on-soft); }
 
     .claim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
     @media(max-width:760px) { .claim-grid { grid-template-columns: 1fr; } }
@@ -1354,6 +1381,17 @@
     table.strategy-table th:first-child, table.strategy-table td:first-child { text-align: left; }
     table.strategy-table td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); }
     table.strategy-table tr.your-choice { background: var(--harbor-soft); font-weight: 600; }
+
+    table.compare-table { width: 100%; min-width: 0; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
+    table.compare-table th, table.compare-table td { word-wrap: break-word; padding: 9px 12px; text-align: right; border-bottom: 1px solid var(--line); }
+    table.compare-table th:first-child, table.compare-table td:first-child { text-align: left; color: var(--ink-soft); font-weight: 400; }
+    table.compare-table th { background: var(--paper-2); font-weight: 700; }
+    table.compare-table th.col-a { color: var(--harbor); }
+    table.compare-table th.col-b { color: var(--maple); }
+    .compare-currency-note {
+      font-size: 12px; color: var(--ink-soft); background: var(--gold-soft); padding: 10px 12px;
+      border-radius: 6px; margin-top: 12px;
+    }
     .strategy-table-scroll { overflow-x: auto; }
 
     .apply-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
@@ -1440,6 +1478,7 @@
 </head>
 
 <body>
+  <a href="#calcForm" class="skip-link">Skip to calculator</a>
   <div class="wrap">
 
     <header>
@@ -1464,6 +1503,7 @@
         <a href="#rrspWithholdingSection">RRSP Withholding</a>
         <a href="#claimingAgeSection">Benefit Timing</a>
         <a href="#movingBackSection">Moving Back to Canada</a>
+        <a href="#compareScenariosSection">Compare Scenarios</a>
         <a href="#considerationsSection">Cross-Border Notes</a>
         <a href="#helpSection">How to Use</a>
       </nav>
@@ -1505,9 +1545,17 @@
         <input type="text" id="scenarioNameInput" placeholder="Name this scenario, e.g. &quot;Retire at 55&quot;" maxlength="40">
         <button type="button" class="primary" id="saveScenarioBtn">Save current as scenario</button>
       </div>
+      <div class="scenarios-row">
+        <button type="button" class="ghost" id="exportAllBtn">⬇️ Export all data (JSON)</button>
+        <button type="button" class="ghost" id="importAllBtn">⬆️ Import data (JSON)</button>
+        <input type="file" id="importAllFile" accept="application/json,.json" hidden>
+      </div>
       <div class="sp-note">Save as many scenarios as you like — e.g. "Retire at 55" vs "Retire at 60" — then load
         either one any time to compare. Saved in this browser only.</div>
-      <span class="scenario-feedback" id="scenarioFeedback">Saved!</span>
+      <div class="sp-note">Export downloads a single file with your current inputs and every saved scenario —
+        useful before clearing your browser, switching devices, or just keeping a backup. Import merges a
+        previously-exported file back in.</div>
+      <span class="scenario-feedback" id="scenarioFeedback" role="status" aria-live="polite">Saved!</span>
     </div>
 
     <form id="calcForm">
@@ -1540,7 +1588,7 @@
 
       <div class="error-banner" id="errorBanner">
         <strong>Please fix the following before calculating:</strong>
-        <ul id="errorList"></ul>
+        <ul id="errorList" role="alert" aria-live="assertive"></ul>
       </div>
 
       <fieldset id="fieldsetPersonal">
@@ -1871,7 +1919,7 @@
         <button type="button" class="ghost" id="shareLinkBtn">🔗 Copy shareable link</button>
         <button type="button" class="ghost" id="printBtn">🖨️ Print summary</button>
         <button type="button" class="ghost" id="downloadPdfBtn">📄 Download PDF report</button>
-        <span class="share-feedback" id="shareFeedback">Link copied!</span>
+        <span class="share-feedback" id="shareFeedback" role="status" aria-live="polite">Link copied!</span>
       </div>
       <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.
       </div>
@@ -1882,7 +1930,7 @@
       <p class="results-sub">Account balances stay in their native currency below; only the totals are converted, at the
         exchange rate you set.</p>
 
-      <div class="result-headline" id="resultHeadline"></div>
+      <div class="result-headline" id="resultHeadline" role="status" aria-live="polite"></div>
 
       <div class="tool-directory">
         <div class="tool-directory-grid">
@@ -1914,6 +1962,12 @@
             <div class="tdc-icon">🍁</div>
             <div class="tdc-title">Moving Back to Canada</div>
             <div class="tdc-sub">Re-entering Canada? See what happens to each account and whether exit-tax rules apply.</div>
+            <span class="tdc-arrow">Try it →</span>
+          </a>
+          <a class="tool-directory-card" href="#compareScenariosSection">
+            <div class="tdc-icon">⚖️</div>
+            <div class="tdc-title">Compare Scenarios</div>
+            <div class="tdc-sub">Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.</div>
             <span class="tdc-arrow">Try it →</span>
           </a>
         </div>
@@ -1950,19 +2004,19 @@
           </defs>
           <circle cx="100" cy="104" r="90" fill="none" stroke="var(--gold)" stroke-width="3" stroke-dasharray="4 4" />
           <circle cx="100" cy="104" r="78" fill="none" stroke="var(--gold)" stroke-width="1.5" />
-          <text font-size="11.5" fill="var(--gold)" letter-spacing="2" font-family="Inter, sans-serif"
+          <text font-size="11.5" fill="var(--gold-text-on-soft)" letter-spacing="2" font-family="Inter, sans-serif"
             font-weight="700">
             <textPath href="#stampArcTop" startOffset="50%" text-anchor="middle" id="stampTopText">CROSS-BORDER CLEARED
             </textPath>
           </text>
-          <text font-size="11.5" fill="var(--gold)" letter-spacing="2" font-family="Inter, sans-serif"
+          <text font-size="11.5" fill="var(--gold-text-on-soft)" letter-spacing="2" font-family="Inter, sans-serif"
             font-weight="700">
             <textPath href="#stampArcBottom" startOffset="50%" text-anchor="middle" id="stampBottomText">COASTFIRE
               STATUS</textPath>
           </text>
-          <text id="stampYear" x="100" y="100" font-size="26" fill="var(--gold)" text-anchor="middle"
+          <text id="stampYear" x="100" y="100" font-size="26" fill="var(--gold-text-on-soft)" text-anchor="middle"
             font-family="Fraunces, serif" font-weight="700">—</text>
-          <text id="stampSub" x="100" y="122" font-size="11" fill="var(--gold)" text-anchor="middle"
+          <text id="stampSub" x="100" y="122" font-size="11" fill="var(--gold-text-on-soft)" text-anchor="middle"
             font-family="IBM Plex Mono, monospace">—</text>
         </svg>
       </div>
@@ -2457,7 +2511,7 @@
           main calculator assumes one unified start age for simplicity).</div>
         <div class="apply-row">
           <button type="button" id="applyClaimingBtn">Apply to my CoastFIRE plan</button>
-          <span class="apply-feedback" id="applyClaimingFeedback">Applied — scroll up to see your updated results.</span>
+          <span class="apply-feedback" id="applyClaimingFeedback" role="status" aria-live="polite">Applied — scroll up to see your updated results.</span>
         </div>
       </div>
     </section>
@@ -2543,6 +2597,47 @@
       </div>
     </section>
 
+    <section class="tool-section" id="compareScenariosSection">
+      <div class="tool-header">
+        <h2>⚖️ Compare Scenarios</h2>
+        <p class="tool-sub">Put two of your saved scenarios side by side — key numbers and portfolio path together,
+          without touching whatever's currently in the form above. Save at least two scenarios in "My Scenarios" near
+          the top of the page to use this.</p>
+      </div>
+
+      <div class="tool-card">
+        <h3>Pick two scenarios</h3>
+        <div class="grid2">
+          <div class="field">
+            <label for="compareScenarioA">Scenario A</label>
+            <select id="compareScenarioA"><option value="">— Select a saved scenario —</option></select>
+          </div>
+          <div class="field">
+            <label for="compareScenarioB">Scenario B</label>
+            <select id="compareScenarioB"><option value="">— Select a saved scenario —</option></select>
+          </div>
+        </div>
+        <div class="card-sub" id="compareEmptyNote">You need at least two saved scenarios to compare. Save your
+          current inputs as a scenario above, change a few things, and save again under a different name.</div>
+      </div>
+
+      <div class="tool-card" id="compareResultsCard" hidden>
+        <h3>Key results, side by side</h3>
+        <div class="table-scroll">
+          <table class="compare-table" id="compareTable"></table>
+        </div>
+        <div class="compare-currency-note" id="compareCurrencyNote" hidden></div>
+      </div>
+
+      <div class="tool-card" id="compareChartCard" hidden>
+        <h3>Portfolio path comparison</h3>
+        <div class="card-sub">Both scenarios start from today (year zero) — the x-axis shows years from now, not
+          calendar age, since the two scenarios can span different timelines.</div>
+        <div class="chart-legend" id="compareChartLegend"></div>
+        <canvas id="compareChart" height="260"></canvas>
+      </div>
+    </section>
+
     <section class="tool-section" id="actionItemsSection">
       <div class="tool-header">
         <h2>✅ Your Action Items</h2>
@@ -2551,7 +2646,7 @@
           advice, just a way to keep track of what to bring up.</p>
       </div>
       <div class="tool-card">
-        <div class="action-items-summary" id="actionItemsSummary"></div>
+        <div class="action-items-summary" id="actionItemsSummary" role="status" aria-live="polite"></div>
         <div id="actionItemsList"></div>
       </div>
     </section>
@@ -2591,6 +2686,43 @@
           <dt>Pre-Tax Planning</dt>
           <dd>No cross-border tax drag (e.g. TFSA taxability, PFICs) is modeled; all totals are pre-tax planning
             targets.</dd>
+        </dl>
+
+        <h4 style="margin-top:24px;font-size:16px;">Key Concepts (Cross-Border Basics)</h4>
+        <dl class="glossary">
+          <dt>CoastFIRE</dt>
+          <dd>The point where your portfolio is projected to grow — with no further contributions — into everything
+            you'll need by retirement. Once you're there, you can "coast": cover today's expenses while your
+            accounts do the rest.</dd>
+          <dt>RRSP (Registered Retirement Savings Plan)</dt>
+          <dd>Canada's tax-deferred retirement account. Recognized by the IRS as tax-deferred under the Canada-US
+            treaty — growth isn't taxed annually as a US person, similar to a Traditional IRA.</dd>
+          <dt>TFSA (Tax-Free Savings Account)</dt>
+          <dd>Tax-free in Canada, but the IRS doesn't recognize that status — growth can be taxable annually to a US
+            person and may carry extra reporting requirements.</dd>
+          <dt>FHSA (First Home Savings Account)</dt>
+          <dd>A newer Canadian account with no IRS guidance yet at all — treat its US tax treatment as unresolved
+            until you've talked to a cross-border specialist.</dd>
+          <dt>RESP (Registered Education Savings Plan)</dt>
+          <dd>Canadian education savings with government matching (CESG). Like the TFSA, not recognized as
+            tax-deferred by the IRS.</dd>
+          <dt>Departure Tax (Canada) vs. Exit Tax (US)</dt>
+          <dd>Two different taxes from two different countries. Canada's departure tax is a deemed disposition —
+            most property is treated as sold at fair market value the day you cease Canadian residency. The US exit
+            tax is a separate rule under IRC 877A that can apply to US citizens who renounce citizenship, or
+            long-term Green Card holders (8+ of the last 15 years) who formally end their status. Leaving Canada
+            doesn't trigger the US exit tax, and vice versa.</dd>
+          <dt>Totalization Agreement</dt>
+          <dd>Lets you combine work/residency periods from both countries to qualify for CPP, OAS, or Social
+            Security — for example, using US residency to meet OAS's 20-year minimum for payments abroad. It doesn't
+            increase the benefit amount, only helps you qualify.</dd>
+          <dt>RRSP/RRIF Withholding Tax</dt>
+          <dd>Canada withholds tax at the source when a non-resident withdraws from an RRSP or RRIF — 25% for a
+            lump-sum RRSP collapse, or 15% for periodic RRIF payments under the treaty. This is generally the final
+            Canadian tax on that withdrawal.</dd>
+          <dt>PFIC (Passive Foreign Investment Company)</dt>
+          <dd>A punitive US tax classification that can apply to Canadian-domiciled mutual funds and ETFs held by a
+            US person. US-domiciled funds are typically used instead once you're a US resident, to avoid this.</dd>
         </dl>
       </div>
     </details>
@@ -2864,6 +2996,7 @@
         store[name] = captureCurrentScenario();
         saveScenariosStore(store);
         refreshScenariosSelect();
+        refreshCompareSelects();
         $('scenariosSelect').value = name;
         $('scenarioNameInput').value = '';
         showScenarioFeedback(`Saved "${name}".`);
@@ -2895,10 +3028,237 @@
         delete store[name];
         saveScenariosStore(store);
         refreshScenariosSelect();
+        refreshCompareSelects();
         showScenarioFeedback(`Deleted "${name}".`);
       });
 
       refreshScenariosSelect();
+
+      // ==================================================================
+      // Full data export / import (JSON) — separate from the CSV export,
+      // which is a spreadsheet-analysis dump of the yearly table, not a
+      // re-importable backup. This covers current inputs + every saved scenario.
+      // ==================================================================
+      $('exportAllBtn').addEventListener('click', () => {
+        const payload = {
+          tool: 'Cross-Border CoastFIRE Calculator',
+          exportVersion: 1,
+          exportedAt: new Date().toISOString(),
+          currentInputs: captureCurrentScenario(),
+          scenarios: loadScenariosStore()
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateStamp = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `coastfire-backup-${dateStamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showScenarioFeedback('Exported — check your downloads.');
+      });
+
+      $('importAllBtn').addEventListener('click', () => $('importAllFile').click());
+
+      $('importAllFile').addEventListener('change', () => {
+        const file = $('importAllFile').files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          let data;
+          try {
+            data = JSON.parse(reader.result);
+          } catch (e) {
+            alert("That file doesn't look like a valid export — couldn't read it as JSON.");
+            $('importAllFile').value = '';
+            return;
+          }
+          const hasCurrentInputs = data && typeof data.currentInputs === 'object' && data.currentInputs !== null;
+          const hasScenarios = data && typeof data.scenarios === 'object' && data.scenarios !== null;
+          if (!hasCurrentInputs && !hasScenarios) {
+            alert("That file doesn't look like a Cross-Border CoastFIRE export — nothing recognizable to import.");
+            $('importAllFile').value = '';
+            return;
+          }
+          const scenarioCount = hasScenarios ? Object.keys(data.scenarios).length : 0;
+          const confirmMsg = `Import this file?\n\n` +
+            (hasCurrentInputs ? '• Your current form inputs will be replaced with the ones in this file.\n' : '') +
+            (scenarioCount > 0 ? `• ${scenarioCount} saved scenario${scenarioCount === 1 ? '' : 's'} will be added, overwriting any with the same name.\n` : '') +
+            `\nThis can't be undone.`;
+          if (!window.confirm(confirmMsg)) { $('importAllFile').value = ''; return; }
+
+          if (hasScenarios) {
+            const store = loadScenariosStore();
+            // Only accept plain-object scenario snapshots; ignore anything malformed rather than trusting it blindly.
+            Object.entries(data.scenarios).forEach(([name, snap]) => {
+              if (snap && typeof snap === 'object' && typeof name === 'string' && name.trim()) {
+                store[name] = snap;
+              }
+            });
+            saveScenariosStore(store);
+            refreshScenariosSelect();
+            refreshCompareSelects();
+          }
+
+          if (hasCurrentInputs) {
+            applyScenario(data.currentInputs);
+            $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+            updateOasHint();
+            syncSlidersFromFields();
+            renderRrspWithholding();
+            renderDepartureTax();
+            renderClaimingTool();
+            renderMovingBack();
+            renderActionItems();
+            saveInputs();
+            validateAndRender();
+          }
+
+          $('importAllFile').value = '';
+          showScenarioFeedback('Import complete.');
+        };
+        reader.onerror = () => {
+          alert("Couldn't read that file — try again.");
+          $('importAllFile').value = '';
+        };
+        reader.readAsText(file);
+      });
+
+      // ==================================================================
+      // Compare Scenarios — computes two saved scenarios independently via
+      // compute(overrides), never touching the live form.
+      // ==================================================================
+      function refreshCompareSelects() {
+        const store = loadScenariosStore();
+        const names = Object.keys(store).sort((a, b) => a.localeCompare(b));
+        ['compareScenarioA', 'compareScenarioB'].forEach(id => {
+          const select = $(id);
+          const prevValue = select.value;
+          select.innerHTML = '<option value="">— Select a saved scenario —</option>' +
+            names.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n}</option>`).join('');
+          if (names.includes(prevValue)) select.value = prevValue;
+        });
+        // Auto-select the first two distinct scenarios the first time there are enough to compare
+        if (names.length >= 2 && !$('compareScenarioA').value && !$('compareScenarioB').value) {
+          $('compareScenarioA').value = names[0];
+          $('compareScenarioB').value = names[1];
+        }
+        $('compareEmptyNote').style.display = names.length >= 2 ? 'none' : 'block';
+        // Programmatic .value assignment above doesn't fire 'change', so re-render explicitly.
+        renderScenarioComparison();
+      }
+
+      function cssVarCompare(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+      function drawComparisonChart(resA, resB, nameA, nameB) {
+        const canvas = $('compareChart');
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = canvas.parentElement.clientWidth - 40;
+        const cssH = 260;
+        canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+        canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, cssW, cssH);
+
+        const padL = 60, padR = 12, padT = 14, padB = 26;
+        const w = cssW - padL - padR, h = cssH - padT - padB;
+        const maxYears = Math.max(resA.n, resB.n, 1);
+        const maxVal = Math.max(
+          ...resA.rows.map(r => r.combined),
+          ...resB.rows.map(r => r.combined)
+        ) * 1.08 || 1;
+        const xFor = yrs => padL + (yrs / maxYears) * w;
+        const yFor = v => padT + h - (v / maxVal) * h;
+
+        const lineColor = cssVarCompare('--line'), softColor = cssVarCompare('--ink-soft');
+        const colorA = cssVarCompare('--harbor'), colorB = cssVarCompare('--maple');
+
+        ctx.strokeStyle = lineColor; ctx.fillStyle = softColor;
+        ctx.font = '11px IBM Plex Mono, monospace'; ctx.lineWidth = 1;
+        for (let g = 0; g <= 4; g++) {
+          const val = (maxVal / 4) * g;
+          const y = yFor(val);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
+          ctx.fillText('$' + Math.round(val / 1000) + 'k', 4, y + 4);
+        }
+
+        const drawSeries = (res, color) => {
+          ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+          res.rows.forEach((r, i) => {
+            const x = xFor(i), y = yFor(r.combined);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        };
+        drawSeries(resA, colorA);
+        drawSeries(resB, colorB);
+
+        ctx.fillStyle = softColor;
+        const step = Math.max(1, Math.round(maxYears / 6));
+        for (let yrs = 0; yrs <= maxYears; yrs += step) {
+          ctx.fillText('+' + yrs + 'y', xFor(yrs) - 12, cssH - 6);
+        }
+
+        $('compareChartLegend').innerHTML =
+          `<span><span class="legend-dot" style="background:${colorA};"></span>${nameA} (${resA.reportCurrency})</span>` +
+          `<span><span class="legend-dot" style="background:${colorB};"></span>${nameB} (${resB.reportCurrency})</span>`;
+      }
+
+      function renderScenarioComparison() {
+        const nameA = $('compareScenarioA').value;
+        const nameB = $('compareScenarioB').value;
+        const store = loadScenariosStore();
+        const snapA = nameA ? store[nameA] : null;
+        const snapB = nameB ? store[nameB] : null;
+
+        if (!snapA || !snapB) {
+          $('compareResultsCard').hidden = true;
+          $('compareChartCard').hidden = true;
+          return;
+        }
+
+        const resA = compute(snapA);
+        const resB = compute(snapB);
+        const firstA = resA.rows[0], firstB = resB.rows[0];
+
+        $('compareResultsCard').hidden = false;
+        $('compareChartCard').hidden = false;
+
+        const rows = [
+          ['Current age', resA.currentAge, resB.currentAge],
+          ['Retirement age', resA.retireAge, resB.retireAge],
+          ['Combined portfolio today', fmt(firstA.combined, resA.reportCurrency), fmt(firstB.combined, resB.reportCurrency)],
+          ['Required at retirement', fmt(resA.requiredAtRetirement, resA.reportCurrency), fmt(resB.requiredAtRetirement, resB.reportCurrency)],
+          ['CoastFIRE number today', fmt(resA.coastNumberToday, resA.reportCurrency), fmt(resB.coastNumberToday, resB.reportCurrency)],
+          ['Years until CoastFIRE', resA.coastYearIndex !== null ? resA.coastYearIndex : 'Not yet on track', resB.coastYearIndex !== null ? resB.coastYearIndex : 'Not yet on track'],
+          ['CoastFIRE age', resA.coastYearIndex !== null ? (resA.currentAge + resA.coastYearIndex) : '—', resB.coastYearIndex !== null ? (resB.currentAge + resB.coastYearIndex) : '—']
+        ];
+        $('compareTable').innerHTML =
+          `<thead><tr><th>Metric</th><th class="col-a">${nameA}</th><th class="col-b">${nameB}</th></tr></thead>` +
+          `<tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody>`;
+
+        const currencyNote = $('compareCurrencyNote');
+        if (resA.reportCurrency !== resB.reportCurrency) {
+          currencyNote.hidden = false;
+          currencyNote.textContent = `⚠️ "${nameA}" reports in ${resA.reportCurrency} and "${nameB}" reports in ${resB.reportCurrency} — figures above are each in their own scenario's currency, not converted to match.`;
+        } else {
+          currencyNote.hidden = true;
+        }
+
+        drawComparisonChart(resA, resB, nameA, nameB);
+      }
+
+      ['compareScenarioA', 'compareScenarioB'].forEach(id => {
+        $(id).addEventListener('change', renderScenarioComparison);
+      });
+      window.addEventListener('resize', () => {
+        if (!$('compareChartCard').hidden) renderScenarioComparison();
+      });
+      refreshCompareSelects();
+
 
       function convertToReport(cadAmt, usdAmt, reportCurrency, rate) {
         if (rate <= 0) rate = 0.0001;
@@ -3499,8 +3859,8 @@
           stampSub.textContent = 'AGE ' + (res.currentAge + res.coastYearIndex);
           stampTop.textContent = 'CROSS-BORDER CLEARED';
           stampBottom.textContent = 'COASTFIRE STATUS';
-          svg.querySelectorAll('circle').forEach(c => c.setAttribute('stroke', '#B08A2E'));
-          svg.querySelectorAll('text').forEach(t => t.setAttribute('fill', '#B08A2E'));
+          svg.querySelectorAll('circle').forEach(c => c.setAttribute('stroke', cssVar('--gold-text-on-soft')));
+          svg.querySelectorAll('text').forEach(t => t.setAttribute('fill', cssVar('--gold-text-on-soft')));
         } else {
           $('statYearsUntil').textContent = '—';
           $('statCoastYear').textContent = 'Not reached by retirement age at current contributions';
@@ -3508,8 +3868,8 @@
           stampSub.textContent = 'NOT YET';
           stampTop.textContent = 'BORDER NOT CLEARED';
           stampBottom.textContent = 'INCREASE SAVINGS';
-          svg.querySelectorAll('circle').forEach(c => c.setAttribute('stroke', '#5B6470'));
-          svg.querySelectorAll('text').forEach(t => t.setAttribute('fill', '#5B6470'));
+          svg.querySelectorAll('circle').forEach(c => c.setAttribute('stroke', cssVar('--ink-soft')));
+          svg.querySelectorAll('text').forEach(t => t.setAttribute('fill', cssVar('--ink-soft')));
         }
 
         renderMainChart(res);
@@ -4241,8 +4601,8 @@
       // Action Items — aggregated across every tool, computed fresh from source data
       // ==================================================================
       function renderActionItems() {
-        const items = []; // { level, icon, title, body, anchor, anchorLabel }
-        const add = (level, icon, title, body, anchor, anchorLabel) => items.push({ level, icon, title, body, anchor, anchorLabel });
+        const items = []; // { slug, level, icon, title, body, anchor, anchorLabel }
+        const add = (slug, level, icon, title, body, anchor, anchorLabel) => items.push({ slug, level, icon, title, body, anchor, anchorLabel });
 
         const tfsa = num('tfsaBal'), fhsa = num('fhsaBal'), resp = num('respBal'), rrsp = num('rrspBal');
         const nonregCad = num('nonregCadBal'), roth = num('rothBal');
@@ -4254,69 +4614,69 @@
         const gcYears = num('mbGreenCardYears');
 
         if (tfsa > 0) {
-          add('warning', '⚠️', 'Confirm your TFSA\'s US tax treatment',
+          add('tfsa-treatment', 'warning', '⚠️', 'Confirm your TFSA\'s US tax treatment',
             `Your TFSA (${fmt(tfsa, 'CAD')}) isn't recognized as tax-free by the IRS — growth can be taxable
             annually and may need extra reporting. Worth a direct conversation with your accountant.`,
             '#considerationsSection', 'See Cross-Border Notes');
         }
         if (rrsp > 0) {
-          add('info', 'ℹ️', 'Budget for RRSP withholding tax at withdrawal',
+          add('rrsp-withholding', 'info', 'ℹ️', 'Budget for RRSP withholding tax at withdrawal',
             `You have an RRSP (${fmt(rrsp, 'CAD')} today). Withdrawing it as a US resident triggers 25% Canadian
             withholding for a lump sum, or 15% for periodic RRIF payments — not currently included in "Required at
             Retirement" above. Worth estimating the drag before you rely on that number.`,
             '#rrspWithholdingSection', 'Open RRSP Withholding Tax');
         }
         if (fhsa > 0) {
-          add('warning', '⚠️', 'FHSA has no IRS guidance yet',
+          add('fhsa-guidance', 'warning', '⚠️', 'FHSA has no IRS guidance yet',
             `Your FHSA (${fmt(fhsa, 'CAD')}) is new enough that the IRS hasn't issued formal guidance — treat its
             US tax treatment as unresolved until you've discussed it with a cross-border specialist.`,
             '#considerationsSection', 'See Cross-Border Notes');
         }
         if (resp > 0) {
-          add('warning', '⚠️', 'RESP may require foreign trust reporting',
+          add('resp-reporting', 'warning', '⚠️', 'RESP may require foreign trust reporting',
             `Your RESP (${fmt(resp, 'CAD')}) isn't tax-deferred to the IRS and can trigger Form 3520/3520-A
             reporting — confirm your filing requirements.`,
             '#considerationsSection', 'See Cross-Border Notes');
         }
         if (rrsp + tfsa + nonregCad + fhsa + resp > 0) {
-          add('action', '📋', 'Check your FBAR / FATCA filing requirement',
+          add('fbar-fatca', 'action', '📋', 'Check your FBAR / FATCA filing requirement',
             `If your combined Canadian financial accounts exceed $10,000 USD at any point in the year, you likely
             need to file an FBAR (FinCEN 114), and possibly Form 8938 — separate from your regular tax return.`,
             '#considerationsSection', 'See Cross-Border Notes');
         }
         if (dtGain > 0) {
-          add('action', '📋', 'You have an estimated departure-tax gain on the books',
+          add('departure-tax-gain', 'action', '📋', 'You have an estimated departure-tax gain on the books',
             `Based on what you entered, you have roughly ${fmt(dtGain, 'CAD')} in unrealized capital gains that
             would be subject to departure tax if you left Canada. Consider whether filing Form T1244 to defer the
             tax makes sense for you.`,
             '#departureTaxSection', 'Open Departure Tax Estimator');
         }
         if (totalCadProperty > 25000) {
-          add('action', '📋', 'You may need to file Form T1161',
+          add('t1161-threshold', 'action', '📋', 'You may need to file Form T1161',
             `Your total property subject to departure tax (${fmt(totalCadProperty, 'CAD')}) is over the $25,000 CAD
             threshold that requires listing everything on Form T1161 when you leave Canada.`,
             '#departureTaxSection', 'Open Departure Tax Estimator');
         }
         if (cpp > 0 || oas > 0 || ss > 0) {
-          add('info', 'ℹ️', 'Review your government-benefit claiming age',
+          add('claiming-age-review', 'info', 'ℹ️', 'Review your government-benefit claiming age',
             `You've entered CPP, OAS, or Social Security amounts — when you claim each one can meaningfully change
             your lifetime total. Worth a few minutes in the claiming-age comparison.`,
             '#claimingAgeSection', 'Open Benefit Timing Optimizer');
         }
         if (isCitizen) {
-          add('action', '📋', 'Your US filing obligations don\'t end when you leave',
+          add('us-citizen-filing', 'action', '📋', 'Your US filing obligations don\'t end when you leave',
             `As a US citizen, you'll keep filing US tax returns for life, regardless of where you live — that only
             changes if you formally renounce citizenship, a separate and much bigger decision.`,
             '#movingBackSection', 'Open Moving Back to Canada');
         }
         if (hasGreenCard && gcYears >= 8) {
-          add('warning', '⚠️', 'Review potential exit-tax exposure',
+          add('green-card-exit-tax', 'warning', '⚠️', 'Review potential exit-tax exposure',
             `You've held Green Card status for ${gcYears} of the last 15 years — past the threshold where exit-tax
             rules can apply if you formally terminate it. Worth reviewing before you make that decision.`,
             '#movingBackSection', 'Open Moving Back to Canada');
         }
         if (roth > 0) {
-          add('info', 'ℹ️', 'Remember the Roth IRA election if you move back to Canada',
+          add('roth-ira-election', 'info', 'ℹ️', 'Remember the Roth IRA election if you move back to Canada',
             `Your Roth IRA (${fmt(roth, 'USD')}) isn't automatically protected from Canadian tax the way a
             Traditional IRA is. If you ever move back to Canada, you'll need a one-time treaty election filed by a
             specific deadline to keep it tax-free.`,
@@ -4334,13 +4694,49 @@
           return;
         }
 
-        const urgent = items.filter(i => i.level === 'warning' || i.level === 'action').length;
-        $('actionItemsSummary').innerHTML = `<strong>${items.length} item${items.length === 1 ? '' : 's'}</strong>
-          based on what you've entered${urgent > 0 ? `, including <strong>${urgent}</strong> worth prioritizing` : ''}.`;
-        $('actionItemsList').innerHTML = items.map(it =>
-          ciHtml(it.level, it.icon, it.title, it.body + (it.anchor ? ` <a class="ci-link" href="${it.anchor}">${it.anchorLabel} →</a>` : ''))
-        ).join('');
+        const checkedSlugs = loadCheckedActionItems();
+        // Prune stored checked-state to only slugs currently in view, so the count stays honest
+        // (an item that's no longer applicable doesn't silently count toward "addressed").
+        const visibleSlugs = new Set(items.map(i => i.slug));
+        const addressedCount = items.filter(i => checkedSlugs.has(i.slug)).length;
+
+        $('actionItemsSummary').innerHTML = `<strong>${addressedCount} of ${items.length}</strong> addressed
+          <progress class="action-items-progress" value="${addressedCount}" max="${items.length}"></progress>`;
+
+        $('actionItemsList').innerHTML = items.map(it => {
+          const checked = checkedSlugs.has(it.slug);
+          return `<div class="consideration-item level-${it.level}${checked ? ' checked-off' : ''}">
+            <label class="ci-checkbox-row">
+              <input type="checkbox" class="ci-checkbox" data-slug="${it.slug}" ${checked ? 'checked' : ''}
+                aria-describedby="ci-body-${it.slug}">
+              <span class="ci-title"><span class="ci-icon">${it.icon}</span>${it.title}</span>
+            </label>
+            <div class="ci-body" id="ci-body-${it.slug}">${it.body}${it.anchor ? ` <a class="ci-link" href="${it.anchor}">${it.anchorLabel} →</a>` : ''}</div>
+          </div>`;
+        }).join('');
       }
+
+      function loadCheckedActionItems() {
+        if (!hasStorage) return new Set();
+        try {
+          const raw = localStorage.getItem(ACTION_ITEMS_CHECKED_KEY);
+          return raw ? new Set(JSON.parse(raw)) : new Set();
+        } catch (e) { return new Set(); }
+      }
+      function saveCheckedActionItems(set) {
+        if (!hasStorage) return;
+        try { localStorage.setItem(ACTION_ITEMS_CHECKED_KEY, JSON.stringify([...set])); } catch (e) { }
+      }
+      const ACTION_ITEMS_CHECKED_KEY = 'ccfire:actionItemsChecked';
+
+      $('actionItemsList').addEventListener('change', e => {
+        if (!e.target.classList.contains('ci-checkbox')) return;
+        const slug = e.target.dataset.slug;
+        const checkedSlugs = loadCheckedActionItems();
+        if (e.target.checked) checkedSlugs.add(slug); else checkedSlugs.delete(slug);
+        saveCheckedActionItems(checkedSlugs);
+        renderActionItems();
+      });
 
       [
         'tfsaBal', 'fhsaBal', 'respBal', 'rrspBal', 'nonregCadBal', 'rothBal', 'cppMonthly', 'oasMonthly', 'ssMonthly',
