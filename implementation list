@@ -1,0 +1,40 @@
+Here are 10 concrete ways to make the Cross-Border CoastFIRE Calculator more useful and user-friendly:
+
+
+1. Side-by-Side Scenario Comparison
+Let users select two saved scenarios and view key results (CoastFIRE age/number, required nest egg, portfolio path, years to coast) in a single comparison table or dual charts.
+
+2. Full Scenario Export / Import (JSON + CSV)
+Allow users to download and re-upload complete scenarios. Protects against cache clearing, enables backups, and makes sharing full input sets easy and reliable.
+
+
+3. Interactive Sensitivity Controls + Tax-Drag Multiplier
+Add live sliders for return rate, inflation, expenses, FX rate, and contributions. Include a simple “tax drag” toggle (e.g. 0–25%) that adjusts the required nest egg so users can model more realistic post-tax outcomes without a full tax engine.
+
+
+4. Sticky Snapshot Bar + Progressive Disclosure
+After the wizard (or on load), show a persistent summary bar with current portfolio, years to CoastFIRE, and top flags. Keep the form clean while giving constant orientation.
+
+
+5. Action Items as a Checkable Checklist
+Convert the existing Action Items into a persistent to-do list users can mark complete. Track progress (“3 of 7 addressed”) and keep deep links into the relevant tools.
+
+
+6. Stronger Mobile Experience
+Redesign the wide projection table into mobile-friendly cards and make all charts fully responsive with touch-friendly tooltips. Ensure the sticky chrome and controls work cleanly on small screens.
+
+
+7. Live Visual Feedback & Contextual Nudges
+Add real-time field highlighting or gentle inline warnings when values look unusual for cross-border situations (e.g. large TFSA contributions, missing Roth election risk, high unrealized gains). Educate while the user is still entering data.
+
+
+8. Improved Sharing & One-Page Summary
+Enhance shareable links with a clear summary card and offer a clean one-page printable/PDF summary in addition to the existing detailed PDF and CSV export of the projection table.
+
+
+9. Smarter Defaults & Typical-Range Helpers
+Expand “use average” and range hints across more fields. Offer age- or income-band presets that fill realistic contribution, expense, and benefit values with one click.
+
+
+10. Accessibility Polish + Lightweight Educational Layer
+Ensure full keyboard navigation, proper ARIA labels, and visible focus states in both themes. Add a short contextual glossary / “Key concepts” panel (CoastFIRE basics, TFSA treatment, departure vs exit tax, etc.) that users can open without leaving the calculator.
