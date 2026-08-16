@@ -1491,6 +1491,33 @@
     .wizard-step-header p { font-size: 13.5px; color: var(--ink-soft); margin: 0; }
     .wizard-chrome.checklist-mode .wizard-step-header { display: none; }
 
+    .snapshot-stats-row { display: none; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .wizard-chrome.checklist-mode .snapshot-stats-row,
+    .wizard-chrome.snapshot-mode .snapshot-stats-row { display: flex; }
+    .wizard-chrome.snapshot-mode .wizard-progress-track,
+    .wizard-chrome.snapshot-mode .wizard-steps-row,
+    .wizard-chrome.snapshot-mode .wizard-meta { display: none; }
+    .wizard-chrome.snapshot-mode { padding-top: 14px; }
+    .ss-stat { display: flex; flex-direction: column; gap: 2px; }
+    .ss-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
+    .ss-value { font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 600; color: var(--harbor); }
+    .ss-flag {
+      margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--gold-text-on-soft);
+      background: var(--gold-soft); padding: 7px 14px; border-radius: 16px; text-decoration: none;
+      max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .ss-flag:empty { display: none; }
+    .ss-dismiss {
+      flex: none; background: transparent; border: none; color: var(--ink-soft); font-size: 18px;
+      cursor: pointer; padding: 2px 6px; line-height: 1;
+    }
+    .ss-dismiss:hover { color: var(--ink); }
+    @media(max-width: 560px) {
+      .snapshot-stats-row { gap: 14px; }
+      .ss-value { font-size: 15px; }
+      .ss-flag { max-width: 140px; }
+    }
+
     @media(max-width: 560px) {
       .wizard-step-pill .wsp-label { display: none; }
       .wizard-step-pill { flex: none; width: 44px; height: 40px; padding: 0; }
@@ -1629,6 +1656,18 @@
         <div class="wizard-step-header" aria-live="polite">
           <h3 id="wizardStepTitle">Tell us about you</h3>
           <p id="wizardStepSub">The basics that set your timeline and what you're saving toward.</p>
+        </div>
+        <div class="snapshot-stats-row" id="snapshotStatsRow" role="status" aria-live="polite">
+          <div class="ss-stat">
+            <span class="ss-label">Portfolio today</span>
+            <span class="ss-value" id="ssPortfolio">—</span>
+          </div>
+          <div class="ss-stat">
+            <span class="ss-label">Years to CoastFIRE</span>
+            <span class="ss-value" id="ssCoastYears">—</span>
+          </div>
+          <a class="ss-flag" id="ssFlag" href="#actionItemsSection"></a>
+          <button type="button" class="ss-dismiss" id="ssDismissBtn" aria-label="Hide this summary bar">×</button>
         </div>
       </div>
 
@@ -3442,6 +3481,22 @@
 
       let chartRows = [], chartReportCurrency = 'USD', chartGeom = null, chartSeries = null;
       let lastRes = null, donutMode = 'account', chartMode = 'single';
+      let latestActionItems = [];
+
+      function updateSnapshotBar() {
+        if (!lastRes) return;
+        const first = lastRes.rows[0];
+        $('ssPortfolio').textContent = fmt(first.combined, lastRes.reportCurrency);
+        $('ssCoastYears').textContent = lastRes.coastYearIndex !== null ? lastRes.coastYearIndex : 'Not yet';
+        const topFlag = latestActionItems.find(i => i.level === 'warning' || i.level === 'action');
+        const flagEl = $('ssFlag');
+        if (topFlag) {
+          flagEl.textContent = topFlag.icon + ' ' + topFlag.title;
+          flagEl.href = topFlag.anchor || '#actionItemsSection';
+        } else {
+          flagEl.textContent = '';
+        }
+      }
 
       function drawChart(rows, reportCurrency) {
         chartRows = rows; chartReportCurrency = reportCurrency; chartSeries = null;
@@ -3868,6 +3923,7 @@
         renderMainChart(res);
         renderRoadmap(res);
         drawIncomeStack(res);
+        updateSnapshotBar();
       }
 
       function doRender(scrollToResults) {
@@ -4768,12 +4824,14 @@
 
         const order = { warning: 0, action: 1, info: 2, good: 3 };
         items.sort((a, b) => order[a.level] - order[b.level]);
+        latestActionItems = items;
 
         if (items.length === 0) {
           $('actionItemsSummary').textContent = '';
           $('actionItemsList').innerHTML = `<div class="action-items-empty">Nothing urgent yet — as you fill in
             accounts, government benefits, and the other tools, relevant action items will show up here
             automatically.</div>`;
+          updateSnapshotBar();
           return;
         }
 
@@ -4797,6 +4855,7 @@
             <div class="ci-body" id="ci-body-${it.slug}">${it.body}${it.anchor ? ` <a class="ci-link" href="${it.anchor}">${it.anchorLabel} →</a>` : ''}</div>
           </div>`;
         }).join('');
+        updateSnapshotBar();
       }
 
       function loadCheckedActionItems() {
@@ -4915,6 +4974,20 @@
         });
       }
 
+      // For classic/returning visitors who never go through the wizard — same sticky bar,
+      // just the live numbers without the 4-step checklist (which wouldn't apply to them).
+      function showSnapshotOnlyMode() {
+        let dismissed = false;
+        try { dismissed = hasStorage && sessionStorage.getItem('ccfire:snapshotDismissed') === '1'; } catch (e) { }
+        if (dismissed) return;
+        $('wizardChrome').hidden = false;
+        $('wizardChrome').classList.add('snapshot-mode');
+      }
+      $('ssDismissBtn').addEventListener('click', () => {
+        $('wizardChrome').hidden = true;
+        try { sessionStorage.setItem('ccfire:snapshotDismissed', '1'); } catch (e) { }
+      });
+
       function finishWizard() {
         wizardActive = false;
         document.body.classList.remove('wizard-mode');
@@ -5006,6 +5079,7 @@
       } else {
         if (loadedFromLink || hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
         validateAndRender(false); // initial page load — show results in place, don't jump the page
+        showSnapshotOnlyMode();
       }
 
       // Fetch exchange rate on load
