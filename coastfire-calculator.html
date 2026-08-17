@@ -2248,7 +2248,10 @@
 
       // Restore inputs: a shared link (query params) takes priority over local autosave
       const loadedFromLink = applyQueryParams();
-      if (loadedFromLink) { saveInputs(); } else { restoreInputs(); }
+      if (loadedFromLink) {
+        saveInputs();
+        history.replaceState(null, '', window.location.pathname);
+      } else { restoreInputs(); }
       $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
       updateOasHint();
       syncSlidersFromFields();
