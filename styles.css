@@ -105,6 +105,10 @@ header {
   margin-bottom: 14px;
 }
 
+@media(max-width: 480px) {
+  .eyebrow { flex-wrap: wrap; row-gap: 4px; }
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -598,6 +602,29 @@ h2.results-title {
 .tool-directory-card .tdc-sub { font-size: 12px; color: var(--ink-soft); line-height: 1.4; }
 .tool-directory-card .tdc-arrow { color: var(--harbor); font-size: 12px; font-weight: 700; margin-top: 8px; display: block; }
 
+.quiz-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 24px; margin: 28px 0;
+}
+.quiz-card h3 { margin: 0 0 4px; font-size: 18px; }
+.quiz-card .card-sub { color: var(--ink-soft); font-size: 13px; margin: 0; }
+.quiz-options {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px;
+}
+.quiz-option {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px;
+  padding: 14px 16px; font-size: 13.5px; font-weight: 600; color: var(--ink);
+  cursor: pointer; transition: border-color .15s ease, background .15s ease;
+}
+.quiz-option:hover { border-color: var(--harbor); background: var(--harbor-soft); }
+.quiz-option .qo-icon { font-size: 20px; flex: none; }
+.quiz-back {
+  margin-top: 16px; background: transparent; border: none; color: var(--ink-soft);
+  font-size: 13px; font-weight: 600; cursor: pointer; padding: 4px;
+}
+.quiz-back:hover { color: var(--ink); }
+
 .chart-card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -994,6 +1021,17 @@ button.export:hover {
 }
 .sample-banner .sb-dismiss:hover { background: transparent; border-color: var(--ink-soft); color: var(--ink); }
 
+@media(max-width: 640px) {
+  .sample-banner { flex-wrap: wrap; }
+  .sample-banner .sb-text { flex-basis: 100%; }
+}
+
+.sample-banner.stale-banner { background: var(--gold-soft); border-color: var(--gold); }
+.stale-banner .sb-text strong { color: var(--gold-text-on-soft); }
+.stale-banner button:not(.sb-dismiss) { background: var(--gold); color: #fff; }
+.stale-banner button:not(.sb-dismiss):hover { background: #96792a; }
+.stale-banner[hidden] { display: none; }
+
 .scenarios-panel {
   background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
   padding: 16px 18px; margin: 20px 0; display: flex; flex-direction: column; gap: 10px;
@@ -1007,6 +1045,8 @@ button.export:hover {
 .scenarios-row button { flex: none; }
 .scenario-feedback { font-size: 12.5px; color: var(--good); font-weight: 600; opacity: 0; transition: opacity .3s ease; }
 .scenarios-panel .sp-note { font-size: 11.5px; color: var(--ink-soft); }
+.scenarios-panel .sp-note a { color: var(--harbor); font-weight: 600; text-decoration: none; }
+.scenarios-panel .sp-note a:hover { text-decoration: underline; }
 
 .back-to-top {
   position: fixed; bottom: 22px; right: 22px; z-index: 30;
@@ -1194,6 +1234,11 @@ footer {
 body { transition: background .2s ease, color .2s ease; }
 
 .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+
+@media(max-width: 640px) {
+  .header-row { flex-wrap: wrap; }
+  .header-row > div:first-child { flex: 1 1 100%; }
+}
 button.theme-toggle {
   background: var(--surface); border: 1px solid var(--line); color: var(--ink);
   padding: 8px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600;
@@ -1544,7 +1589,7 @@ body.wizard-mode .save-note,
 body.wizard-mode legend.section-title,
 body.wizard-mode summary.section-title,
 body.wizard-mode .section-explainer,
-body.wizard-mode .sample-banner,
+body.wizard-mode .sample-banner:not(.stale-banner),
 body.wizard-mode .scenarios-panel {
   display: none !important;
 }

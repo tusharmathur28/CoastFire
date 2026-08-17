@@ -5,6 +5,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CoastFIRE Calculator — Two Currencies, One Number</title>
+  <meta name="description" content="See when your Canadian and US accounts can coast to retirement — tracked in their native currencies until the final conversion.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Two Currencies, One Number">
+  <meta property="og:title" content="CoastFIRE Calculator — Two Currencies, One Number">
+  <meta property="og:description" content="See when your Canadian and US accounts can coast to retirement — tracked in their native currencies until the final conversion.">
+  <meta property="og:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
+  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/coastfire-calculator.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CoastFIRE Calculator — Two Currencies, One Number">
+  <meta name="twitter:description" content="See when your Canadian and US accounts can coast to retirement — tracked in their native currencies until the final conversion.">
+  <meta name="twitter:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
@@ -41,6 +54,8 @@
         <a href="compare-scenarios.html">Compare Scenarios</a>
       </nav>
     </header>
+
+    <div class="sample-banner stale-banner" id="staleBanner" hidden></div>
 
     <div class="tool-header" id="calcFormHeader">
       <h2>🧭 CoastFIRE Calculator</h2>
@@ -79,6 +94,8 @@
       </div>
       <div class="sp-note">Save as many scenarios as you like — e.g. "Retire at 55" vs "Retire at 60" — then load
         either one any time to compare. Saved in this browser only.</div>
+      <div class="sp-note">Have two or more saved? <a href="compare-scenarios.html">Compare them side by side →</a>
+      </div>
       <div class="sp-note">Export downloads a single file with your current inputs and every saved scenario —
         useful before clearing your browser, switching devices, or just keeping a backup. Import merges a
         previously-exported file back in.</div>
@@ -613,7 +630,8 @@
           <span class="toggle-icon"></span>
         </summary>
         <div class="subhead">Same underlying CAD and USD balances — just re-converted at different exchange rates, so
-          you can see how much currency swings actually move your numbers.</div>
+          you can see how much currency swings actually move your numbers, including how much sooner or later you'd
+          hit CoastFIRE.</div>
         <div class="card-collapsible-body">
           <div class="table-scroll">
             <table class="sens">
@@ -622,6 +640,7 @@
                   <th>1 CAD =</th>
                   <th>Combined portfolio</th>
                   <th>CoastFIRE number</th>
+                  <th>CoastFIRE date</th>
                 </tr>
               </thead>
               <tbody id="sensitivityBody"></tbody>
@@ -853,6 +872,7 @@
     (function () {
       initTheme();
       initThemeToggle();
+      initStaleBanner();
 
       const OAS_MAX_MONTHLY = 743.05; // 2026, age 65-74, Service Canada
 
@@ -1671,15 +1691,22 @@
         $('insightsList').innerHTML = insights.map(t => `<li><span class="mark">→</span><span>${t}</span></li>`).join('');
 
         const baseRate = res.exchangeRate;
-        const rateOffsets = [-0.05, -0.02, 0, 0.02, 0.05];
+        const rateOffsets = [-0.10, -0.05, -0.02, 0, 0.02, 0.05, 0.10];
         $('sensitivityBody').innerHTML = rateOffsets.map(off => {
           const rate = Math.max(0.01, Math.round((baseRate + off) * 1000) / 1000);
           const at = computeAtRate(res, rate);
           const isCurrent = off === 0;
+          // Full re-projection at this rate (not just today's snapshot) so we can show how the
+          // CoastFIRE date itself shifts — a currency swing changes the target, not just today's total.
+          const full = compute({ exchangeRate: rate });
+          const coastCell = full.coastYearIndex !== null
+            ? `Age ${full.currentAge + full.coastYearIndex} (${full.coastYearIndex} yr${full.coastYearIndex === 1 ? '' : 's'})`
+            : `Not by age ${full.retireAge}`;
           return `<tr class="${isCurrent ? 'current-rate' : ''}">
         <td>${rate.toFixed(3)} USD${isCurrent ? ' (your rate)' : ''}</td>
         <td>${fmt(at.combined, res.reportCurrency)}</td>
         <td>${fmt(at.coastNumber, res.reportCurrency)}</td>
+        <td>${coastCell}</td>
       </tr>`;
         }).join('');
 

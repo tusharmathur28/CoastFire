@@ -5,6 +5,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Benefit Claiming-Age Optimizer — Two Currencies, One Number</title>
+  <meta name="description" content="Compare claiming CPP, OAS, and Social Security early vs. late to find your best claiming age.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Two Currencies, One Number">
+  <meta property="og:title" content="Benefit Claiming-Age Optimizer — Two Currencies, One Number">
+  <meta property="og:description" content="Compare claiming CPP, OAS, and Social Security early vs. late to find your best claiming age.">
+  <meta property="og:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
+  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/benefit-timing.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Benefit Claiming-Age Optimizer — Two Currencies, One Number">
+  <meta name="twitter:description" content="Compare claiming CPP, OAS, and Social Security early vs. late to find your best claiming age.">
+  <meta name="twitter:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
@@ -41,6 +54,8 @@
         <a href="compare-scenarios.html">Compare Scenarios</a>
       </nav>
     </header>
+
+    <div class="sample-banner stale-banner" id="staleBanner" hidden></div>
 
     <div class="tool-header">
       <h2>📅 When Should You Claim CPP, OAS &amp; Social Security?</h2>
@@ -128,6 +143,7 @@
     (function () {
       initTheme();
       initThemeToggle();
+      initStaleBanner();
       restoreInputs();
 
       function strategyTableHtml(label, baseAmount, factorFn, minAge, maxAge, chosenAge, planToAge, currency) {

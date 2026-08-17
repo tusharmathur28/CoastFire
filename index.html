@@ -5,6 +5,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Two Currencies, One Number — Cross-Border Financial Tools for Canadians</title>
+  <meta name="description" content="Free cross-border financial planning tools for Canadians living in the US — CoastFIRE retirement math, departure tax, RRSP withholding, benefit timing, and moving back to Canada.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Two Currencies, One Number">
+  <meta property="og:title" content="Two Currencies, One Number — Cross-Border Financial Tools for Canadians">
+  <meta property="og:description" content="Free cross-border financial planning tools for Canadians living in the US — CoastFIRE retirement math, departure tax, RRSP withholding, benefit timing, and moving back to Canada.">
+  <meta property="og:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
+  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/index.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Two Currencies, One Number — Cross-Border Financial Tools for Canadians">
+  <meta name="twitter:description" content="Free cross-border financial planning tools for Canadians living in the US — CoastFIRE retirement math, departure tax, RRSP withholding, benefit timing, and moving back to Canada.">
+  <meta name="twitter:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
@@ -42,6 +55,8 @@
       </nav>
     </header>
 
+    <div class="sample-banner stale-banner" id="staleBanner" hidden></div>
+
     <section class="intro">
       <p>Living cross-border complicates your financial picture. Your accounts sit in two currencies, under two tax
         systems, and not every wrapper is treated the same way by both governments. These tools keep your Canadian and
@@ -51,6 +66,56 @@
         taxation — treat every dollar figure as a <em>pre-tax</em> planning target. Cross-border tax rules (RRSP/TFSA
         treatment, PFIC, FBAR/FATCA, departure tax, totalization) are genuinely complex and change; work with a
         cross-border-specialist accountant or financial planner before acting on this.</div>
+    </section>
+
+    <section class="quiz-card" id="routeQuiz">
+      <div class="quiz-step" id="quizStep1">
+        <h3>Not sure where to start?</h3>
+        <p class="card-sub">Answer one quick question and we'll point you at the right tool.</p>
+        <div class="quiz-options">
+          <button type="button" class="quiz-option" data-next="departure-tax.html">
+            <span class="qo-icon">🛫</span>
+            <span class="qo-label">Still in Canada, planning a move to the US</span>
+          </button>
+          <button type="button" class="quiz-option" data-next="step2">
+            <span class="qo-icon">🇺🇸</span>
+            <span class="qo-label">Already living in the US</span>
+          </button>
+          <button type="button" class="quiz-option" data-next="moving-back.html">
+            <span class="qo-icon">🍁</span>
+            <span class="qo-label">Thinking about moving back to Canada</span>
+          </button>
+          <button type="button" class="quiz-option" data-next="coastfire-calculator.html">
+            <span class="qo-icon">🤔</span>
+            <span class="qo-label">Just exploring — not sure yet</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="quiz-step" id="quizStep2" hidden>
+        <h3>What do you want to figure out first?</h3>
+        <p class="card-sub">You can always visit the other tools later — nothing here requires filling out the
+          others first.</p>
+        <div class="quiz-options">
+          <button type="button" class="quiz-option" data-next="coastfire-calculator.html">
+            <span class="qo-icon">🧭</span>
+            <span class="qo-label">My overall CoastFIRE / retirement number</span>
+          </button>
+          <button type="button" class="quiz-option" data-next="benefit-timing.html">
+            <span class="qo-icon">📅</span>
+            <span class="qo-label">When to claim CPP, OAS &amp; Social Security</span>
+          </button>
+          <button type="button" class="quiz-option" data-next="rrsp-withholding.html">
+            <span class="qo-icon">🏦</span>
+            <span class="qo-label">The tax hit on drawing down my RRSP</span>
+          </button>
+          <button type="button" class="quiz-option" data-next="action-items.html">
+            <span class="qo-icon">✅</span>
+            <span class="qo-label">Just show me my to-do list</span>
+          </button>
+        </div>
+        <button type="button" class="quiz-back" id="quizBackBtn">← Back</button>
+      </div>
     </section>
 
     <section class="tools-hub" id="toolsHub">
@@ -110,6 +175,29 @@
   <script>
     initTheme();
     initThemeToggle();
+    initStaleBanner();
+
+    (function () {
+      const quiz = document.getElementById('routeQuiz');
+      if (!quiz) return;
+      quiz.addEventListener('click', e => {
+        const opt = e.target.closest('.quiz-option');
+        if (opt) {
+          const next = opt.getAttribute('data-next');
+          if (next === 'step2') {
+            document.getElementById('quizStep1').hidden = true;
+            document.getElementById('quizStep2').hidden = false;
+          } else {
+            window.location.href = next;
+          }
+          return;
+        }
+        if (e.target.id === 'quizBackBtn') {
+          document.getElementById('quizStep2').hidden = true;
+          document.getElementById('quizStep1').hidden = false;
+        }
+      });
+    })();
   </script>
 </body>
 

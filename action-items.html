@@ -5,6 +5,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Action Items — Two Currencies, One Number</title>
+  <meta name="description" content="A prioritized checklist of cross-border deadlines and to-dos, built automatically from what you've entered across every tool on this site.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Two Currencies, One Number">
+  <meta property="og:title" content="Your Action Items — Two Currencies, One Number">
+  <meta property="og:description" content="A prioritized checklist of cross-border deadlines and to-dos, built automatically from what you've entered across every tool on this site.">
+  <meta property="og:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
+  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/action-items.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Your Action Items — Two Currencies, One Number">
+  <meta name="twitter:description" content="A prioritized checklist of cross-border deadlines and to-dos, built automatically from what you've entered across every tool on this site.">
+  <meta name="twitter:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
@@ -42,6 +55,8 @@
       </nav>
     </header>
 
+    <div class="sample-banner stale-banner" id="staleBanner" hidden></div>
+
     <div class="tool-header">
       <h2>✅ Your Action Items</h2>
       <p class="tool-sub">A prioritized checklist built from what you've actually entered across every tool on
@@ -63,6 +78,7 @@
     (function () {
       initTheme();
       initThemeToggle();
+      initStaleBanner();
 
       function renderActionItems() {
         const stored = readStoredInputs();

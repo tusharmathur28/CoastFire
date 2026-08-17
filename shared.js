@@ -52,6 +52,38 @@ function initThemeToggle() {
   });
 }
 
+// ---- Stale-data nudge ----
+// Shows a dismissible banner (in a page's #staleBanner container, if present) when it's been a
+// while since any tool page last wrote to ccfire:v2 — a reminder to refresh assumptions rather
+// than an error state, so dismissing it just snoozes it instead of hiding it forever.
+function initStaleBanner() {
+  const el = $('staleBanner');
+  if (!el || !hasStorage) return;
+  let lastSaved, snoozeUntil;
+  try {
+    lastSaved = parseInt(localStorage.getItem(LAST_SAVED_KEY), 10);
+    snoozeUntil = parseInt(localStorage.getItem(STALE_SNOOZE_KEY), 10) || 0;
+  } catch (e) { return; }
+  if (!lastSaved) return; // never saved anything yet — still on the shipped example, nothing to go stale
+  const days = Math.floor((Date.now() - lastSaved) / 86400000);
+  if (days < STALE_THRESHOLD_DAYS || Date.now() < snoozeUntil) return;
+
+  const monthsAgo = Math.round(days / 30);
+  el.innerHTML = `
+    <div class="sb-icon">🕓</div>
+    <div class="sb-text"><strong>Your numbers are getting stale.</strong> You last updated your inputs
+      about ${monthsAgo} month${monthsAgo === 1 ? '' : 's'} ago (${days} days) — balances, contribution
+      amounts, and benefit estimates likely need a refresh for accurate results.</div>
+    <a href="coastfire-calculator.html"><button type="button">Update my numbers</button></a>
+    <button type="button" class="sb-dismiss" id="staleDismissBtn">Remind me later</button>`;
+  el.hidden = false;
+  el.className = 'sample-banner stale-banner';
+  $('staleDismissBtn').addEventListener('click', () => {
+    try { localStorage.setItem(STALE_SNOOZE_KEY, String(Date.now() + STALE_SNOOZE_DAYS * 86400000)); } catch (e) { }
+    el.hidden = true;
+  });
+}
+
 // ==================================================================
 // Storage: the single cross-tool source of truth
 // ==================================================================
@@ -89,6 +121,17 @@ const DEFAULT_FIELD_VALUES = {
   rwWithdrawalType: '0.25', rwRrspAtRetirement: '0'
 };
 
+// Timestamp of the last time any tool page actually wrote to ccfire:v2 — used to nudge users
+// whose numbers have gone stale, separately from SNOOZE_KEY which mutes that nudge for a while.
+const LAST_SAVED_KEY = 'ccfire:lastSaved';
+const STALE_SNOOZE_KEY = 'ccfire:staleSnoozeUntil';
+const STALE_THRESHOLD_DAYS = 90;
+const STALE_SNOOZE_DAYS = 30;
+function markSaved() {
+  if (!hasStorage) return;
+  try { localStorage.setItem(LAST_SAVED_KEY, String(Date.now())); } catch (e) { }
+}
+
 function storageAvailable() {
   try { const k = '__t__'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; }
   catch (e) { return false; }
@@ -122,7 +165,7 @@ function writeStoredInputs(patch) {
   const stored = readRawStore();
   FIELD_IDS.forEach(id => { if (stored[id] === undefined) stored[id] = DEFAULT_FIELD_VALUES[id]; });
   Object.assign(stored, patch);
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stored)); } catch (e) { /* ignore quota/availability errors */ }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stored)); markSaved(); } catch (e) { /* ignore quota/availability errors */ }
 }
 
 // Saves this page's own fields into ccfire:v2. Merges with whatever's already stored rather
@@ -134,6 +177,7 @@ function saveInputs() {
     const data = readRawStore();
     FIELD_IDS.forEach(id => { const el = $(id); if (el) data[id] = el.value; });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    markSaved();
   } catch (e) { /* ignore quota/availability errors */ }
 }
 // Restores whichever of this page's own fields have a saved value. Safe as-is post-split:
