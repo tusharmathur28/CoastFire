@@ -103,7 +103,9 @@ const FIELD_IDS = ['currentAge', 'retireAge', 'contribFreq', 'rrspBal', 'rrspCon
   'rwWithdrawalType', 'rwRrspAtRetirement',
   // Drawdown-Order Optimizer
   'ddoPlanToAge', 'ddoFilingStatus', 'ddoCapGainsRate',
-  'ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal'];
+  'ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal',
+  // One-time life events (CoastFIRE Calculator) — JSON-encoded array, see parseLifeEvents()
+  'lifeEvents'];
 
 // The shipped example scenario's values, one per FIELD_IDS entry. Extracted directly from the
 // original single-page HTML's `value="..."` attributes (captured before any prefill/JS could
@@ -123,7 +125,8 @@ const DEFAULT_FIELD_VALUES = {
   mbIsCitizen: 'no', mbHasGreenCard: 'no', mbGreenCardYears: '0', mbNetWorth: '0', mbTaxLiability: '0',
   rwWithdrawalType: '0.25', rwRrspAtRetirement: '0',
   ddoPlanToAge: '90', ddoFilingStatus: 'single', ddoCapGainsRate: '15',
-  ddoRrspBal: '0', ddoTfsaBal: '0', ddoK401Bal: '0', ddoIraBal: '0', ddoRothBal: '0', ddoNonregCadBal: '0', ddoTaxableUsdBal: '0'
+  ddoRrspBal: '0', ddoTfsaBal: '0', ddoK401Bal: '0', ddoIraBal: '0', ddoRothBal: '0', ddoNonregCadBal: '0', ddoTaxableUsdBal: '0',
+  lifeEvents: '[]'
 };
 
 // Timestamp of the last time any tool page actually wrote to ccfire:v2 — used to nudge users
@@ -224,12 +227,46 @@ function convertToReport(cadAmt, usdAmt, reportCurrency, rate) {
 }
 
 const ACCOUNT_KEYS = ['rrsp', 'tfsa', 'nonregCad', 'fhsa', 'resp', 'k401', 'ira', 'roth', 'taxableUsd', 'hsa'];
+const ACCOUNT_LABELS = {
+  rrsp: 'RRSP', tfsa: 'TFSA', nonregCad: 'Non-Registered (CAD)', fhsa: 'FHSA', resp: 'RESP',
+  k401: '401(k)/403(b)', ira: 'Traditional IRA', roth: 'Roth IRA', taxableUsd: 'Taxable (USD)', hsa: 'HSA'
+};
+const CAD_ACCOUNT_KEYS = ['rrsp', 'tfsa', 'nonregCad', 'fhsa', 'resp'];
+
 // One year's compounding step for every account, shared by the deterministic compute() loop
 // and the Monte Carlo engine below so the two never drift out of sync with each other.
 function stepAccounts(bal, contribAnnual, returnRate, mult) {
   const next = {};
   for (const k of ACCOUNT_KEYS) next[k] = bal[k] * (1 + returnRate) + contribAnnual[k] * mult;
   return next;
+}
+
+// ==================================================================
+// One-time life events — dated, signed, account-targeted lump sums (house down payment,
+// inheritance, relocation costs, tuition) layered on top of the steady-state contribution/growth
+// model. Stored as one JSON-encoded FIELD_IDS entry (see 'lifeEvents' above) so autosave, named
+// scenarios, share links, and JSON export/import all pick it up automatically like every other
+// field, with no dedicated persistence code of its own.
+// ==================================================================
+function parseLifeEvents(raw) {
+  try {
+    const arr = JSON.parse(raw || '[]');
+    if (!Array.isArray(arr)) return [];
+    return arr.filter(e => e && Number.isFinite(e.age) && Number.isFinite(e.amount) && ACCOUNT_LABELS[e.account]);
+  } catch (e) { return []; }
+}
+
+// Mutates `bal` in place for every event scheduled at `age`. `usdConverted` is true when the
+// caller's `bal` already holds CAD-native accounts converted to USD (simulateDrawdown) rather
+// than kept in native currency (compute()/simulateMonteCarlo()) — the event amount (always
+// entered in the account's native currency) needs the same conversion in that case. Floors at
+// zero rather than going negative — an event larger than the account's balance just empties it.
+function applyLifeEventsForAge(bal, events, age, exchangeRate, usdConverted) {
+  events.forEach(ev => {
+    if (ev.age !== age || !Object.prototype.hasOwnProperty.call(bal, ev.account)) return;
+    const amt = (usdConverted && CAD_ACCOUNT_KEYS.includes(ev.account)) ? ev.amount * exchangeRate : ev.amount;
+    bal[ev.account] = Math.max(0, bal[ev.account] + amt);
+  });
 }
 
 function compute(overrides) {
@@ -250,6 +287,7 @@ function compute(overrides) {
   const monthlyExpenses = val('monthlyExpenses');
   const cppMonthly = val('cppMonthly'), oasMonthly = val('oasMonthly'), ssMonthly = val('ssMonthly');
   const benefitsStartAge = val('benefitsStartAge');
+  const lifeEvents = parseLifeEvents(raw('lifeEvents'));
 
   let bal = {
     rrsp: val('rrspBal'), tfsa: val('tfsaBal'), nonregCad: val('nonregCadBal'), fhsa: val('fhsaBal'), resp: val('respBal'),
@@ -291,6 +329,7 @@ function compute(overrides) {
 
   for (let i = 0; i <= n; i++) {
     const age = currentAge + i;
+    applyLifeEventsForAge(bal, lifeEvents, age, exchangeRate, false);
     const yrsRemaining = n - i;
     const cadTotal = bal.rrsp + bal.tfsa + bal.nonregCad + bal.fhsa + bal.resp;
     const usdTotal = bal.k401 + bal.ira + bal.roth + bal.taxableUsd + bal.hsa;
@@ -378,6 +417,7 @@ function simulateMonteCarlo(overrides, trials, stdevReturn) {
   const monthlyExpenses = val('monthlyExpenses');
   const cppMonthly = val('cppMonthly'), oasMonthly = val('oasMonthly'), ssMonthly = val('ssMonthly');
   const benefitsStartAge = val('benefitsStartAge');
+  const lifeEvents = parseLifeEvents(raw('lifeEvents'));
 
   const startBal = {
     rrsp: val('rrspBal'), tfsa: val('tfsaBal'), nonregCad: val('nonregCadBal'), fhsa: val('fhsaBal'), resp: val('respBal'),
@@ -412,6 +452,7 @@ function simulateMonteCarlo(overrides, trials, stdevReturn) {
     let coastedFlag = false;
     const path = [];
     for (let i = 0; i <= n; i++) {
+      applyLifeEventsForAge(bal, lifeEvents, currentAge + i, exchangeRate, false);
       const cadTotal = bal.rrsp + bal.tfsa + bal.nonregCad + bal.fhsa + bal.resp;
       const usdTotal = bal.k401 + bal.ira + bal.roth + bal.taxableUsd + bal.hsa;
       const combined = convertToReport(cadTotal, usdTotal, reportCurrency, exchangeRate);
@@ -646,6 +687,7 @@ function simulateDrawdown(overrides, strategyName) {
   const benefitsStartAge = val('benefitsStartAge');
   const filingStatus = raw('ddoFilingStatus') === 'mfj' ? 'mfj' : 'single';
   const capGainsRate = Math.max(0, val('ddoCapGainsRate')) / 100;
+  const lifeEvents = parseLifeEvents(raw('lifeEvents'));
 
   const brackets = US_TAX_BRACKETS_2026[filingStatus];
   const standardDeduction = US_STANDARD_DEDUCTION_2026[filingStatus];
@@ -670,6 +712,7 @@ function simulateDrawdown(overrides, strategyName) {
 
   for (let i = 0; i <= n; i++) {
     const age = retireAge + i;
+    applyLifeEventsForAge(bal, lifeEvents, age, exchangeRate, true);
     const govBenefit = age >= benefitsStartAge ? annualGovBenefit : 0;
     const netNeed = Math.max(0, futureAnnualExpense - govBenefit);
 

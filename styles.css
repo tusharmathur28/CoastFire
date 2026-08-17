@@ -331,6 +331,54 @@ details.collapsible-section .collapsible-body { padding-top: 4px; }
   margin-bottom: 16px;
 }
 
+.life-event-row {
+  display: grid;
+  grid-template-columns: 72px 118px 120px 1fr 1fr 32px;
+  gap: 10px;
+  align-items: end;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.life-event-row .field {
+  margin-bottom: 0;
+}
+
+.life-event-row label {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.life-event-row .remove-event-btn {
+  padding: 9px 0;
+  width: 32px;
+  text-align: center;
+}
+
+.life-events-empty {
+  color: var(--ink-soft);
+  font-size: 13px;
+  padding: 4px 0 14px;
+}
+
+@media(max-width:760px) {
+  .life-event-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .life-event-row .life-event-label {
+    grid-column: 1 / -1;
+  }
+
+  .life-event-row .remove-event-btn {
+    grid-column: 1 / -1;
+    justify-self: end;
+    width: auto;
+    padding: 6px 14px;
+  }
+}
+
 .field label {
   display: flex;
   align-items: center;

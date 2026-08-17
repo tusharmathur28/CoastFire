@@ -173,6 +173,11 @@
         </table>
       </div>
 
+      <div class="consideration-item level-info" id="ddoLifeEventsNote" hidden>
+        <div class="ci-title"><span class="ci-icon">ℹ️</span>Life events applied to this simulation</div>
+        <div class="ci-body" id="ddoLifeEventsBody"></div>
+      </div>
+
       <div class="consideration-item level-info">
         <div class="ci-title"><span class="ci-icon">ℹ️</span>RRSP withdrawals are modeled with a simplified foreign
           tax credit</div>
@@ -334,8 +339,26 @@
         });
       }
 
+      // Life events are managed on the CoastFIRE Calculator (readStoredInputs() brings them in
+      // via buildOverrides()) — this page just surfaces which of them, if any, fall inside its
+      // own simulated horizon so a lump sum showing up in the year-by-year table isn't a mystery.
+      function renderLifeEventsNote(overrides) {
+        const retireAge = parseFloat(overrides.retireAge) || 0;
+        const planToAge = num('ddoPlanToAge') || 90;
+        const exchangeRate = parseFloat(overrides.exchangeRate) || 0.73;
+        const inRange = parseLifeEvents(overrides.lifeEvents).filter(ev => ev.age >= retireAge && ev.age <= planToAge);
+        const note = $('ddoLifeEventsNote');
+        if (!inRange.length) { note.hidden = true; return; }
+        note.hidden = false;
+        $('ddoLifeEventsBody').innerHTML = 'Managed on the CoastFIRE Calculator: ' + inRange.map(ev => {
+          const usdAmount = Math.abs(ev.amount) * (CAD_ACCOUNT_KEYS.includes(ev.account) ? exchangeRate : 1);
+          return `<strong>${ev.amount < 0 ? '−' : '+'}${fmtUsd(usdAmount)}</strong> to ${ACCOUNT_LABELS[ev.account]} at age ${ev.age}${ev.label ? ` (${ev.label})` : ''}`;
+        }).join(', ') + '.';
+      }
+
       function renderDrawdown() {
         const overrides = buildOverrides();
+        renderLifeEventsNote(overrides);
         const totalBal = ['ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal']
           .reduce((s, id) => s + num(id), 0);
 

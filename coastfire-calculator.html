@@ -461,6 +461,21 @@
         </div>
       </details>
 
+      <details class="collapsible-section" id="lifeEventsDetails">
+        <summary class="section-title"><span class="num">06</span> Life events
+          <span class="collapse-teaser">optional — click to expand</span></summary>
+        <div class="collapsible-body" data-step="4">
+          <div class="section-explainer">One-time lump sums in or out of a specific account at a specific age — a
+            house down payment, an inheritance, relocation costs, a kid's tuition. Everything else here assumes
+            steady contributions; this is where you account for the bumps. Applies to this projection, the Monte
+            Carlo chart, and the Drawdown-Order Optimizer.</div>
+
+          <div id="lifeEventsList"></div>
+          <button type="button" class="small ghost-small" id="addLifeEventBtn">+ Add a life event</button>
+          <input type="hidden" id="lifeEvents" value="[]">
+        </div>
+      </details>
+
       <div class="wizard-nav-row" id="wizardNavRow" hidden>
         <button type="button" class="ghost" id="wizardBackBtn">Back</button>
         <button type="button" class="primary" id="wizardContinueBtn">Continue</button>
@@ -951,6 +966,7 @@
         $('results').hidden = true;
         clearSavedInputs();
         syncSlidersFromFields();
+        refreshLifeEventsFromField();
         showBanner();
       });
 
@@ -1050,6 +1066,88 @@
         else collapseExtraAccounts();
       });
 
+      // ---- Life events (one-time lump sums) ----
+      // lifeEventsState is populated later, once restoreInputs()/applyQueryParams() has settled
+      // the hidden #lifeEvents field's value (see refreshLifeEventsFromField() below) — wiring
+      // here is safe to set up early since nothing reads lifeEventsState until then.
+      let lifeEventsState = [];
+
+      function accountOptionsHtml(selected) {
+        const groups = [
+          { label: 'Canadian', keys: ['rrsp', 'tfsa', 'nonregCad', 'fhsa', 'resp'] },
+          { label: 'US', keys: ['k401', 'ira', 'roth', 'taxableUsd', 'hsa'] }
+        ];
+        return groups.map(g => `<optgroup label="${g.label}">` +
+          g.keys.map(k => `<option value="${k}"${k === selected ? ' selected' : ''}>${ACCOUNT_LABELS[k]}</option>`).join('') +
+          '</optgroup>').join('');
+      }
+
+      function renderLifeEventsList() {
+        const container = $('lifeEventsList');
+        if (!lifeEventsState.length) {
+          container.innerHTML = '<div class="life-events-empty">No life events added yet — add one below for a house down payment, inheritance, relocation costs, tuition, etc.</div>';
+          return;
+        }
+        container.innerHTML = lifeEventsState.map((ev, i) => {
+          const direction = ev.amount < 0 ? 'out' : 'in';
+          const magnitude = Math.abs(ev.amount);
+          return `<div class="life-event-row" data-index="${i}">
+            <div class="field"><label for="leAge${i}">Age</label><input type="number" id="leAge${i}" min="0" max="110" step="1" value="${ev.age}" data-field="age"></div>
+            <div class="field"><label for="leDir${i}">Direction</label>
+              <select id="leDir${i}" data-field="direction">
+                <option value="in"${direction === 'in' ? ' selected' : ''}>Add money</option>
+                <option value="out"${direction === 'out' ? ' selected' : ''}>Remove money</option>
+              </select>
+            </div>
+            <div class="field"><label for="leAmt${i}">Amount</label><input type="number" id="leAmt${i}" min="0" step="500" value="${magnitude}" data-field="amount"></div>
+            <div class="field"><label for="leAcc${i}">Account</label><select id="leAcc${i}" data-field="account">${accountOptionsHtml(ev.account)}</select></div>
+            <div class="field life-event-label"><label for="leLbl${i}">Label (optional)</label><input type="text" id="leLbl${i}" maxlength="60" value="${(ev.label || '').replace(/"/g, '&quot;')}" placeholder="e.g. House down payment" data-field="label"></div>
+            <button type="button" class="small ghost-small remove-event-btn" data-action="remove" title="Remove this event" aria-label="Remove this event">×</button>
+          </div>`;
+        }).join('');
+      }
+
+      function syncLifeEvents() {
+        $('lifeEvents').value = JSON.stringify(lifeEventsState);
+        $('lifeEvents').dispatchEvent(new Event('input', { bubbles: true }));
+      }
+
+      function refreshLifeEventsFromField() {
+        lifeEventsState = parseLifeEvents($('lifeEvents').value);
+        renderLifeEventsList();
+      }
+
+      $('addLifeEventBtn').addEventListener('click', () => {
+        lifeEventsState.push({ age: num('currentAge') + 5, account: 'nonregCad', amount: -10000, label: '' });
+        renderLifeEventsList();
+        syncLifeEvents();
+      });
+
+      $('lifeEventsList').addEventListener('input', e => {
+        const row = e.target.closest('.life-event-row');
+        if (!row) return;
+        const ev = lifeEventsState[parseInt(row.dataset.index, 10)];
+        const field = e.target.dataset.field;
+        if (!ev || !field) return;
+        if (field === 'age') ev.age = parseInt(e.target.value, 10) || 0;
+        else if (field === 'account') ev.account = e.target.value;
+        else if (field === 'label') ev.label = e.target.value;
+        else if (field === 'amount' || field === 'direction') {
+          const magnitude = field === 'amount' ? Math.abs(parseFloat(e.target.value) || 0) : Math.abs(ev.amount);
+          const direction = field === 'direction' ? e.target.value : row.querySelector('[data-field="direction"]').value;
+          ev.amount = direction === 'out' ? -magnitude : magnitude;
+        }
+        syncLifeEvents();
+      });
+
+      $('lifeEventsList').addEventListener('click', e => {
+        if (e.target.dataset.action !== 'remove') return;
+        const row = e.target.closest('.life-event-row');
+        lifeEventsState.splice(parseInt(row.dataset.index, 10), 1);
+        renderLifeEventsList();
+        syncLifeEvents();
+      });
+
       // ---- Validation ----
       // Each validation error is tagged with the wizard step it belongs to (1-4), so the wizard's
       // "Continue" button can validate just the current step. Classic full-form validation (no argument)
@@ -1141,6 +1239,7 @@
         $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
         updateOasHint();
         syncSlidersFromFields();
+        refreshLifeEventsFromField();
         saveInputs();
         validateAndRender();
         showScenarioFeedback(`Loaded "${name}".`);
@@ -1230,6 +1329,7 @@
             $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
             updateOasHint();
             syncSlidersFromFields();
+            refreshLifeEventsFromField();
             saveInputs();
             validateAndRender();
           }
@@ -1933,6 +2033,10 @@
         if (res.annualGovBenefit > 0) {
           insights.push(`Once claimed, your combined CPP + OAS + Social Security is projected to cover ${fmt(res.annualGovBenefit / 12, res.reportCurrency)}/month of your ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month expense target (today's dollars) — reducing how much your portfolio alone needs to fund.`);
         }
+        if (lifeEventsState.length) {
+          const inRange = lifeEventsState.filter(ev => ev.age >= res.currentAge && ev.age <= res.retireAge);
+          insights.push(`${inRange.length} of your ${lifeEventsState.length} life event${lifeEventsState.length === 1 ? '' : 's'} fall${inRange.length === 1 ? 's' : ''} within this projection (age ${res.currentAge}-${res.retireAge}) and ${inRange.length === 1 ? 'is' : 'are'} applied at ${inRange.length === 1 ? 'its' : 'their'} scheduled age — an event larger than the account's balance at that time simply empties it rather than going negative.`);
+        }
         $('insightsList').innerHTML = insights.map(t => `<li><span class="mark">→</span><span>${t}</span></li>`).join('');
 
         const baseRate = res.exchangeRate;
@@ -2110,6 +2214,7 @@
         $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
         updateOasHint();
         syncSlidersFromFields();
+        refreshLifeEventsFromField();
         showBanner();
         saveInputs();
         validateAndRender();
@@ -2527,6 +2632,7 @@
       $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
       updateOasHint();
       syncSlidersFromFields();
+      refreshLifeEventsFromField();
       (function syncPresetActiveOnLoad() {
         const match = Object.entries(PRESETS).find(([, p]) => p.returnRate == num('returnRate') && p.inflationRate == num('inflationRate'));
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', match && b.dataset.preset === match[0]));
