@@ -4,6 +4,15 @@
 // tool's data comes from localStorage['ccfire:v2'] via readStoredInputs(), not from a shared
 // script-level variable or a live DOM read into another page's markup.
 
+// Cloudflare Web Analytics — injected here so every page gets it via this one shared script.
+(function () {
+  const s = document.createElement('script');
+  s.type = 'module';
+  s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+  s.setAttribute('data-cf-beacon', '{"token": "023d624f5e7e4815b6172a9022bfbd68"}');
+  document.head.appendChild(s);
+})();
+
 const $ = id => document.getElementById(id);
 const num = id => parseFloat($(id).value) || 0;
 const fmt = (n, cur) => {
