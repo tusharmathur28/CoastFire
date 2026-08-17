@@ -649,6 +649,43 @@
         </div>
       </details>
 
+      <details class="goal-seek-card card-collapsible" id="goalSeekDetails">
+        <summary>
+          <h3>Goal seek</h3>
+          <span class="toggle-icon"></span>
+        </summary>
+        <div class="subhead">Solve backward from a target instead of forward from your inputs.</div>
+        <div class="card-collapsible-body">
+          <div class="view-tabs" id="goalSeekTabs" role="tablist" aria-label="Goal seek mode">
+            <button type="button" class="active" data-gsmode="contrib" role="tab" aria-selected="true">Required
+              contribution</button>
+            <button type="button" data-gsmode="age" role="tab" aria-selected="false">Earliest retirement age</button>
+          </div>
+
+          <div id="goalSeekContribPanel">
+            <div class="helper-row">
+              <div class="field">
+                <label for="gsTargetAge">Target retirement age</label>
+                <input type="number" id="gsTargetAge" min="20" max="90" step="1" value="55">
+              </div>
+              <button type="button" class="small" id="gsSolveContribBtn">Solve</button>
+            </div>
+            <div class="helper-hint">Keeps the mix between accounts the same and scales every contribution field
+              above by the same factor to find the total needed.</div>
+            <div id="gsContribResult"></div>
+          </div>
+
+          <div id="goalSeekAgePanel" hidden>
+            <div class="helper-hint" style="margin-top:0;">Uses the contribution amounts you've already entered
+              above — no need to change anything first.</div>
+            <div class="helper-row">
+              <button type="button" class="small" id="gsSolveAgeBtn">Solve</button>
+            </div>
+            <div id="gsAgeResult"></div>
+          </div>
+        </div>
+      </details>
+
       <div class="insights">
         <h3 style="font-size:18px;">Insights</h3>
         <ul id="insightsList"></ul>
@@ -861,6 +898,16 @@
         </dl>
       </div>
     </details>
+    <details class="freshness-note">
+      <summary>📅 Figures current as of 2026</summary>
+      <ul>
+        <li><strong>2026</strong> — CPP, OAS &amp; Social Security maximums, HSA contribution limits, the capital
+          gains inclusion rate, and moving-back thresholds are all updated for 2026.</li>
+        <li><strong>Jan 2025</strong> — Social Security Fairness Act repeal of WEP/GPO reflected in the Benefit
+          Timing amounts.</li>
+      </ul>
+    </details>
+
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · Inspired by <a
         href="https://maplecoastfire.ca" style="color:inherit;">MapleCoastFIRE</a></footer>
   </div>
@@ -1508,6 +1555,94 @@
           });
           if (lastRes) renderDonut(lastRes, donutMode);
         });
+      });
+
+      // ---- Goal seek: solve backward from a target instead of forward from the inputs ----
+      const CAD_CONTRIB_IDS = ['rrspContrib', 'tfsaContrib', 'nonregCadContrib', 'fhsaContrib', 'respContrib'];
+      const USD_CONTRIB_IDS = ['k401Contrib', 'iraContrib', 'rothContrib', 'taxableUsdContrib', 'hsaContrib'];
+      const ALL_CONTRIB_IDS = CAD_CONTRIB_IDS.concat(USD_CONTRIB_IDS);
+
+      // Scales every contribution field by the same factor k, holding employer match and
+      // everything else fixed — match isn't the user's to increase, so it stays as entered.
+      function contribOverrides(k) {
+        const o = {};
+        ALL_CONTRIB_IDS.forEach(id => { o[id] = (parseFloat($(id).value) || 0) * k; });
+        return o;
+      }
+      // CAD and USD contributions are different currencies until this conversion, same as
+      // everywhere else in this calculator — never sum them as raw dollars.
+      function totalMonthlyContrib(scale, reportCurrency, exchangeRate) {
+        const freqMult = $('contribFreq').value === 'monthly' ? 1 : (1 / 12);
+        const cadSum = CAD_CONTRIB_IDS.reduce((s, id) => s + (parseFloat($(id).value) || 0), 0) * scale;
+        const usdSum = USD_CONTRIB_IDS.reduce((s, id) => s + (parseFloat($(id).value) || 0), 0) * scale;
+        return convertToReport(cadSum, usdSum, reportCurrency, exchangeRate) * freqMult;
+      }
+
+      document.querySelectorAll('#goalSeekTabs button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#goalSeekTabs button').forEach(b => {
+            const isActive = b === btn;
+            b.classList.toggle('active', isActive);
+            b.setAttribute('aria-selected', String(isActive));
+          });
+          $('goalSeekContribPanel').hidden = btn.dataset.gsmode !== 'contrib';
+          $('goalSeekAgePanel').hidden = btn.dataset.gsmode !== 'age';
+        });
+      });
+
+      $('gsSolveContribBtn').addEventListener('click', () => {
+        const targetAge = parseFloat($('gsTargetAge').value) || 0;
+        const currentAge = num('currentAge');
+        const resultEl = $('gsContribResult');
+
+        if (targetAge <= currentAge) {
+          resultEl.innerHTML = `<div class="reassurance-box warn"><strong>Target age must be after your current age (${currentAge}).</strong></div>`;
+          return;
+        }
+        const totalCurrentRaw = ALL_CONTRIB_IDS.reduce((s, id) => s + (parseFloat($(id).value) || 0), 0);
+        if (totalCurrentRaw <= 0) {
+          resultEl.innerHTML = `<div class="reassurance-box warn"><strong>Enter at least one contribution amount above first</strong> — this solves by scaling your current contributions, so it needs a starting point above zero.</div>`;
+          return;
+        }
+
+        const atCurrent = compute({ retireAge: targetAge });
+        const curMonthly = totalMonthlyContrib(1, atCurrent.reportCurrency, atCurrent.exchangeRate);
+        if (atCurrent.coastYearIndex !== null) {
+          resultEl.innerHTML = `<div class="reassurance-box"><strong>You're already on track.</strong> At your current ${fmt(curMonthly, atCurrent.reportCurrency)}/month in combined contributions, you're projected to reach CoastFIRE by age ${currentAge + atCurrent.coastYearIndex} — at or before your target of ${targetAge}.</div>`;
+          return;
+        }
+
+        // Binary search the smallest contribution scale factor that reaches the target age.
+        let lo = 1, hi = 20, reached = false;
+        for (let i = 0; i < 40; i++) {
+          const mid = (lo + hi) / 2;
+          const r = compute(Object.assign({ retireAge: targetAge }, contribOverrides(mid)));
+          if (r.coastYearIndex !== null) { hi = mid; reached = true; } else { lo = mid; }
+        }
+        if (!reached) {
+          resultEl.innerHTML = `<div class="reassurance-box warn"><strong>Not reachable by contributions alone.</strong> Even at 20&times; your current contributions, this isn't reached by age ${targetAge} — try a later target age or revisit your expected return.</div>`;
+          return;
+        }
+        const reqMonthly = totalMonthlyContrib(hi, atCurrent.reportCurrency, atCurrent.exchangeRate);
+        const delta = reqMonthly - curMonthly;
+        const pct = curMonthly > 0 ? Math.round((delta / curMonthly) * 100) : null;
+        resultEl.innerHTML = `<div class="reassurance-box"><strong>To reach CoastFIRE by age ${targetAge}</strong>, increase your total combined contributions from about ${fmt(curMonthly, atCurrent.reportCurrency)}/month to about ${fmt(reqMonthly, atCurrent.reportCurrency)}/month${pct !== null ? ` (+${fmt(delta, atCurrent.reportCurrency)}/mo, about +${pct}%)` : ''} — split across the accounts above however makes sense for you.</div>`;
+      });
+
+      $('gsSolveAgeBtn').addEventListener('click', () => {
+        const currentAge = num('currentAge');
+        const resultEl = $('gsAgeResult');
+        let found = null;
+        for (let age = currentAge + 1; age <= 90; age++) {
+          const r = compute({ retireAge: age });
+          if (r.coastYearIndex !== null) { found = age; break; }
+        }
+        if (found === null) {
+          resultEl.innerHTML = `<div class="reassurance-box warn"><strong>Not reachable by age 90</strong> at your current contribution rate — try the "Required contribution" tab above to see what it'd take.</div>`;
+          return;
+        }
+        const yrs = found - currentAge;
+        resultEl.innerHTML = `<div class="reassurance-box"><strong>Earliest retirement age: ${found}</strong> (${yrs} year${yrs === 1 ? '' : 's'} from now) — the earliest age at which your projected portfolio, at your current contribution rate, covers what you'd need starting then.</div>`;
       });
 
       // ---- Retirement income stack chart ----

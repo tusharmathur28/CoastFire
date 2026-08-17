@@ -1231,6 +1231,16 @@ footer {
   margin-top: 40px;
 }
 
+.freshness-note { margin: 24px 0 0; font-size: 12px; color: var(--ink-soft); }
+.freshness-note summary { cursor: pointer; list-style: none; font-weight: 600; }
+.freshness-note summary::-webkit-details-marker { display: none; }
+.freshness-note summary::before { content: '▸ '; }
+.freshness-note[open] summary::before { content: '▾ '; }
+.freshness-note ul { margin: 8px 0 0; padding-left: 18px; }
+.freshness-note li { margin-bottom: 6px; }
+.freshness-note li:last-child { margin-bottom: 0; }
+.freshness-note strong { color: var(--ink); }
+
 body { transition: background .2s ease, color .2s ease; }
 
 .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
@@ -1444,6 +1454,11 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
   padding: 14px 16px; font-size: 13.5px; color: var(--ink); margin-bottom: 20px;
 }
 .reassurance-box strong { color: var(--good); }
+.reassurance-box.warn { background: var(--maple-soft); border-left-color: var(--maple); }
+.reassurance-box.warn strong { color: var(--maple); }
+
+.goal-seek-card .view-tabs { margin-bottom: 16px; }
+.goal-seek-card .reassurance-box { margin-top: 14px; margin-bottom: 0; }
 
 .result-strip {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
