@@ -50,6 +50,7 @@
         <a href="departure-tax.html">Departure Tax</a>
         <a href="rrsp-withholding.html">RRSP Withholding</a>
         <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="drawdown-optimizer.html">Drawdown Optimizer</a>
         <a href="moving-back.html">Moving Back to Canada</a>
         <a href="compare-scenarios.html">Compare Scenarios</a>
       </nav>
@@ -74,9 +75,9 @@
           <label for="rwWithdrawalType">Withdrawal strategy <span class="info"
               title="This is generally the final Canadian tax on the withdrawal — no Canadian return needed — unless you elect under Section 217 to be taxed as if resident, which can sometimes produce a refund at lower income levels.">?</span></label>
           <select id="rwWithdrawalType">
-            <option value="0.25" selected>Lump-sum RRSP collapse — 25% withholding</option>
-            <option value="0.15">RRIF periodic payments — 15% treaty rate</option>
-            <option value="0">I'll be a Canadian resident when I withdraw — no withholding</option>
+            <option data-rate-key="lumpSum" selected>Lump-sum RRSP collapse — 25% withholding</option>
+            <option data-rate-key="periodic">RRIF periodic payments — 15% treaty rate</option>
+            <option data-rate-key="resident">I'll be a Canadian resident when I withdraw — no withholding</option>
           </select>
           <div class="label-plain">The 15% rate only applies to true periodic payments from a RRIF, not a single
             lump-sum RRSP collapse — you generally need to convert your RRSP to a RRIF first.</div>
@@ -154,6 +155,13 @@
       initTheme();
       initThemeToggle();
       initStaleBanner();
+
+      // Option values come from the shared RRSP_WITHHOLDING_RATES constant (shared.js) rather
+      // than being hardcoded here a second time — must run before restoreInputs() so a saved
+      // rwWithdrawalType value still matches one of the option values.
+      document.querySelectorAll('#rwWithdrawalType option[data-rate-key]').forEach(opt => {
+        opt.value = RRSP_WITHHOLDING_RATES[opt.dataset.rateKey];
+      });
       restoreInputs();
 
       // Seed the projected RRSP balance from the CoastFIRE Calculator's own projection, but only
@@ -185,10 +193,10 @@
         if (balance <= 0) {
           note.className = 'deferral-note auto';
           note.textContent = 'No projected RRSP balance to estimate against — fill in an RRSP balance and contributions on the CoastFIRE Calculator to see this.';
-        } else if (rate === 0) {
+        } else if (rate === RRSP_WITHHOLDING_RATES.resident) {
           note.className = 'deferral-note auto';
           note.textContent = `No Canadian withholding applies if you're a resident when you withdraw — standard resident tax rules would apply instead.`;
-        } else if (rate === 0.15) {
+        } else if (rate === RRSP_WITHHOLDING_RATES.periodic) {
           note.className = 'deferral-note auto';
           note.textContent = `✅ At the 15% periodic-payment rate, you'd keep an estimated ${fmt(net, 'CAD')} of your projected ${fmt(balance, 'CAD')} RRSP balance after Canadian withholding — before any additional US tax owed.`;
         } else {

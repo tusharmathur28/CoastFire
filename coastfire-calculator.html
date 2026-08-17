@@ -50,6 +50,7 @@
         <a href="departure-tax.html">Departure Tax</a>
         <a href="rrsp-withholding.html">RRSP Withholding</a>
         <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="drawdown-optimizer.html">Drawdown Optimizer</a>
         <a href="moving-back.html">Moving Back to Canada</a>
         <a href="compare-scenarios.html">Compare Scenarios</a>
       </nav>
@@ -493,6 +494,7 @@
         <a href="departure-tax.html">Departure Tax</a>
         <a href="rrsp-withholding.html">RRSP Withholding</a>
         <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="drawdown-optimizer.html">Drawdown Optimizer</a>
         <a href="moving-back.html">Moving Back to Canada</a>
         <a href="compare-scenarios.html">Compare Scenarios</a>
         <a href="index.html">All tools ↑</a>
@@ -602,16 +604,25 @@
             <span><span class="legend-dot" style="background:var(--maple);"></span>CoastFIRE number</span>
           </div>
           <div class="chart-legend" id="chartLegendMulti" style="display:none;"></div>
+          <div class="chart-legend" id="chartLegendMonteCarlo" style="display:none;">
+            <span class="mc-headline" id="mcHeadline">—</span>
+            <span><span class="legend-dot" style="background:var(--harbor);"></span>Median path</span>
+            <span><span class="legend-swatch" style="background:var(--harbor); opacity:0.3;"></span>Middle 50%</span>
+            <span><span class="legend-swatch" style="background:var(--harbor); opacity:0.15;"></span>Middle 80%</span>
+            <span><span class="legend-dot" style="background:var(--maple);"></span>CoastFIRE number</span>
+          </div>
           <div class="view-tabs" id="chartModeTabs" role="tablist" aria-label="Chart view mode">
             <button type="button" data-mode="single" class="active" role="tab" aria-selected="true">Projection</button>
             <button type="button" data-mode="range" role="tab" aria-selected="false">Scenario range</button>
             <button type="button" data-mode="coast" role="tab" aria-selected="false">Coast on vs off</button>
+            <button type="button" data-mode="montecarlo" role="tab" aria-selected="false">Monte Carlo</button>
           </div>
         </div>
         <div class="chart-wrap">
           <canvas id="chart" height="280"></canvas>
           <div class="chart-tooltip" id="chartTooltip"></div>
         </div>
+        <div class="mc-caveat" id="mcCaveat" style="display:none;">Volatility (±<span id="mcStdev">—</span>%/yr) is an illustrative planning range tied to your Conservative/Base/Optimistic preset, not derived from your actual asset mix. Only the portfolio path is randomized — the CoastFIRE target line still uses your fixed return-rate assumption.</div>
       </div>
 
       <div class="income-stack-card">
@@ -925,7 +936,9 @@
       // Chart colors come from CSS vars, so they need a manual redraw on theme flip —
       // initThemeToggle() (shared.js) calls this after applying the new theme.
       window.onThemeChange = () => {
-        if (!$('results').hidden) drawChart(chartRows, chartReportCurrency);
+        if ($('results').hidden) return;
+        if (chartMode === 'montecarlo' && lastMc) drawFanChart(lastMc, chartReportCurrency);
+        else drawChart(chartRows, chartReportCurrency);
       };
 
       $('reportCurrency').addEventListener('change', () => {
@@ -942,11 +955,24 @@
       });
 
       // ---- Scenario presets ----
+      // stdevReturn is an illustrative annual-volatility planning range per risk level (not
+      // derived from the user's actual asset mix) — used only by the Monte Carlo chart mode.
       const PRESETS = {
-        conservative: { returnRate: 5, inflationRate: 3 },
-        base: { returnRate: 7, inflationRate: 2.5 },
-        optimistic: { returnRate: 9, inflationRate: 2 }
+        conservative: { returnRate: 5, inflationRate: 3, stdevReturn: 8 },
+        base: { returnRate: 7, inflationRate: 2.5, stdevReturn: 12 },
+        optimistic: { returnRate: 9, inflationRate: 2, stdevReturn: 16 }
       };
+      const MC_TRIALS = 500;
+      function stdevForReturn(returnRate) {
+        const exact = Object.values(PRESETS).find(p => p.returnRate === returnRate);
+        if (exact) return exact.stdevReturn;
+        let closest = PRESETS.base, bestDist = Infinity;
+        Object.values(PRESETS).forEach(p => {
+          const dist = Math.abs(p.returnRate - returnRate);
+          if (dist < bestDist) { bestDist = dist; closest = p; }
+        });
+        return closest.stdevReturn;
+      }
       document.querySelectorAll('.preset-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const p = PRESETS[btn.dataset.preset];
@@ -1218,8 +1244,8 @@
         reader.readAsText(file);
       });
 
-      let chartRows = [], chartReportCurrency = 'USD', chartGeom = null, chartSeries = null;
-      let lastRes = null, donutMode = 'account', chartMode = 'single';
+      let chartRows = [], chartReportCurrency = 'USD', chartGeom = null, chartSeries = null, chartFan = null;
+      let lastRes = null, lastMc = null, donutMode = 'account', chartMode = 'single';
 
       // Simplified from the single-page version: it used to show the top flagged Action Item
       // live (via an in-memory variable Action Items populated), but that tool is a separate
@@ -1236,7 +1262,7 @@
       }
 
       function drawChart(rows, reportCurrency) {
-        chartRows = rows; chartReportCurrency = reportCurrency; chartSeries = null;
+        chartRows = rows; chartReportCurrency = reportCurrency; chartSeries = null; chartFan = null;
         const canvas = $('chart');
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.parentElement.clientWidth - 40;
@@ -1291,7 +1317,7 @@
 
       // Draws several "combined portfolio" lines on the same axes (scenario range / coast on-vs-off).
       function drawChartMulti(seriesList, reportCurrency) {
-        chartSeries = seriesList; chartReportCurrency = reportCurrency; chartRows = seriesList[0].rows;
+        chartSeries = seriesList; chartReportCurrency = reportCurrency; chartRows = seriesList[0].rows; chartFan = null;
         const canvas = $('chart');
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.parentElement.clientWidth - 40;
@@ -1341,19 +1367,86 @@
         legend.innerHTML = seriesList.map(s => `<span><span class="legend-dot" style="background:${s.color};"></span>${s.label}</span>`).join('');
       }
 
+      // Fan chart: shades the middle-50% and middle-80% bands of simulated portfolio paths
+      // around the median, on the same axis/grid scaffolding as drawChart/drawChartMulti.
+      function drawFanChart(mc, reportCurrency) {
+        chartFan = mc; chartSeries = null; chartRows = []; chartReportCurrency = reportCurrency;
+        const canvas = $('chart');
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = canvas.parentElement.clientWidth - 40;
+        const cssH = 260;
+        canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+        canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, cssW, cssH);
+
+        const padL = 60, padR = 12, padT = 14, padB = 26;
+        const w = cssW - padL - padR, h = cssH - padT - padB;
+        const bands = mc.bands;
+        const maxVal = Math.max(...bands.map(b => Math.max(b.p90, b.coastNum))) * 1.08 || 1;
+        const xFor = i => padL + (bands.length <= 1 ? 0 : (i / (bands.length - 1)) * w);
+        const yFor = v => padT + h - (v / maxVal) * h;
+        chartGeom = { padL, padR, padT, padB, w, h, cssW, cssH, maxVal };
+
+        const lineColor = cssVar('--line'), softColor = cssVar('--ink-soft');
+        const mapleColor = cssVar('--maple'), harborColor = cssVar('--harbor');
+
+        ctx.strokeStyle = lineColor; ctx.fillStyle = softColor;
+        ctx.font = '11px IBM Plex Mono, monospace'; ctx.lineWidth = 1;
+        for (let g = 0; g <= 4; g++) {
+          const val = (maxVal / 4) * g;
+          const y = yFor(val);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
+          ctx.fillText((reportCurrency === 'CAD' ? 'CA$' : '$') + Math.round(val / 1000) + 'k', 4, y + 4);
+        }
+
+        const fillBand = (loKey, hiKey, alpha) => {
+          ctx.beginPath();
+          bands.forEach((b, i) => { const x = xFor(i), y = yFor(b[hiKey]); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+          for (let i = bands.length - 1; i >= 0; i--) { const x = xFor(i), y = yFor(bands[i][loKey]); ctx.lineTo(x, y); }
+          ctx.closePath();
+          ctx.fillStyle = harborColor; ctx.globalAlpha = alpha; ctx.fill(); ctx.globalAlpha = 1;
+        };
+        fillBand('p10', 'p90', 0.15);
+        fillBand('p25', 'p75', 0.3);
+
+        const drawLine = (key, color, dashed) => {
+          ctx.beginPath();
+          ctx.strokeStyle = color; ctx.lineWidth = dashed ? 2 : 2.5;
+          if (dashed) ctx.setLineDash([5, 4]);
+          bands.forEach((b, i) => { const x = xFor(i), y = yFor(b[key]); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+          ctx.stroke();
+          ctx.setLineDash([]);
+        };
+        drawLine('coastNum', mapleColor, true);
+        drawLine('p50', harborColor, false);
+
+        ctx.fillStyle = softColor;
+        const step = Math.max(1, Math.round(bands.length / 6));
+        bands.forEach((b, i) => {
+          if (i % step === 0 || i === bands.length - 1) ctx.fillText('Age ' + b.age, xFor(i) - 14, cssH - 6);
+        });
+      }
+
       function redrawChartBase() {
-        if (chartSeries) drawChartMulti(chartSeries, chartReportCurrency);
+        if (chartFan) drawFanChart(chartFan, chartReportCurrency);
+        else if (chartSeries) drawChartMulti(chartSeries, chartReportCurrency);
         else if (chartRows.length) drawChart(chartRows, chartReportCurrency);
       }
 
-      function renderMainChart(res) {
+      // skipMonteCarlo: true while a slider is being dragged (quickUpdate's live-update path) —
+      // re-running hundreds of simulation trials on every pointer-move tick would be wasted
+      // work, so the fan chart just holds its last-drawn state until the slider is released.
+      function renderMainChart(res, skipMonteCarlo) {
+        $('chartLegendSingle').style.display = chartMode === 'single' ? 'flex' : 'none';
+        $('chartLegendMulti').style.display = (chartMode === 'range' || chartMode === 'coast') ? 'flex' : 'none';
+        $('chartLegendMonteCarlo').style.display = chartMode === 'montecarlo' ? 'flex' : 'none';
+        $('mcCaveat').style.display = chartMode === 'montecarlo' ? 'block' : 'none';
+
         if (chartMode === 'single') {
-          $('chartLegendSingle').style.display = 'flex';
-          $('chartLegendMulti').style.display = 'none';
           drawChart(res.rows, res.reportCurrency);
         } else if (chartMode === 'range') {
-          $('chartLegendSingle').style.display = 'none';
-          $('chartLegendMulti').style.display = 'flex';
           const scenarios = [
             { key: 'conservative', label: 'Conservative (5%/3%)', color: cssVar('--maple') },
             { key: 'base', label: 'Base case (7%/2.5%)', color: cssVar('--harbor') },
@@ -1365,13 +1458,19 @@
           }));
           drawChartMulti(series, res.reportCurrency);
         } else if (chartMode === 'coast') {
-          $('chartLegendSingle').style.display = 'none';
-          $('chartLegendMulti').style.display = 'flex';
           const series = [
             { label: 'Stop contributing at CoastFIRE', color: cssVar('--gold'), rows: compute({ stopAtCoast: 'yes' }).rows },
             { label: 'Keep contributing to retirement', color: cssVar('--harbor'), rows: compute({ stopAtCoast: 'no' }).rows }
           ];
           drawChartMulti(series, res.reportCurrency);
+        } else if (chartMode === 'montecarlo') {
+          if (skipMonteCarlo) return;
+          const stdev = stdevForReturn(num('returnRate')) / 100;
+          $('mcStdev').textContent = Math.round(stdev * 100);
+          const mc = simulateMonteCarlo({}, MC_TRIALS, stdev);
+          lastMc = mc;
+          $('mcHeadline').textContent = Math.round(mc.successProb * 100) + '% chance you\'re coasting by age ' + mc.retireAge;
+          drawFanChart(mc, res.reportCurrency);
         }
       }
 
@@ -1389,14 +1488,15 @@
 
       // ---- Interactive hover: crosshair + tooltip (works for both single and multi-series modes) ----
       function chartPointerHandler(clientX) {
-        if (!chartGeom || !chartRows.length) return;
+        const pointCount = chartFan ? chartFan.bands.length : chartRows.length;
+        if (!chartGeom || !pointCount) return;
         const canvas = $('chart');
         const rect = canvas.getBoundingClientRect();
         const mouseX = clientX - rect.left;
         const { padL, padT, h, w, maxVal, cssW } = chartGeom;
-        let idx = Math.round(((mouseX - padL) / w) * (chartRows.length - 1));
-        idx = Math.max(0, Math.min(chartRows.length - 1, idx));
-        const x = padL + (chartRows.length <= 1 ? 0 : (idx / (chartRows.length - 1)) * w);
+        let idx = Math.round(((mouseX - padL) / w) * (pointCount - 1));
+        idx = Math.max(0, Math.min(pointCount - 1, idx));
+        const x = padL + (pointCount <= 1 ? 0 : (idx / (pointCount - 1)) * w);
         const yFor = v => padT + h - (v / maxVal) * h;
 
         redrawChartBase();
@@ -1415,7 +1515,18 @@
         const tip = $('chartTooltip');
         let tipHtml = '';
 
-        if (chartSeries) {
+        if (chartFan) {
+          const b = chartFan.bands[idx];
+          const harborColor = cssVar('--harbor'), mapleColor = cssVar('--maple');
+          ctx.beginPath(); ctx.fillStyle = harborColor;
+          ctx.arc(x, yFor(b.p50), 4.5, 0, Math.PI * 2); ctx.fill();
+          ctx.lineWidth = 1.5; ctx.strokeStyle = cssVar('--surface'); ctx.stroke();
+          tipHtml = `<div class="tip-age">Age ${b.age} · ${b.year}</div>
+            <div class="tip-line"><span class="tip-dot" style="background:${harborColor}"></span>Median: <strong>${fmt(b.p50, chartReportCurrency)}</strong></div>
+            <div class="tip-line">Middle 50%: <strong>${fmt(b.p25, chartReportCurrency)} – ${fmt(b.p75, chartReportCurrency)}</strong></div>
+            <div class="tip-line">Middle 80%: <strong>${fmt(b.p10, chartReportCurrency)} – ${fmt(b.p90, chartReportCurrency)}</strong></div>
+            <div class="tip-line"><span class="tip-dot" style="background:${mapleColor}"></span>Coast #: <strong>${fmt(b.coastNum, chartReportCurrency)}</strong></div>`;
+        } else if (chartSeries) {
           const row0 = chartSeries[0].rows[idx];
           tipHtml += `<div class="tip-age">Age ${row0.age} · ${row0.year}</div>`;
           chartSeries.forEach(s => {
@@ -1745,7 +1856,7 @@
         fill.classList.toggle('reached', pct >= 100);
         $('progressPct').textContent = pct + '%';
 
-        renderMainChart(res);
+        renderMainChart(res, true);
         renderRoadmap(res);
         drawIncomeStack(res);
         updateSnapshotBar();

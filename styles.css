@@ -650,6 +650,27 @@ h2.results-title {
   vertical-align: middle;
 }
 
+.legend-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.mc-headline {
+  font-weight: 600;
+  color: var(--ink);
+  margin-right: 4px;
+}
+
+.mc-caveat {
+  font-size: 12px;
+  color: var(--ink-soft);
+  padding: 4px 2px 12px;
+}
+
 .insights {
   margin-bottom: 32px;
 }
@@ -857,6 +878,10 @@ tbody tr:nth-child(even) {
 
 tbody tr.coast-row {
   background: var(--harbor-soft) !important;
+}
+
+tbody tr.warn-row {
+  background: var(--maple-soft) !important;
 }
 
 td.notes {

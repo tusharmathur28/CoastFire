@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drawdown-Order Optimizer — Two Currencies, One Number</title>
+  <meta name="description" content="Sequence RRSP, TFSA, 401(k)/IRA, Roth, and taxable withdrawals in retirement to minimize withholding tax and bracket creep.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Two Currencies, One Number">
+  <meta property="og:title" content="Drawdown-Order Optimizer — Two Currencies, One Number">
+  <meta property="og:description" content="Sequence RRSP, TFSA, 401(k)/IRA, Roth, and taxable withdrawals in retirement to minimize withholding tax and bracket creep.">
+  <meta property="og:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
+  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/drawdown-optimizer.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Drawdown-Order Optimizer — Two Currencies, One Number">
+  <meta name="twitter:description" content="Sequence RRSP, TFSA, 401(k)/IRA, Roth, and taxable withdrawals in retirement to minimize withholding tax and bracket creep.">
+  <meta name="twitter:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <a href="#ddoRrspBal" class="skip-link">Skip to calculator</a>
+  <div class="wrap">
+
+    <header>
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
+            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
+            accounts in their native currencies.</p>
+        </div>
+        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+      </div>
+      <nav class="page-nav">
+        <a href="index.html">All Tools</a>
+        <a href="coastfire-calculator.html">CoastFIRE Calculator</a>
+        <a href="action-items.html">Action Items</a>
+        <a href="departure-tax.html">Departure Tax</a>
+        <a href="rrsp-withholding.html">RRSP Withholding</a>
+        <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="drawdown-optimizer.html">Drawdown Optimizer</a>
+        <a href="moving-back.html">Moving Back to Canada</a>
+        <a href="compare-scenarios.html">Compare Scenarios</a>
+      </nav>
+    </header>
+
+    <div class="sample-banner stale-banner" id="staleBanner" hidden></div>
+
+    <div class="tool-header">
+      <h2>🧮 Drawdown-Order Optimizer</h2>
+      <p class="tool-sub">Which account you draw down first in retirement changes how much tax you pay, year over
+        year — RRSP withdrawals carry Canadian non-resident withholding on top of US ordinary tax, taxable
+        brokerage gains stack differently than ordinary income, and TFSA/Roth withdrawals are free. This simulates
+        your full retirement year by year and compares withdrawal orders. General information only, not tax advice.</p>
+    </div>
+
+    <div class="tool-card">
+      <h3>Balances at retirement</h3>
+      <div class="prefill-note"><span class="pn-icon">↺</span>Defaults to your projected balances at retirement
+        from the CoastFIRE Calculator — adjust if you expect an account to grow differently than the rest of your
+        portfolio.</div>
+      <div class="grid3 border-crossing">
+        <div class="country-col">
+          <div class="country-head"><span class="chip ca">CA</span> Canadian accounts</div>
+          <div class="field">
+            <label for="ddoRrspBal">RRSP balance ($ CAD)</label>
+            <input type="number" id="ddoRrspBal" value="0" min="0" step="1000">
+          </div>
+          <div class="field">
+            <label for="ddoTfsaBal">TFSA balance ($ CAD)</label>
+            <input type="number" id="ddoTfsaBal" value="0" min="0" step="1000">
+          </div>
+          <div class="field">
+            <label for="ddoNonregCadBal">Non-registered CAD balance ($ CAD)</label>
+            <input type="number" id="ddoNonregCadBal" value="0" min="0" step="1000">
+          </div>
+        </div>
+        <div class="country-col">
+          <div class="country-head"><span class="chip us">US</span> US accounts</div>
+          <div class="field">
+            <label for="ddoK401Bal">401(k) balance ($ USD)</label>
+            <input type="number" id="ddoK401Bal" value="0" min="0" step="1000">
+          </div>
+          <div class="field">
+            <label for="ddoIraBal">Traditional IRA balance ($ USD)</label>
+            <input type="number" id="ddoIraBal" value="0" min="0" step="1000">
+          </div>
+          <div class="field">
+            <label for="ddoRothBal">Roth IRA balance ($ USD)</label>
+            <input type="number" id="ddoRothBal" value="0" min="0" step="1000">
+          </div>
+          <div class="field">
+            <label for="ddoTaxableUsdBal">Taxable brokerage balance ($ USD)</label>
+            <input type="number" id="ddoTaxableUsdBal" value="0" min="0" step="1000">
+          </div>
+        </div>
+      </div>
+      <div class="card-sub">FHSA, RESP, and HSA aren't included here — they're pre-retirement, beneficiary-owned,
+        or medical-conditional accounts that don't fit a standard retirement decumulation sequence.</div>
+    </div>
+
+    <div class="tool-card">
+      <h3>Plan assumptions</h3>
+      <div class="grid3">
+        <div class="field">
+          <label for="ddoPlanToAge">Plan to age (life expectancy assumption)</label>
+          <input type="number" id="ddoPlanToAge" value="90" min="70" max="105" step="1">
+        </div>
+        <div class="field">
+          <label for="ddoFilingStatus">US tax filing status</label>
+          <select id="ddoFilingStatus">
+            <option value="single">Single</option>
+            <option value="mfj">Married filing jointly</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="ddoCapGainsRate">Capital-gains rate on taxable withdrawals (%) <span class="info"
+              title="Applied to the full withdrawal amount, not just the gain portion — this site doesn't track cost basis, so this is a simplified, deliberately conservative stand-in.">?</span></label>
+          <input type="number" id="ddoCapGainsRate" value="15" min="0" max="50" step="1">
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <h3>Recommended withdrawal order</h3>
+      <div class="card-sub">Simulated year by year from your retirement age to your plan-to-age, using your
+        CoastFIRE Calculator's retirement age, spending, growth rate, and benefit-timing inputs. All figures below
+        are shown in USD equivalent, since US federal tax brackets are the binding constraint on the ordering.</div>
+      <div class="result-strip">
+        <div class="rs-stat">
+          <div class="rs-label">Total lifetime tax (recommended)</div>
+          <div class="rs-value" id="ddoTotalTax">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Ending balance (USD equiv.)</div>
+          <div class="rs-value" id="ddoEndingBalance">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Portfolio lasts until</div>
+          <div class="rs-value" id="ddoDepletion">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Tax saved vs. worst order</div>
+          <div class="rs-value" id="ddoTaxSaved">—</div>
+        </div>
+      </div>
+      <div class="deferral-note" id="ddoNote">—</div>
+
+      <div class="chart-legend">
+        <span><span class="legend-dot" style="background:var(--harbor);"></span>401(k) / IRA</span>
+        <span><span class="legend-dot" style="background:var(--maple);"></span>RRSP</span>
+        <span><span class="legend-dot" style="background:var(--gold);"></span>Taxable brokerage</span>
+        <span><span class="legend-dot" style="background:var(--ink-soft);"></span>TFSA / Roth</span>
+      </div>
+      <canvas id="ddoWithdrawalChart" height="220"></canvas>
+
+      <div class="table-scroll">
+        <table class="strategy-table">
+          <thead><tr><th>Strategy</th><th>Total lifetime tax</th><th>Ending balance</th><th>Portfolio lasts until</th></tr></thead>
+          <tbody id="ddoStrategyTable"></tbody>
+        </table>
+      </div>
+
+      <div class="consideration-item level-info">
+        <div class="ci-title"><span class="ci-icon">ℹ️</span>RRSP withdrawals are modeled with a simplified foreign
+          tax credit</div>
+        <div class="ci-body">RRSP withdrawals owe both US ordinary tax and Canadian non-resident withholding. Real
+          treatment requires Form 1116 foreign-tax-credit mechanics (baskets, carryovers). This tool approximates it
+          by taxing the RRSP slice at whichever is higher — its marginal US rate or the 15% treaty withholding rate
+          — assuming the credit fully absorbs the smaller of the two.</div>
+      </div>
+      <div class="consideration-item level-info">
+        <div class="ci-title"><span class="ci-icon">ℹ️</span>Taxable withdrawals use a flat rate, not cost basis</div>
+        <div class="ci-body">This site doesn't track adjusted cost base for taxable accounts, so capital-gains tax
+          here is a flat rate applied to the full withdrawal amount above — a deliberately simple, conservative
+          over-estimate rather than a real gain calculation.</div>
+      </div>
+      <div class="consideration-item level-info">
+        <div class="ci-title"><span class="ci-icon">ℹ️</span>CPP, OAS &amp; Social Security are treated as untaxed</div>
+        <div class="ci-body">Consistent with how the CoastFIRE Calculator treats government benefits elsewhere on
+          this site — real Social Security can be up to 85% taxable, and CPP/OAS are taxable income too. Budget
+          some cushion for this.</div>
+      </div>
+
+      <details class="card-collapsible" id="ddoYearsDetails">
+        <summary>
+          <h3>Year-by-year detail (recommended order)</h3>
+          <span class="toggle-icon"></span>
+        </summary>
+        <div class="card-collapsible-body">
+          <div class="table-scroll">
+            <table class="compare-table">
+              <thead>
+                <tr>
+                  <th>Age</th><th>Year</th><th>401(k)/IRA</th><th>RRSP</th><th>Taxable</th><th>TFSA/Roth</th>
+                  <th>US Tax</th><th>CDN Withholding</th><th>Total Tax</th><th>End Balance</th>
+                </tr>
+              </thead>
+              <tbody id="ddoYearsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <details class="freshness-note">
+      <summary>📅 Figures current as of 2026</summary>
+      <ul>
+        <li><strong>2026</strong> — CPP, OAS &amp; Social Security maximums, HSA contribution limits, the capital
+          gains inclusion rate, and moving-back thresholds are all updated for 2026.</li>
+        <li><strong>Jan 2025</strong> — Social Security Fairness Act repeal of WEP/GPO reflected in the Benefit
+          Timing amounts.</li>
+        <li><strong>2026 US federal tax brackets</strong> and standard deduction, per IRS Revenue Procedure
+          2025-32 — used by this Drawdown-Order Optimizer.</li>
+      </ul>
+    </details>
+
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice</footer>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    (function () {
+      initTheme();
+      initThemeToggle();
+      initStaleBanner();
+      restoreInputs();
+
+      // Seed balances from the CoastFIRE Calculator's own retirement-age projection, but only
+      // for fields this page doesn't already have a saved value for — same one-time-prefill
+      // pattern as rrsp-withholding.html.
+      (function prefillIfNeeded() {
+        let stored = {};
+        try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) stored = JSON.parse(raw); } catch (e) { }
+        if (stored.ddoRrspBal !== undefined) return;
+        const res = compute(readStoredInputs());
+        if (!res || !res.rows || !res.rows.length) return;
+        const last = res.rows[res.rows.length - 1];
+        $('ddoRrspBal').value = Math.round(last.rrsp);
+        $('ddoTfsaBal').value = Math.round(last.tfsa);
+        $('ddoNonregCadBal').value = Math.round(last.nonregCad);
+        $('ddoK401Bal').value = Math.round(last.k401);
+        $('ddoIraBal').value = Math.round(last.ira);
+        $('ddoRothBal').value = Math.round(last.roth);
+        $('ddoTaxableUsdBal').value = Math.round(last.taxableUsd);
+      })();
+
+      window.onThemeChange = () => {
+        if (lastRecommended) drawWithdrawalStack(lastRecommended);
+      };
+
+      function buildOverrides() {
+        const stored = readStoredInputs();
+        const overrides = Object.assign({}, stored);
+        ['ddoPlanToAge', 'ddoFilingStatus', 'ddoCapGainsRate', 'ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal',
+          'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal'].forEach(id => {
+            overrides[id] = $(id).value;
+          });
+        return overrides;
+      }
+
+      function fmtUsd(n) { return fmt(n, 'USD'); }
+
+      let lastRecommended = null;
+
+      function drawWithdrawalStack(sim) {
+        const canvas = $('ddoWithdrawalChart');
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = canvas.parentElement.clientWidth - 40;
+        const cssH = 220;
+        canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+        canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, cssW, cssH);
+
+        const years = sim.years;
+        if (!years.length) return;
+        const padL = 60, padR = 12, padT = 10, padB = 26;
+        const w = cssW - padL - padR, h = cssH - padT - padB;
+        const grouped = years.map(y => ({
+          age: y.age,
+          ordinaryCheap: y.withdrawals.k401 + y.withdrawals.ira,
+          rrsp: y.withdrawals.rrsp,
+          taxable: y.withdrawals.nonregCad + y.withdrawals.taxableUsd,
+          taxFree: y.withdrawals.tfsa + y.withdrawals.roth
+        }));
+        const maxVal = Math.max(...grouped.map(g => g.ordinaryCheap + g.rrsp + g.taxable + g.taxFree)) * 1.1 || 1;
+        const yFor = v => padT + h - (v / maxVal) * h;
+        const bandW = w / grouped.length;
+        const barW = Math.max(1, bandW * 0.7);
+
+        const lineColor = cssVar('--line'), softColor = cssVar('--ink-soft');
+        const harborColor = cssVar('--harbor'), mapleColor = cssVar('--maple'), goldColor = cssVar('--gold');
+
+        ctx.strokeStyle = lineColor; ctx.fillStyle = softColor;
+        ctx.font = '11px IBM Plex Mono, monospace'; ctx.lineWidth = 1;
+        for (let g = 0; g <= 4; g++) {
+          const val = (maxVal / 4) * g;
+          const y = yFor(val);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
+          ctx.fillText('$' + Math.round(val / 1000) + 'k', 4, y + 4);
+        }
+
+        grouped.forEach((g, i) => {
+          const x = padL + i * bandW + (bandW - barW) / 2;
+          let yTop = padT + h;
+          [['ordinaryCheap', harborColor], ['rrsp', mapleColor], ['taxable', goldColor], ['taxFree', softColor]].forEach(([key, color]) => {
+            const segH = (g[key] / maxVal) * h;
+            ctx.fillStyle = color;
+            ctx.fillRect(x, yTop - segH, barW, segH);
+            yTop -= segH;
+          });
+        });
+
+        ctx.fillStyle = softColor;
+        const step = Math.max(1, Math.round(grouped.length / 6));
+        grouped.forEach((g, i) => {
+          if (i % step === 0 || i === grouped.length - 1) {
+            ctx.fillText('Age ' + g.age, padL + i * bandW + bandW / 2 - 14, cssH - 6);
+          }
+        });
+      }
+
+      function renderDrawdown() {
+        const overrides = buildOverrides();
+        const totalBal = ['ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal']
+          .reduce((s, id) => s + num(id), 0);
+
+        if (totalBal <= 0) {
+          $('ddoNote').className = 'deferral-note auto';
+          $('ddoNote').textContent = 'Enter at least one account balance above (or fill in the CoastFIRE Calculator first) to see a recommended withdrawal order.';
+          $('ddoStrategyTable').innerHTML = '';
+          $('ddoYearsBody').innerHTML = '';
+          ['ddoTotalTax', 'ddoEndingBalance', 'ddoDepletion', 'ddoTaxSaved'].forEach(id => $(id).textContent = '—');
+          return;
+        }
+
+        // None of the four strategies is guaranteed cheapest for every combination of balances
+        // and spending, so "Recommended" is whichever actually comes out lowest-tax for this
+        // user's own numbers — not a fixed assumption that bracket-filling always wins.
+        const strategyNames = ['greedy', 'taxableFirst', 'rrspFirst', 'proportional'];
+        const sims = strategyNames.map(name => ({ name, sim: simulateDrawdown(overrides, name) }));
+        const best = sims.reduce((a, b) => (b.sim.totalTaxPaid < a.sim.totalTaxPaid ? b : a));
+        const recommended = best.sim;
+        lastRecommended = recommended;
+
+        const planToAge = num('ddoPlanToAge') || 90;
+        $('ddoTotalTax').textContent = fmtUsd(recommended.totalTaxPaid);
+        $('ddoEndingBalance').textContent = fmtUsd(recommended.endingBalance);
+        $('ddoDepletion').textContent = recommended.depletionAge === null ? `Age ${planToAge}+` : `Age ${recommended.depletionAge}`;
+
+        const worst = sims.reduce((a, b) => (b.sim.totalTaxPaid > a.sim.totalTaxPaid ? b : a));
+        const taxSaved = worst.sim.totalTaxPaid - recommended.totalTaxPaid;
+        $('ddoTaxSaved').textContent = fmtUsd(Math.max(0, taxSaved));
+
+        $('ddoNote').className = 'deferral-note auto';
+        if (recommended.depletionAge !== null) {
+          $('ddoNote').textContent = `⚠️ At these balances and spending, even the best order compared here runs out of money around age ${recommended.depletionAge} — before your plan-to-age of ${planToAge}. Consider a lower withdrawal rate or working with a planner on a sustainable spend.`;
+          $('ddoNote').className = 'deferral-note security';
+        } else {
+          $('ddoNote').textContent = `✅ The "${DRAWDOWN_STRATEGIES[best.name].label}" order covers your spending all the way to age ${planToAge}, paying an estimated ${fmtUsd(recommended.totalTaxPaid)} in lifetime tax — about ${fmtUsd(Math.max(0, taxSaved))} less than the worst of the strategies compared below.`;
+        }
+
+        const sortedForTable = [...sims].sort((a, b) => a.sim.totalTaxPaid - b.sim.totalTaxPaid);
+        $('ddoStrategyTable').innerHTML = sortedForTable.map(({ name, sim }) => {
+          const label = (name === best.name ? '⭐ Recommended — ' : '') + DRAWDOWN_STRATEGIES[name].label;
+          const lastsUntil = sim.depletionAge === null ? `Age ${planToAge}+` : `Age ${sim.depletionAge}`;
+          return `<tr class="${name === best.name ? 'your-choice' : ''}">
+            <td>${label}</td><td>${fmtUsd(sim.totalTaxPaid)}</td><td>${fmtUsd(sim.endingBalance)}</td><td>${lastsUntil}</td>
+          </tr>`;
+        }).join('');
+
+        $('ddoYearsBody').innerHTML = recommended.years.map(y => `<tr class="${y.depleted ? 'warn-row' : ''}">
+          <td>${y.age}</td><td>${y.year}</td>
+          <td>${fmtUsd(y.withdrawals.k401 + y.withdrawals.ira)}</td>
+          <td>${fmtUsd(y.withdrawals.rrsp)}</td>
+          <td>${fmtUsd(y.withdrawals.nonregCad + y.withdrawals.taxableUsd)}</td>
+          <td>${fmtUsd(y.withdrawals.tfsa + y.withdrawals.roth)}</td>
+          <td>${fmtUsd(y.usTax)}</td><td>${fmtUsd(y.cdnWithholding)}</td><td>${fmtUsd(y.totalTax)}</td>
+          <td>${fmtUsd(Object.values(y.endBalances).reduce((s, v) => s + v, 0))}</td>
+        </tr>`).join('');
+
+        drawWithdrawalStack(recommended);
+      }
+
+      const inputIds = ['ddoPlanToAge', 'ddoFilingStatus', 'ddoCapGainsRate', 'ddoRrspBal', 'ddoTfsaBal',
+        'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal'];
+      inputIds.forEach(id => {
+        $(id).addEventListener('input', () => { saveInputs(); renderDrawdown(); });
+        $(id).addEventListener('change', () => { saveInputs(); renderDrawdown(); });
+      });
+
+      renderDrawdown();
+    })();
+  </script>
+</body>
+
+</html>

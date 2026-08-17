@@ -100,7 +100,10 @@ const FIELD_IDS = ['currentAge', 'retireAge', 'contribFreq', 'rrspBal', 'rrspCon
   // Moving Back to Canada
   'mbIsCitizen', 'mbHasGreenCard', 'mbGreenCardYears', 'mbNetWorth', 'mbTaxLiability',
   // RRSP Withholding Tax
-  'rwWithdrawalType', 'rwRrspAtRetirement'];
+  'rwWithdrawalType', 'rwRrspAtRetirement',
+  // Drawdown-Order Optimizer
+  'ddoPlanToAge', 'ddoFilingStatus', 'ddoCapGainsRate',
+  'ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal'];
 
 // The shipped example scenario's values, one per FIELD_IDS entry. Extracted directly from the
 // original single-page HTML's `value="..."` attributes (captured before any prefill/JS could
@@ -118,7 +121,9 @@ const DEFAULT_FIELD_VALUES = {
   dtNonregFmv: '10000', dtNonregAcb: '7000', dtOtherFmv: '0', dtOtherAcb: '0', dtMarginalRate: '35',
   claimCppBase: '900', claimOasBase: '334', claimSsBase: '2000', claimCppAge: '65', claimOasAge: '65', claimSsAge: '67', claimPlanToAge: '90',
   mbIsCitizen: 'no', mbHasGreenCard: 'no', mbGreenCardYears: '0', mbNetWorth: '0', mbTaxLiability: '0',
-  rwWithdrawalType: '0.25', rwRrspAtRetirement: '0'
+  rwWithdrawalType: '0.25', rwRrspAtRetirement: '0',
+  ddoPlanToAge: '90', ddoFilingStatus: 'single', ddoCapGainsRate: '15',
+  ddoRrspBal: '0', ddoTfsaBal: '0', ddoK401Bal: '0', ddoIraBal: '0', ddoRothBal: '0', ddoNonregCadBal: '0', ddoTaxableUsdBal: '0'
 };
 
 // Timestamp of the last time any tool page actually wrote to ccfire:v2 — used to nudge users
@@ -218,6 +223,15 @@ function convertToReport(cadAmt, usdAmt, reportCurrency, rate) {
   return reportCurrency === 'USD' ? (cadAmt * rate + usdAmt) : (usdAmt / rate + cadAmt);
 }
 
+const ACCOUNT_KEYS = ['rrsp', 'tfsa', 'nonregCad', 'fhsa', 'resp', 'k401', 'ira', 'roth', 'taxableUsd', 'hsa'];
+// One year's compounding step for every account, shared by the deterministic compute() loop
+// and the Monte Carlo engine below so the two never drift out of sync with each other.
+function stepAccounts(bal, contribAnnual, returnRate, mult) {
+  const next = {};
+  for (const k of ACCOUNT_KEYS) next[k] = bal[k] * (1 + returnRate) + contribAnnual[k] * mult;
+  return next;
+}
+
 function compute(overrides) {
   overrides = overrides || {};
   const raw = id => (overrides[id] !== undefined ? overrides[id] : $(id).value);
@@ -237,7 +251,7 @@ function compute(overrides) {
   const cppMonthly = val('cppMonthly'), oasMonthly = val('oasMonthly'), ssMonthly = val('ssMonthly');
   const benefitsStartAge = val('benefitsStartAge');
 
-  const bal = {
+  let bal = {
     rrsp: val('rrspBal'), tfsa: val('tfsaBal'), nonregCad: val('nonregCadBal'), fhsa: val('fhsaBal'), resp: val('respBal'),
     k401: val('k401Bal'), ira: val('iraBal'), roth: val('rothBal'), taxableUsd: val('taxableUsdBal'), hsa: val('hsaBal')
   };
@@ -303,16 +317,7 @@ function compute(overrides) {
 
     if (i < n) {
       const mult = (stopAtCoast === 'yes' && coastedFlag) ? 0 : 1;
-      bal.rrsp = bal.rrsp * (1 + returnRate) + contribAnnual.rrsp * mult;
-      bal.tfsa = bal.tfsa * (1 + returnRate) + contribAnnual.tfsa * mult;
-      bal.nonregCad = bal.nonregCad * (1 + returnRate) + contribAnnual.nonregCad * mult;
-      bal.fhsa = bal.fhsa * (1 + returnRate) + contribAnnual.fhsa * mult;
-      bal.resp = bal.resp * (1 + returnRate) + contribAnnual.resp * mult;
-      bal.k401 = bal.k401 * (1 + returnRate) + contribAnnual.k401 * mult;
-      bal.ira = bal.ira * (1 + returnRate) + contribAnnual.ira * mult;
-      bal.roth = bal.roth * (1 + returnRate) + contribAnnual.roth * mult;
-      bal.taxableUsd = bal.taxableUsd * (1 + returnRate) + contribAnnual.taxableUsd * mult;
-      bal.hsa = bal.hsa * (1 + returnRate) + contribAnnual.hsa * mult;
+      bal = stepAccounts(bal, contribAnnual, returnRate, mult);
     }
   }
 
@@ -343,6 +348,104 @@ function computeAtRate(res, rate) {
 }
 
 // ==================================================================
+// Monte Carlo / sequence-of-returns simulation — reuses compute()'s setup and stepAccounts()
+// so the stochastic path never diverges from the deterministic model's semantics. Only the
+// *portfolio path* is randomized each trial; the CoastFIRE target line (coastNumberAt) stays
+// on the single deterministic returnRate, matching how most retail Monte Carlo tools treat the
+// liability side of the plan.
+// ==================================================================
+function randNormal() {
+  let u1 = Math.random(), u2 = Math.random();
+  if (u1 === 0) u1 = Number.EPSILON;
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+
+function simulateMonteCarlo(overrides, trials, stdevReturn) {
+  overrides = overrides || {};
+  const raw = id => (overrides[id] !== undefined ? overrides[id] : $(id).value);
+  const val = id => parseFloat(raw(id)) || 0;
+
+  const currentAge = val('currentAge');
+  const retireAge = val('retireAge');
+  const n = Math.max(0, Math.round(retireAge - currentAge));
+  const freqMult = raw('contribFreq') === 'monthly' ? 12 : 1;
+  const meanReturn = val('returnRate') / 100;
+  const inflationRate = val('inflationRate') / 100;
+  const withdrawalRate = Math.max(0.001, val('withdrawalRate') / 100);
+  const stopAtCoast = raw('stopAtCoast');
+  const reportCurrency = raw('reportCurrency');
+  const exchangeRate = val('exchangeRate') || 0.73;
+  const monthlyExpenses = val('monthlyExpenses');
+  const cppMonthly = val('cppMonthly'), oasMonthly = val('oasMonthly'), ssMonthly = val('ssMonthly');
+  const benefitsStartAge = val('benefitsStartAge');
+
+  const startBal = {
+    rrsp: val('rrspBal'), tfsa: val('tfsaBal'), nonregCad: val('nonregCadBal'), fhsa: val('fhsaBal'), resp: val('respBal'),
+    k401: val('k401Bal'), ira: val('iraBal'), roth: val('rothBal'), taxableUsd: val('taxableUsdBal'), hsa: val('hsaBal')
+  };
+  const contribAnnual = {
+    rrsp: (val('rrspContrib') + val('rrspMatch')) * freqMult, tfsa: val('tfsaContrib') * freqMult,
+    nonregCad: val('nonregCadContrib') * freqMult, fhsa: val('fhsaContrib') * freqMult, resp: val('respContrib') * freqMult,
+    k401: (val('k401Contrib') + val('k401Match')) * freqMult, ira: val('iraContrib') * freqMult,
+    roth: val('rothContrib') * freqMult, taxableUsd: val('taxableUsdContrib') * freqMult, hsa: val('hsaContrib') * freqMult
+  };
+
+  const futureAnnualExpense = monthlyExpenses * Math.pow(1 + inflationRate, n) * 12;
+  const annualGovBenefit = convertToReport((cppMonthly + oasMonthly) * 12, ssMonthly * 12, reportCurrency, exchangeRate);
+  const annualGapAfterBenefits = Math.max(0, futureAnnualExpense - annualGovBenefit);
+  const bridgeYears = Math.max(0, benefitsStartAge - retireAge);
+  const pvBridge = bridgeYears > 0
+    ? (meanReturn > 0
+      ? futureAnnualExpense * (1 - Math.pow(1 + meanReturn, -bridgeYears)) / meanReturn
+      : futureAnnualExpense * bridgeYears)
+    : 0;
+  const pvPostBenefit = (annualGapAfterBenefits / withdrawalRate) / Math.pow(1 + meanReturn, bridgeYears);
+  const requiredAtRetirement = pvBridge + pvPostBenefit;
+  const coastNumberAt = yrsRemaining => requiredAtRetirement / Math.pow(1 + meanReturn, Math.max(0, yrsRemaining));
+
+  const currentYear = new Date().getFullYear();
+  const paths = []; // trials x (n+1) combined-balance series
+  let coastHits = 0;
+
+  for (let t = 0; t < trials; t++) {
+    let bal = { ...startBal };
+    let coastedFlag = false;
+    const path = [];
+    for (let i = 0; i <= n; i++) {
+      const cadTotal = bal.rrsp + bal.tfsa + bal.nonregCad + bal.fhsa + bal.resp;
+      const usdTotal = bal.k401 + bal.ira + bal.roth + bal.taxableUsd + bal.hsa;
+      const combined = convertToReport(cadTotal, usdTotal, reportCurrency, exchangeRate);
+      const coastNum = coastNumberAt(n - i);
+      if (!coastedFlag && combined >= coastNum) coastedFlag = true;
+      path.push(combined);
+      if (i < n) {
+        const r = Math.max(meanReturn + randNormal() * stdevReturn, -0.95);
+        const mult = (stopAtCoast === 'yes' && coastedFlag) ? 0 : 1;
+        bal = stepAccounts(bal, contribAnnual, r, mult);
+      }
+    }
+    if (coastedFlag) coastHits++;
+    paths.push(path);
+  }
+
+  const bands = [];
+  for (let i = 0; i <= n; i++) {
+    const yearVals = paths.map(p => p[i]).sort((a, b) => a - b);
+    const pick = p => yearVals[Math.min(yearVals.length - 1, Math.floor(p / 100 * yearVals.length))];
+    bands.push({
+      age: currentAge + i, year: currentYear + i,
+      p10: pick(10), p25: pick(25), p50: pick(50), p75: pick(75), p90: pick(90),
+      coastNum: coastNumberAt(n - i)
+    });
+  }
+
+  return {
+    n, currentAge, retireAge, currentYear, reportCurrency, trials,
+    successProb: coastHits / trials, bands, requiredAtRetirement
+  };
+}
+
+// ==================================================================
 // Benefit claiming-age factors — used by Benefit Timing's own page and by the
 // calculator's PDF export.
 // ==================================================================
@@ -369,4 +472,240 @@ function ssFactor(age) {
 function breakevenAge(ageEarly, amtEarly, ageLate, amtLate) {
   if (amtLate <= amtEarly) return null;
   return (amtLate * ageLate - amtEarly * ageEarly) / (amtLate - amtEarly);
+}
+
+// ==================================================================
+// Drawdown-order optimizer — US federal tax data + the year-by-year decumulation engine.
+// Everything in this section runs in USD, regardless of the calculator's reportCurrency
+// setting, because the US bracket data below is only meaningful in USD: CAD-native balances
+// (RRSP/TFSA/non-registered CAD) are converted at the top of simulateDrawdown() using the same
+// static exchangeRate the rest of the site already holds fixed for a given scenario.
+// ==================================================================
+
+// 2026 tax year, per IRS Revenue Procedure 2025-32 (published Oct 2025).
+const US_TAX_BRACKETS_2026 = {
+  single: [
+    { upTo: 12400, rate: 0.10 }, { upTo: 50400, rate: 0.12 }, { upTo: 105700, rate: 0.22 },
+    { upTo: 201775, rate: 0.24 }, { upTo: 256225, rate: 0.32 }, { upTo: 640600, rate: 0.35 },
+    { upTo: Infinity, rate: 0.37 }
+  ],
+  mfj: [
+    { upTo: 24800, rate: 0.10 }, { upTo: 100800, rate: 0.12 }, { upTo: 211400, rate: 0.22 },
+    { upTo: 403550, rate: 0.24 }, { upTo: 512450, rate: 0.32 }, { upTo: 768700, rate: 0.35 },
+    { upTo: Infinity, rate: 0.37 }
+  ]
+};
+const US_STANDARD_DEDUCTION_2026 = { single: 16100, mfj: 32200 };
+
+// Canada-US tax treaty non-resident RRSP/RRIF withholding rates — promoted here from the
+// rwWithdrawalType <select> literals in rrsp-withholding.html so both pages share one source.
+const RRSP_WITHHOLDING_RATES = { lumpSum: 0.25, periodic: 0.15, resident: 0 };
+
+function progressiveTax(taxableIncome, brackets) {
+  let tax = 0, prevCap = 0;
+  for (const b of brackets) {
+    if (taxableIncome <= prevCap) break;
+    tax += (Math.min(taxableIncome, b.upTo) - prevCap) * b.rate;
+    prevCap = b.upTo;
+  }
+  return tax;
+}
+function topOfBracket(rate, brackets) {
+  const b = brackets.find(b => b.rate === rate);
+  return b ? b.upTo : brackets[brackets.length - 1].upTo;
+}
+// The taxable-income point above which the next dollar of ordinary income costs more than the
+// flat capital-gains rate — i.e. where it becomes cheaper to fund the rest of the year's
+// spending from taxable brokerage (or preserve tax-free accounts) than to keep drawing
+// ordinary-taxed accounts. Because each year's taxable income resets with a fresh standard
+// deduction (this model doesn't carry any "bracket creep" across years — only within a year),
+// this rate comparison, not a fixed bracket ceiling, is what actually minimizes total tax.
+function ordinaryIncomeCeiling(capGainsRate, brackets) {
+  let cap = 0;
+  for (const b of brackets) {
+    if (b.rate > capGainsRate) break;
+    cap = b.upTo;
+  }
+  return cap;
+}
+function toUsd(amt, reportCurrency, rate) {
+  return reportCurrency === 'USD' ? amt : amt * rate;
+}
+
+// Account "pools" grouped by tax treatment. TFSA/Roth are always drawn last across every
+// strategy below, since preserving tax-free compounding as long as possible is the one rule
+// of thumb that's true regardless of ordering philosophy.
+const DRAWDOWN_POOLS = {
+  ordinaryCheap: ['k401', 'ira'],   // US ordinary income, no extra withholding layer
+  ordinaryRrsp: ['rrsp'],           // US ordinary income + Canadian non-resident withholding
+  taxable: ['nonregCad', 'taxableUsd'], // flat simplified capital-gains treatment
+  taxFree: ['tfsa', 'roth']
+};
+
+// Each strategy is just a priority order over the pools above, run through the identical
+// tax/compounding engine — matching the site's existing "enumerate named, explainable
+// strategies" style (see strategyTableHtml in benefit-timing.html) rather than a black-box
+// solver. `greedy` additionally caps ordinary withdrawals at a bracket-creep ceiling each year
+// before spilling into cheaper sources. None of these is guaranteed optimal for every possible
+// set of balances/spending — the page that calls simulateDrawdown() for all four should treat
+// whichever comes out cheapest as "Recommended" for that user's numbers, rather than assuming
+// greedy always wins (labels here deliberately don't claim "Recommended" themselves).
+const DRAWDOWN_STRATEGIES = {
+  greedy: { label: 'Bracket-filling', order: ['ordinaryCheap', 'ordinaryRrsp', 'taxable', 'taxFree'], capOrdinary: true },
+  taxableFirst: { label: 'Taxable first', order: ['taxable', 'ordinaryCheap', 'ordinaryRrsp', 'taxFree'], capOrdinary: false },
+  rrspFirst: { label: 'RRSP first', order: ['ordinaryRrsp', 'ordinaryCheap', 'taxable', 'taxFree'], capOrdinary: false },
+  proportional: { label: 'Proportional', order: ['ordinaryCheap', 'ordinaryRrsp', 'taxable', 'taxFree'], capOrdinary: false, proportional: true }
+};
+
+function drawFromAccounts(accounts, amount, bal, withdrawals) {
+  let remaining = amount;
+  for (const acc of accounts) {
+    if (remaining <= 0) break;
+    const take = Math.min(bal[acc], remaining);
+    if (take > 0) {
+      bal[acc] -= take;
+      withdrawals[acc] += take;
+      remaining -= take;
+    }
+  }
+  return amount - remaining;
+}
+function drawProportional(accounts, amount, bal, withdrawals) {
+  const totalBal = accounts.reduce((s, a) => s + Math.max(0, bal[a]), 0);
+  if (totalBal <= 0) return 0;
+  let drawn = 0;
+  for (const acc of accounts) {
+    const take = Math.min(bal[acc], amount * Math.max(0, bal[acc]) / totalBal);
+    if (take > 0) {
+      bal[acc] -= take;
+      withdrawals[acc] += take;
+      drawn += take;
+    }
+  }
+  return drawn;
+}
+
+// One retirement year's withdrawal decision for a given strategy. Returns the amount taken
+// from each account plus any unmet need (a depletion year).
+function drawdownYear(bal, netNeed, strategy, grossOrdinaryCeiling) {
+  const withdrawals = { rrsp: 0, tfsa: 0, k401: 0, ira: 0, roth: 0, nonregCad: 0, taxableUsd: 0 };
+  let remaining = netNeed;
+
+  if (strategy.proportional) {
+    remaining -= drawProportional(['k401', 'ira', 'rrsp', 'nonregCad', 'taxableUsd'], remaining, bal, withdrawals);
+    if (remaining > 0) remaining -= drawFromAccounts(DRAWDOWN_POOLS.taxFree, remaining, bal, withdrawals);
+  } else {
+    let ordinaryDrawnSoFar = 0;
+    for (const poolKey of strategy.order) {
+      if (remaining <= 0) break;
+      const isOrdinaryPool = poolKey === 'ordinaryCheap' || poolKey === 'ordinaryRrsp';
+      let allowance = remaining;
+      if (strategy.capOrdinary && isOrdinaryPool) {
+        allowance = Math.min(allowance, Math.max(0, grossOrdinaryCeiling - ordinaryDrawnSoFar));
+      }
+      const drawn = drawFromAccounts(DRAWDOWN_POOLS[poolKey], allowance, bal, withdrawals);
+      if (isOrdinaryPool) ordinaryDrawnSoFar += drawn;
+      remaining -= drawn;
+    }
+    // The ordinary-income ceiling is a soft target, not a hard wall. If it's still unmet once
+    // every pool has been visited (typically because taxable ran dry while ordinary stayed
+    // capped), cover the rest as cheaply as possible per this model's own math: a tax-free
+    // withdrawal always beats paying any positive rate, so a modest tax-free "top-up" once the
+    // cheap brackets and taxable are used up is genuinely tax-efficient here — flat-rate taxable
+    // (if it somehow still has room) comes next, and pushing further into higher ordinary
+    // brackets is the last resort.
+    if (remaining > 0) {
+      const fallbackOrder = ['taxFree', 'taxable', 'ordinaryCheap', 'ordinaryRrsp'];
+      for (const poolKey of fallbackOrder) {
+        if (remaining <= 0) break;
+        remaining -= drawFromAccounts(DRAWDOWN_POOLS[poolKey], remaining, bal, withdrawals);
+      }
+    }
+  }
+  return { withdrawals, shortfall: Math.max(0, remaining) };
+}
+
+// Full year-by-year retirement simulation for one withdrawal-order strategy. `overrides` is a
+// flat {fieldId: value} snapshot (e.g. from readStoredInputs(), plus the ddo* fields) — never
+// reads the DOM directly so it can run for any strategy without a live page.
+function simulateDrawdown(overrides, strategyName) {
+  overrides = overrides || {};
+  const raw = id => overrides[id];
+  const val = id => parseFloat(raw(id)) || 0;
+
+  const currentAge = val('currentAge');
+  const retireAge = val('retireAge');
+  const planToAge = val('ddoPlanToAge') || 90;
+  const n = Math.max(0, Math.round(planToAge - retireAge));
+  const returnRate = val('returnRate') / 100;
+  const inflationRate = val('inflationRate') / 100;
+  const reportCurrency = raw('reportCurrency');
+  const exchangeRate = val('exchangeRate') || 0.73;
+  const monthlyExpenses = val('monthlyExpenses');
+  const cppMonthly = val('cppMonthly'), oasMonthly = val('oasMonthly'), ssMonthly = val('ssMonthly');
+  const benefitsStartAge = val('benefitsStartAge');
+  const filingStatus = raw('ddoFilingStatus') === 'mfj' ? 'mfj' : 'single';
+  const capGainsRate = Math.max(0, val('ddoCapGainsRate')) / 100;
+
+  const brackets = US_TAX_BRACKETS_2026[filingStatus];
+  const standardDeduction = US_STANDARD_DEDUCTION_2026[filingStatus];
+  const grossOrdinaryCeiling = ordinaryIncomeCeiling(capGainsRate, brackets) + standardDeduction;
+
+  // Retirement-date balances, converted to USD up front (see file-header note above).
+  let bal = {
+    rrsp: val('ddoRrspBal') * exchangeRate, tfsa: val('ddoTfsaBal') * exchangeRate,
+    nonregCad: val('ddoNonregCadBal') * exchangeRate,
+    k401: val('ddoK401Bal'), ira: val('ddoIraBal'), roth: val('ddoRothBal'), taxableUsd: val('ddoTaxableUsdBal')
+  };
+
+  const futureAnnualExpenseReport = monthlyExpenses * 12 * Math.pow(1 + inflationRate, Math.max(0, retireAge - currentAge));
+  const annualGovBenefitReport = convertToReport((cppMonthly + oasMonthly) * 12, ssMonthly * 12, reportCurrency, exchangeRate);
+  const futureAnnualExpense = toUsd(futureAnnualExpenseReport, reportCurrency, exchangeRate);
+  const annualGovBenefit = toUsd(annualGovBenefitReport, reportCurrency, exchangeRate);
+
+  const strategy = DRAWDOWN_STRATEGIES[strategyName] || DRAWDOWN_STRATEGIES.greedy;
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  let totalTaxPaid = 0, depletionAge = null;
+
+  for (let i = 0; i <= n; i++) {
+    const age = retireAge + i;
+    const govBenefit = age >= benefitsStartAge ? annualGovBenefit : 0;
+    const netNeed = Math.max(0, futureAnnualExpense - govBenefit);
+
+    const { withdrawals, shortfall } = drawdownYear(bal, netNeed, strategy, grossOrdinaryCeiling);
+
+    const ordinaryGross = withdrawals.k401 + withdrawals.ira + withdrawals.rrsp;
+    const taxableOrdinaryIncome = Math.max(0, ordinaryGross - standardDeduction);
+    const usTaxOnOrdinary = progressiveTax(taxableOrdinaryIncome, brackets);
+    // FTC simplification: the RRSP "slice" of ordinary income is taxed at whichever is
+    // higher of its marginal US rate or the flat Canadian withholding — modeling a foreign
+    // tax credit that fully absorbs the smaller of the two. Real FTC mechanics (basket
+    // limits, carryovers) are out of scope; flagged as a consideration-item on the page.
+    const taxableIncomeExRrsp = Math.max(0, taxableOrdinaryIncome - withdrawals.rrsp);
+    const usTaxExRrsp = progressiveTax(taxableIncomeExRrsp, brackets);
+    const rrspMarginalUsTax = usTaxOnOrdinary - usTaxExRrsp;
+    const cdnWithholding = withdrawals.rrsp * RRSP_WITHHOLDING_RATES.periodic;
+    const effectiveOrdinaryTax = usTaxExRrsp + Math.max(rrspMarginalUsTax, cdnWithholding);
+    const capGainsTax = (withdrawals.nonregCad + withdrawals.taxableUsd) * capGainsRate;
+    const totalTax = effectiveOrdinaryTax + capGainsTax;
+    totalTaxPaid += totalTax;
+
+    const depleted = shortfall > 0.01;
+    if (depleted && depletionAge === null) depletionAge = age;
+
+    years.push({
+      age, year: currentYear + i, spend: futureAnnualExpense, govBenefit, netNeed,
+      withdrawals: { ...withdrawals }, usTax: usTaxOnOrdinary, cdnWithholding, totalTax,
+      endBalances: { ...bal }, depleted
+    });
+
+    if (depleted) break;
+    const next = {};
+    for (const k of Object.keys(bal)) next[k] = bal[k] * (1 + returnRate);
+    bal = next;
+  }
+
+  const endingBalance = Object.values(bal).reduce((s, v) => s + v, 0);
+  return { years, totalTaxPaid, endingBalance, depletionAge, strategyName, filingStatus };
 }
