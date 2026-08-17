@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compare Scenarios — Two Currencies, One Number</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <a href="#compareScenarioA" class="skip-link">Skip to comparison</a>
+  <div class="wrap">
+
+    <header>
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
+            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
+            accounts in their native currencies.</p>
+        </div>
+        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+      </div>
+      <nav class="page-nav">
+        <a href="index.html">All Tools</a>
+        <a href="coastfire-calculator.html">Calculator</a>
+        <a href="action-items.html">Action Items</a>
+        <a href="departure-tax.html">Departure Tax</a>
+        <a href="rrsp-withholding.html">RRSP Withholding</a>
+        <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="moving-back.html">Moving Back to Canada</a>
+        <a href="compare-scenarios.html">Compare Scenarios</a>
+      </nav>
+    </header>
+
+    <div class="tool-header">
+      <h2>⚖️ Compare Scenarios</h2>
+      <p class="tool-sub">Put two of your saved scenarios side by side — key numbers and portfolio path together,
+        without touching whatever's currently in the CoastFIRE Calculator. Save at least two scenarios in
+        "My Scenarios" on the calculator page to use this.</p>
+    </div>
+
+    <div class="tool-card">
+      <h3>Pick two scenarios</h3>
+      <div class="grid2">
+        <div class="field">
+          <label for="compareScenarioA">Scenario A</label>
+          <select id="compareScenarioA"><option value="">— Select a saved scenario —</option></select>
+        </div>
+        <div class="field">
+          <label for="compareScenarioB">Scenario B</label>
+          <select id="compareScenarioB"><option value="">— Select a saved scenario —</option></select>
+        </div>
+      </div>
+      <div class="card-sub" id="compareEmptyNote">You need at least two saved scenarios to compare. Save your
+        current inputs as a scenario on the CoastFIRE Calculator page, change a few things, and save again under a
+        different name.</div>
+    </div>
+
+    <div class="tool-card" id="compareResultsCard" hidden>
+      <h3>Key results, side by side</h3>
+      <div class="table-scroll">
+        <table class="compare-table" id="compareTable"></table>
+      </div>
+      <div class="compare-currency-note" id="compareCurrencyNote" hidden></div>
+    </div>
+
+    <div class="tool-card" id="compareChartCard" hidden>
+      <h3>Portfolio path comparison</h3>
+      <div class="card-sub">Both scenarios start from today (year zero) — the x-axis shows years from now, not
+        calendar age, since the two scenarios can span different timelines.</div>
+      <div class="chart-legend" id="compareChartLegend"></div>
+      <canvas id="compareChart" height="260"></canvas>
+    </div>
+
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · Inspired by <a
+        href="https://maplecoastfire.ca" style="color:inherit;">MapleCoastFIRE</a></footer>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    (function () {
+      initTheme();
+      initThemeToggle();
+      window.onThemeChange = () => {
+        if (!$('compareChartCard').hidden) renderScenarioComparison();
+      };
+
+      function refreshCompareSelects() {
+        const store = loadScenariosStore();
+        const names = Object.keys(store).sort((a, b) => a.localeCompare(b));
+        ['compareScenarioA', 'compareScenarioB'].forEach(id => {
+          const select = $(id);
+          const prevValue = select.value;
+          select.innerHTML = '<option value="">— Select a saved scenario —</option>' +
+            names.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n}</option>`).join('');
+          if (names.includes(prevValue)) select.value = prevValue;
+        });
+        // Auto-select the first two distinct scenarios the first time there are enough to compare
+        if (names.length >= 2 && !$('compareScenarioA').value && !$('compareScenarioB').value) {
+          $('compareScenarioA').value = names[0];
+          $('compareScenarioB').value = names[1];
+        }
+        $('compareEmptyNote').style.display = names.length >= 2 ? 'none' : 'block';
+        // Programmatic .value assignment above doesn't fire 'change', so re-render explicitly.
+        renderScenarioComparison();
+      }
+
+      function drawComparisonChart(resA, resB, nameA, nameB) {
+        const canvas = $('compareChart');
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = canvas.parentElement.clientWidth - 40;
+        const cssH = 260;
+        canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+        canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, cssW, cssH);
+
+        const padL = 60, padR = 12, padT = 14, padB = 26;
+        const w = cssW - padL - padR, h = cssH - padT - padB;
+        const maxYears = Math.max(resA.n, resB.n, 1);
+        const maxVal = Math.max(
+          ...resA.rows.map(r => r.combined),
+          ...resB.rows.map(r => r.combined)
+        ) * 1.08 || 1;
+        const xFor = yrs => padL + (yrs / maxYears) * w;
+        const yFor = v => padT + h - (v / maxVal) * h;
+
+        const lineColor = cssVar('--line'), softColor = cssVar('--ink-soft');
+        const colorA = cssVar('--harbor'), colorB = cssVar('--maple');
+
+        ctx.strokeStyle = lineColor; ctx.fillStyle = softColor;
+        ctx.font = '11px IBM Plex Mono, monospace'; ctx.lineWidth = 1;
+        for (let g = 0; g <= 4; g++) {
+          const val = (maxVal / 4) * g;
+          const y = yFor(val);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
+          ctx.fillText('$' + Math.round(val / 1000) + 'k', 4, y + 4);
+        }
+
+        const drawSeries = (res, color) => {
+          ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+          res.rows.forEach((r, i) => {
+            const x = xFor(i), y = yFor(r.combined);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        };
+        drawSeries(resA, colorA);
+        drawSeries(resB, colorB);
+
+        ctx.fillStyle = softColor;
+        const step = Math.max(1, Math.round(maxYears / 6));
+        for (let yrs = 0; yrs <= maxYears; yrs += step) {
+          ctx.fillText('+' + yrs + 'y', xFor(yrs) - 12, cssH - 6);
+        }
+
+        $('compareChartLegend').innerHTML =
+          `<span><span class="legend-dot" style="background:${colorA};"></span>${nameA} (${resA.reportCurrency})</span>` +
+          `<span><span class="legend-dot" style="background:${colorB};"></span>${nameB} (${resB.reportCurrency})</span>`;
+      }
+
+      function renderScenarioComparison() {
+        const nameA = $('compareScenarioA').value;
+        const nameB = $('compareScenarioB').value;
+        const store = loadScenariosStore();
+        const snapA = nameA ? store[nameA] : null;
+        const snapB = nameB ? store[nameB] : null;
+
+        if (!snapA || !snapB) {
+          $('compareResultsCard').hidden = true;
+          $('compareChartCard').hidden = true;
+          return;
+        }
+
+        const resA = compute(snapA);
+        const resB = compute(snapB);
+        const firstA = resA.rows[0], firstB = resB.rows[0];
+
+        $('compareResultsCard').hidden = false;
+        $('compareChartCard').hidden = false;
+
+        const rows = [
+          ['Current age', resA.currentAge, resB.currentAge],
+          ['Retirement age', resA.retireAge, resB.retireAge],
+          ['Combined portfolio today', fmt(firstA.combined, resA.reportCurrency), fmt(firstB.combined, resB.reportCurrency)],
+          ['Required at retirement', fmt(resA.requiredAtRetirement, resA.reportCurrency), fmt(resB.requiredAtRetirement, resB.reportCurrency)],
+          ['CoastFIRE number today', fmt(resA.coastNumberToday, resA.reportCurrency), fmt(resB.coastNumberToday, resB.reportCurrency)],
+          ['Years until CoastFIRE', resA.coastYearIndex !== null ? resA.coastYearIndex : 'Not yet on track', resB.coastYearIndex !== null ? resB.coastYearIndex : 'Not yet on track'],
+          ['CoastFIRE age', resA.coastYearIndex !== null ? (resA.currentAge + resA.coastYearIndex) : '—', resB.coastYearIndex !== null ? (resB.currentAge + resB.coastYearIndex) : '—']
+        ];
+        $('compareTable').innerHTML =
+          `<thead><tr><th>Metric</th><th class="col-a">${nameA}</th><th class="col-b">${nameB}</th></tr></thead>` +
+          `<tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody>`;
+
+        const currencyNote = $('compareCurrencyNote');
+        if (resA.reportCurrency !== resB.reportCurrency) {
+          currencyNote.hidden = false;
+          currencyNote.textContent = `⚠️ "${nameA}" reports in ${resA.reportCurrency} and "${nameB}" reports in ${resB.reportCurrency} — figures above are each in their own scenario's currency, not converted to match.`;
+        } else {
+          currencyNote.hidden = true;
+        }
+
+        drawComparisonChart(resA, resB, nameA, nameB);
+      }
+
+      ['compareScenarioA', 'compareScenarioB'].forEach(id => {
+        $(id).addEventListener('change', renderScenarioComparison);
+      });
+      window.addEventListener('resize', () => {
+        if (!$('compareChartCard').hidden) renderScenarioComparison();
+      });
+      refreshCompareSelects();
+    })();
+  </script>
+</body>
+
+</html>

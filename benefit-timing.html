@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benefit Claiming-Age Optimizer — Two Currencies, One Number</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <a href="#claimCppBase" class="skip-link">Skip to calculator</a>
+  <div class="wrap">
+
+    <header>
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
+            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
+            accounts in their native currencies.</p>
+        </div>
+        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+      </div>
+      <nav class="page-nav">
+        <a href="index.html">All Tools</a>
+        <a href="coastfire-calculator.html">Calculator</a>
+        <a href="action-items.html">Action Items</a>
+        <a href="departure-tax.html">Departure Tax</a>
+        <a href="rrsp-withholding.html">RRSP Withholding</a>
+        <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="moving-back.html">Moving Back to Canada</a>
+        <a href="compare-scenarios.html">Compare Scenarios</a>
+      </nav>
+    </header>
+
+    <div class="tool-header">
+      <h2>📅 When Should You Claim CPP, OAS &amp; Social Security?</h2>
+      <p class="tool-sub">Claiming earlier means smaller checks for longer; delaying means bigger checks for fewer
+        years. This shows the trade-off using your own numbers — and remember, the Totalization Agreement helps you
+        qualify across both countries but doesn't change these per-country reduction and delay formulas.</p>
+    </div>
+
+    <div class="tool-card">
+      <div class="prefill-note"><span class="pn-icon">↺</span>Amounts below default to your Government
+        Benefits inputs on the CoastFIRE Calculator (CPP/OAS assumed to be "at 65" amounts, Social Security assumed
+        to be your "at full retirement age 67" amount).</div>
+      <div class="grid3">
+        <div class="field">
+          <label for="claimCppBase">CPP amount at age 65 ($ CAD)</label>
+          <input type="number" id="claimCppBase" value="900" min="0" step="10">
+        </div>
+        <div class="field">
+          <label for="claimOasBase">OAS amount at age 65 ($ CAD)</label>
+          <input type="number" id="claimOasBase" value="334" min="0" step="10">
+        </div>
+        <div class="field">
+          <label for="claimSsBase">Social Security amount at full retirement age 67 ($ USD)</label>
+          <input type="number" id="claimSsBase" value="2000" min="0" step="10">
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <h3>Pick a claiming age for each</h3>
+      <div class="claim-grid">
+        <div class="claim-col">
+          <h4><span class="chip ca">CA</span> CPP (60-70)</h4>
+          <input type="range" id="claimCppAge" min="60" max="70" step="1" value="65" style="width:100%;accent-color:var(--harbor);">
+          <div class="slider-val" id="claimCppAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 65</div>
+          <div class="claim-amount" id="claimCppAmount">—</div>
+          <div class="claim-factor" id="claimCppFactor">—</div>
+        </div>
+        <div class="claim-col">
+          <h4><span class="chip ca">CA</span> OAS (65-70)</h4>
+          <input type="range" id="claimOasAge" min="65" max="70" step="1" value="65" style="width:100%;accent-color:var(--harbor);">
+          <div class="slider-val" id="claimOasAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 65</div>
+          <div class="claim-amount" id="claimOasAmount">—</div>
+          <div class="claim-factor" id="claimOasFactor">—</div>
+        </div>
+        <div class="claim-col">
+          <h4><span class="chip us">US</span> Social Security (62-70)</h4>
+          <input type="range" id="claimSsAge" min="62" max="70" step="1" value="67" style="width:100%;accent-color:var(--harbor);">
+          <div class="slider-val" id="claimSsAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 67</div>
+          <div class="claim-amount" id="claimSsAmount">—</div>
+          <div class="claim-factor" id="claimSsFactor">—</div>
+        </div>
+      </div>
+      <div class="field" style="max-width:280px;">
+        <label for="claimPlanToAge">Plan to age (life expectancy assumption)</label>
+        <input type="number" id="claimPlanToAge" value="90" min="70" max="105" step="1">
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <h3>Earliest vs. standard vs. latest vs. your choice</h3>
+      <div class="card-sub">Lifetime total assumes you live to the "plan to age" above — a longer life favors
+        delaying, a shorter one favors claiming early.</div>
+      <div id="claimStrategyTables"></div>
+      <div class="assumptions-note" id="claimBreakevenNote"></div>
+    </div>
+
+    <div class="tool-card">
+      <h3>Use these choices in your CoastFIRE plan</h3>
+      <div class="card-sub">This saves your chosen ages and adjusted amounts into the CoastFIRE Calculator's
+        Government Benefits section (using the latest of your three claiming ages as the single "benefits start age,"
+        since the calculator assumes one unified start age for simplicity).</div>
+      <div class="apply-row">
+        <button type="button" id="applyClaimingBtn">Apply to my CoastFIRE plan</button>
+        <span class="apply-feedback" id="applyClaimingFeedback" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · Inspired by <a
+        href="https://maplecoastfire.ca" style="color:inherit;">MapleCoastFIRE</a></footer>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    (function () {
+      initTheme();
+      initThemeToggle();
+      restoreInputs();
+
+      function strategyTableHtml(label, baseAmount, factorFn, minAge, maxAge, chosenAge, planToAge, currency) {
+        const strategies = [
+          { name: 'Earliest possible', age: minAge },
+          { name: 'Standard age', age: (label === 'Social Security' ? 67 : 65) },
+          { name: 'Latest possible', age: maxAge },
+          { name: 'Your choice', age: chosenAge, highlight: true }
+        ];
+        // Merge rows that land on the same age (e.g., chosen age happens to equal the standard age)
+        const byAge = new Map();
+        strategies.forEach(s => {
+          if (byAge.has(s.age)) {
+            const existing = byAge.get(s.age);
+            existing.name = existing.name + ' / ' + s.name;
+            existing.highlight = existing.highlight || s.highlight;
+          } else {
+            byAge.set(s.age, { ...s });
+          }
+        });
+        const rows = [...byAge.values()].sort((a, b) => a.age - b.age);
+        const rowsHtml = rows.map(s => {
+          const amt = baseAmount * factorFn(s.age);
+          const lifetime = amt * 12 * Math.max(0, planToAge - s.age);
+          return `<tr class="${s.highlight ? 'your-choice' : ''}">
+            <td>${s.name}</td><td>Age ${s.age}</td><td>${fmt(amt, currency)}/mo</td><td>${fmt(lifetime, currency)}</td>
+          </tr>`;
+        }).join('');
+        return `<h4 style="font-size:14px;margin:0 0 8px;">${label}</h4>
+          <div class="strategy-table-scroll">
+          <table class="strategy-table">
+            <thead><tr><th>Strategy</th><th>Claim age</th><th>Monthly</th><th>Lifetime total to age ${planToAge}</th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+          </div>`;
+      }
+
+      function renderClaimingTool() {
+        const cppAge = parseInt($('claimCppAge').value, 10);
+        const oasAge = parseInt($('claimOasAge').value, 10);
+        const ssAge = parseInt($('claimSsAge').value, 10);
+        const planToAge = num('claimPlanToAge') || 90;
+
+        $('claimCppAgeVal').textContent = 'Age ' + cppAge;
+        $('claimOasAgeVal').textContent = 'Age ' + oasAge;
+        $('claimSsAgeVal').textContent = 'Age ' + ssAge;
+
+        const cppBase = num('claimCppBase'), oasBase = num('claimOasBase'), ssBase = num('claimSsBase');
+        const cppF = cppFactor(cppAge), oasF = oasFactor(oasAge), ssF = ssFactor(ssAge);
+        const cppAmt = cppBase * cppF, oasAmt = oasBase * oasF, ssAmt = ssBase * ssF;
+
+        $('claimCppAmount').textContent = fmt(cppAmt, 'CAD') + '/mo';
+        $('claimOasAmount').textContent = fmt(oasAmt, 'CAD') + '/mo';
+        $('claimSsAmount').textContent = fmt(ssAmt, 'USD') + '/mo';
+        $('claimCppFactor').textContent = (cppF >= 1 ? '+' : '') + Math.round((cppF - 1) * 100) + '% vs. age 65';
+        $('claimOasFactor').textContent = (oasF >= 1 ? '+' : '') + Math.round((oasF - 1) * 100) + '% vs. age 65';
+        $('claimSsFactor').textContent = (ssF >= 1 ? '+' : '') + Math.round((ssF - 1) * 100) + '% vs. age 67';
+
+        $('claimStrategyTables').innerHTML =
+          strategyTableHtml('CPP', cppBase, cppFactor, 60, 70, cppAge, planToAge, 'CAD') +
+          strategyTableHtml('OAS', oasBase, oasFactor, 65, 70, oasAge, planToAge, 'CAD') +
+          strategyTableHtml('Social Security', ssBase, ssFactor, 62, 70, ssAge, planToAge, 'USD');
+
+        const cppEarly = cppBase * cppFactor(60), cppLate = cppBase * cppFactor(70);
+        const cppBE = breakevenAge(60, cppEarly, 70, cppLate);
+        const ssEarly = ssBase * ssFactor(62), ssLate = ssBase * ssFactor(70);
+        const ssBE = breakevenAge(62, ssEarly, 70, ssLate);
+        let note = '';
+        if (cppBE) note += `If you delay CPP from 60 to 70, delaying comes out ahead once you live past about age ${Math.round(cppBE)}. `;
+        if (ssBE) note += `For Social Security, delaying from 62 to 70 comes out ahead once you live past about age ${Math.round(ssBE)}.`;
+        $('claimBreakevenNote').textContent = note || 'Adjust the sliders above to compare strategies.';
+      }
+
+      ['claimCppAge', 'claimOasAge', 'claimSsAge', 'claimCppBase', 'claimOasBase', 'claimSsBase', 'claimPlanToAge'].forEach(id => {
+        $(id).addEventListener('input', () => { saveInputs(); renderClaimingTool(); });
+      });
+
+      // Writes straight into the CoastFIRE Calculator's saved inputs — that page's own DOM isn't
+      // present here, so this can't re-render results in place like the single-page version did.
+      // Save + link to the updated plan instead of auto-navigating, so nothing yanks the user away
+      // without confirmation.
+      $('applyClaimingBtn').addEventListener('click', () => {
+        const cppAge = parseInt($('claimCppAge').value, 10);
+        const oasAge = parseInt($('claimOasAge').value, 10);
+        const ssAge = parseInt($('claimSsAge').value, 10);
+        writeStoredInputs({
+          cppMonthly: String(Math.round(num('claimCppBase') * cppFactor(cppAge))),
+          oasMonthly: String(Math.round(num('claimOasBase') * oasFactor(oasAge))),
+          ssMonthly: String(Math.round(num('claimSsBase') * ssFactor(ssAge))),
+          benefitsStartAge: String(Math.max(cppAge, oasAge, ssAge))
+        });
+        const fb = $('applyClaimingFeedback');
+        fb.innerHTML = 'Applied — <a href="coastfire-calculator.html">open your updated CoastFIRE plan →</a>';
+        fb.style.opacity = 1;
+      });
+
+      renderClaimingTool();
+    })();
+  </script>
+</body>
+
+</html>

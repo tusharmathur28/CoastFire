@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Action Items — Two Currencies, One Number</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <a href="#actionItemsSummary" class="skip-link">Skip to checklist</a>
+  <div class="wrap">
+
+    <header>
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
+            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
+            accounts in their native currencies.</p>
+        </div>
+        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+      </div>
+      <nav class="page-nav">
+        <a href="index.html">All Tools</a>
+        <a href="coastfire-calculator.html">Calculator</a>
+        <a href="action-items.html">Action Items</a>
+        <a href="departure-tax.html">Departure Tax</a>
+        <a href="rrsp-withholding.html">RRSP Withholding</a>
+        <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="moving-back.html">Moving Back to Canada</a>
+        <a href="compare-scenarios.html">Compare Scenarios</a>
+      </nav>
+    </header>
+
+    <div class="tool-header">
+      <h2>✅ Your Action Items</h2>
+      <p class="tool-sub">A prioritized checklist built from what you've actually entered across every tool on
+        this site — deadlines, elections, and forms worth putting on your radar. Not a substitute for professional
+        advice, just a way to keep track of what to bring up. If you've just changed something on another page,
+        reload this one to pick up the update.</p>
+    </div>
+    <div class="tool-card">
+      <div class="action-items-summary" id="actionItemsSummary" role="status" aria-live="polite"></div>
+      <div id="actionItemsList"></div>
+    </div>
+
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · Inspired by <a
+        href="https://maplecoastfire.ca" style="color:inherit;">MapleCoastFIRE</a></footer>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    (function () {
+      initTheme();
+      initThemeToggle();
+
+      function renderActionItems() {
+        const stored = readStoredInputs();
+        const num = id => parseFloat(stored[id]) || 0;
+        const items = []; // { slug, level, icon, title, body, anchor, anchorLabel }
+        const add = (slug, level, icon, title, body, anchor, anchorLabel) => items.push({ slug, level, icon, title, body, anchor, anchorLabel });
+
+        const tfsa = num('tfsaBal'), fhsa = num('fhsaBal'), resp = num('respBal'), rrsp = num('rrspBal');
+        const nonregCad = num('nonregCadBal'), roth = num('rothBal');
+        const cpp = num('cppMonthly'), oas = num('oasMonthly'), ss = num('ssMonthly');
+        const dtGain = Math.max(0, num('dtNonregFmv') - num('dtNonregAcb')) + Math.max(0, num('dtOtherFmv') - num('dtOtherAcb'));
+        const totalCadProperty = num('dtNonregFmv') + num('dtOtherFmv');
+        const isCitizen = stored.mbIsCitizen === 'yes';
+        const hasGreenCard = stored.mbHasGreenCard === 'yes';
+        const gcYears = num('mbGreenCardYears');
+
+        if (tfsa > 0) {
+          add('tfsa-treatment', 'warning', '⚠️', 'Confirm your TFSA\'s US tax treatment',
+            `Your TFSA (${fmt(tfsa, 'CAD')}) isn't recognized as tax-free by the IRS — growth can be taxable
+            annually and may need extra reporting. Worth a direct conversation with your accountant.`,
+            'coastfire-calculator.html#considerationsSection', 'See Cross-Border Notes');
+        }
+        if (rrsp > 0) {
+          add('rrsp-withholding', 'info', 'ℹ️', 'Budget for RRSP withholding tax at withdrawal',
+            `You have an RRSP (${fmt(rrsp, 'CAD')} today). Withdrawing it as a US resident triggers 25% Canadian
+            withholding for a lump sum, or 15% for periodic RRIF payments — not currently included in "Required at
+            Retirement" above. Worth estimating the drag before you rely on that number.`,
+            'rrsp-withholding.html', 'Open RRSP Withholding Tax');
+        }
+        if (fhsa > 0) {
+          add('fhsa-guidance', 'warning', '⚠️', 'FHSA has no IRS guidance yet',
+            `Your FHSA (${fmt(fhsa, 'CAD')}) is new enough that the IRS hasn't issued formal guidance — treat its
+            US tax treatment as unresolved until you've discussed it with a cross-border specialist.`,
+            'coastfire-calculator.html#considerationsSection', 'See Cross-Border Notes');
+        }
+        if (resp > 0) {
+          add('resp-reporting', 'warning', '⚠️', 'RESP may require foreign trust reporting',
+            `Your RESP (${fmt(resp, 'CAD')}) isn't tax-deferred to the IRS and can trigger Form 3520/3520-A
+            reporting — confirm your filing requirements.`,
+            'coastfire-calculator.html#considerationsSection', 'See Cross-Border Notes');
+        }
+        if (rrsp + tfsa + nonregCad + fhsa + resp > 0) {
+          add('fbar-fatca', 'action', '📋', 'Check your FBAR / FATCA filing requirement',
+            `If your combined Canadian financial accounts exceed $10,000 USD at any point in the year, you likely
+            need to file an FBAR (FinCEN 114), and possibly Form 8938 — separate from your regular tax return.`,
+            'coastfire-calculator.html#considerationsSection', 'See Cross-Border Notes');
+        }
+        if (dtGain > 0) {
+          add('departure-tax-gain', 'action', '📋', 'You have an estimated departure-tax gain on the books',
+            `Based on what you entered, you have roughly ${fmt(dtGain, 'CAD')} in unrealized capital gains that
+            would be subject to departure tax if you left Canada. Consider whether filing Form T1244 to defer the
+            tax makes sense for you.`,
+            'departure-tax.html', 'Open Departure Tax Estimator');
+        }
+        if (totalCadProperty > 25000) {
+          add('t1161-threshold', 'action', '📋', 'You may need to file Form T1161',
+            `Your total property subject to departure tax (${fmt(totalCadProperty, 'CAD')}) is over the $25,000 CAD
+            threshold that requires listing everything on Form T1161 when you leave Canada.`,
+            'departure-tax.html', 'Open Departure Tax Estimator');
+        }
+        if (cpp > 0 || oas > 0 || ss > 0) {
+          add('claiming-age-review', 'info', 'ℹ️', 'Review your government-benefit claiming age',
+            `You've entered CPP, OAS, or Social Security amounts — when you claim each one can meaningfully change
+            your lifetime total. Worth a few minutes in the claiming-age comparison.`,
+            'benefit-timing.html', 'Open Benefit Timing Optimizer');
+        }
+        if (isCitizen) {
+          add('us-citizen-filing', 'action', '📋', 'Your US filing obligations don\'t end when you leave',
+            `As a US citizen, you'll keep filing US tax returns for life, regardless of where you live — that only
+            changes if you formally renounce citizenship, a separate and much bigger decision.`,
+            'moving-back.html', 'Open Moving Back to Canada');
+        }
+        if (hasGreenCard && gcYears >= 8) {
+          add('green-card-exit-tax', 'warning', '⚠️', 'Review potential exit-tax exposure',
+            `You've held Green Card status for ${gcYears} of the last 15 years — past the threshold where exit-tax
+            rules can apply if you formally terminate it. Worth reviewing before you make that decision.`,
+            'moving-back.html', 'Open Moving Back to Canada');
+        }
+        if (roth > 0) {
+          add('roth-ira-election', 'info', 'ℹ️', 'Remember the Roth IRA election if you move back to Canada',
+            `Your Roth IRA (${fmt(roth, 'USD')}) isn't automatically protected from Canadian tax the way a
+            Traditional IRA is. If you ever move back to Canada, you'll need a one-time treaty election filed by a
+            specific deadline to keep it tax-free.`,
+            'moving-back.html', 'Open Moving Back to Canada');
+        }
+
+        const order = { warning: 0, action: 1, info: 2, good: 3 };
+        items.sort((a, b) => order[a.level] - order[b.level]);
+
+        if (items.length === 0) {
+          $('actionItemsSummary').textContent = '';
+          $('actionItemsList').innerHTML = `<div class="action-items-empty">Nothing urgent yet — as you fill in
+            accounts, government benefits, and the other tools, relevant action items will show up here
+            automatically.</div>`;
+          return;
+        }
+
+        const checkedSlugs = loadCheckedActionItems();
+        // Prune stored checked-state to only slugs currently in view, so the count stays honest
+        // (an item that's no longer applicable doesn't silently count toward "addressed").
+        const visibleSlugs = new Set(items.map(i => i.slug));
+        const addressedCount = items.filter(i => checkedSlugs.has(i.slug)).length;
+
+        $('actionItemsSummary').innerHTML = `<strong>${addressedCount} of ${items.length}</strong> addressed
+          <progress class="action-items-progress" value="${addressedCount}" max="${items.length}"></progress>`;
+
+        $('actionItemsList').innerHTML = items.map(it => {
+          const checked = checkedSlugs.has(it.slug);
+          return `<div class="consideration-item level-${it.level}${checked ? ' checked-off' : ''}">
+            <label class="ci-checkbox-row">
+              <input type="checkbox" class="ci-checkbox" data-slug="${it.slug}" ${checked ? 'checked' : ''}
+                aria-describedby="ci-body-${it.slug}">
+              <span class="ci-title"><span class="ci-icon">${it.icon}</span>${it.title}</span>
+            </label>
+            <div class="ci-body" id="ci-body-${it.slug}">${it.body}${it.anchor ? ` <a class="ci-link" href="${it.anchor}">${it.anchorLabel} →</a>` : ''}</div>
+          </div>`;
+        }).join('');
+      }
+
+      function loadCheckedActionItems() {
+        if (!hasStorage) return new Set();
+        try {
+          const raw = localStorage.getItem(ACTION_ITEMS_CHECKED_KEY);
+          return raw ? new Set(JSON.parse(raw)) : new Set();
+        } catch (e) { return new Set(); }
+      }
+      function saveCheckedActionItems(set) {
+        if (!hasStorage) return;
+        try { localStorage.setItem(ACTION_ITEMS_CHECKED_KEY, JSON.stringify([...set])); } catch (e) { }
+      }
+      const ACTION_ITEMS_CHECKED_KEY = 'ccfire:actionItemsChecked';
+
+      $('actionItemsList').addEventListener('change', e => {
+        if (!e.target.classList.contains('ci-checkbox')) return;
+        const slug = e.target.dataset.slug;
+        const checkedSlugs = loadCheckedActionItems();
+        if (e.target.checked) checkedSlugs.add(slug); else checkedSlugs.delete(slug);
+        saveCheckedActionItems(checkedSlugs);
+        renderActionItems();
+      });
+
+      renderActionItems();
+    })();
+  </script>
+</body>
+
+</html>

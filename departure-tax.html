@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Departure Tax Estimator — Two Currencies, One Number</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <a href="#dtNonregFmv" class="skip-link">Skip to calculator</a>
+  <div class="wrap">
+
+    <header>
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
+            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
+            accounts in their native currencies.</p>
+        </div>
+        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+      </div>
+      <nav class="page-nav">
+        <a href="index.html">All Tools</a>
+        <a href="coastfire-calculator.html">Calculator</a>
+        <a href="action-items.html">Action Items</a>
+        <a href="departure-tax.html">Departure Tax</a>
+        <a href="rrsp-withholding.html">RRSP Withholding</a>
+        <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="moving-back.html">Moving Back to Canada</a>
+        <a href="compare-scenarios.html">Compare Scenarios</a>
+      </nav>
+    </header>
+
+    <div class="tool-header">
+      <h2>🛫 Departure Tax Estimator</h2>
+      <p class="tool-sub">When a Canadian resident emigrates, the CRA treats most of your property as if you sold it
+        at fair market value on your departure date — even though you haven't actually sold anything. This estimates
+        that one-time bill. General information only, not tax advice; confirm your numbers with a cross-border
+        accountant before you file.</p>
+    </div>
+
+    <div class="tool-card">
+      <h3>What's excluded — the good news first</h3>
+      <div class="card-sub">Registered accounts, Canadian real estate, and pension entitlements are exempt from
+        departure tax entirely.</div>
+      <div class="reassurance-box" id="departureExemptBox">
+        Loading your account balances…
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <h3>What's actually taxed</h3>
+      <div class="card-sub">Non-registered investments, foreign real estate, crypto, and private business shares are
+        generally caught by the deemed disposition. Enter fair market value (what it's worth today) and adjusted
+        cost base (what you originally paid) for each.</div>
+
+      <div class="prefill-note"><span class="pn-icon">↺</span>Fair market value below defaults to your
+        Non-Registered (CAD) balance from the CoastFIRE Calculator — adjust as needed.</div>
+
+      <div class="grid3">
+        <div class="field">
+          <label for="dtNonregFmv">Non-registered CAD investments — fair market value</label>
+          <input type="number" id="dtNonregFmv" value="10000" min="0" step="100">
+        </div>
+        <div class="field">
+          <label for="dtNonregAcb">Non-registered CAD investments — adjusted cost base <span class="info"
+              title="What you originally paid for these investments, including reinvested distributions. Your gain is FMV minus this.">?</span></label>
+          <input type="number" id="dtNonregAcb" value="7000" min="0" step="100">
+        </div>
+        <div class="field"></div>
+        <div class="field">
+          <label for="dtOtherFmv">Other property (foreign real estate, crypto, private shares) — fair market value</label>
+          <input type="number" id="dtOtherFmv" value="0" min="0" step="100">
+        </div>
+        <div class="field">
+          <label for="dtOtherAcb">Other property — adjusted cost base</label>
+          <input type="number" id="dtOtherAcb" value="0" min="0" step="100">
+        </div>
+        <div class="field"></div>
+        <div class="field">
+          <label for="dtMarginalRate">Your expected marginal tax rate in your departure year (%) <span class="info"
+              title="Your combined federal + provincial marginal tax rate for the year you leave. This varies widely by province and income — Ontario's top combined rate is roughly 53.5%; someone mid-career might be closer to 30-40%.">?</span></label>
+          <input type="number" id="dtMarginalRate" value="35" min="0" max="60" step="1">
+          <div class="typical-range">Not sure? Rough starting points: ~20-25% for modest income, ~35-45% for mid-to-upper income, ~50-54% at the very top bracket depending on province.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <h3>Estimated departure tax</h3>
+      <div class="card-sub">Canada's capital gains inclusion rate is 50% for 2026 — half of your gain is added to
+        income and taxed at your marginal rate.</div>
+      <div class="result-strip">
+        <div class="rs-stat">
+          <div class="rs-label">Total capital gain</div>
+          <div class="rs-value" id="dtGain">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Taxable amount (50%)</div>
+          <div class="rs-value" id="dtTaxable">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Estimated tax owing</div>
+          <div class="rs-value" id="dtTaxOwing">—</div>
+        </div>
+      </div>
+      <div class="deferral-note" id="dtDeferralNote">—</div>
+
+      <div class="considerations-legend" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">
+        <span>Also worth knowing:</span>
+      </div>
+      <div class="consideration-item level-info">
+        <div class="ci-title"><span class="ci-icon">ℹ️</span>60-month short-term resident rule</div>
+        <div class="ci-body">If you were resident in Canada for less than 60 months in the 10 years before departure,
+          property you owned before becoming a Canadian resident is generally exempt entirely — a common situation
+          for people who moved to Canada as adults and later left.</div>
+      </div>
+      <div class="consideration-item level-good">
+        <div class="ci-title"><span class="ci-icon">✅</span>Spousal rollover option</div>
+        <div class="ci-body">If your spouse or common-law partner remains a Canadian resident, capital property can
+          sometimes be transferred to them at cost base before you leave, deferring the gain until they eventually
+          sell it.</div>
+      </div>
+      <div class="consideration-item level-action">
+        <div class="ci-title"><span class="ci-icon">📋</span>Forms to know</div>
+        <div class="ci-body">T1161 (list of properties, required if total property exceeds $25,000), T1243 (deemed
+          disposition calculation), and T1244 (election to defer the tax) are filed with your final Canadian return
+          in your departure year.</div>
+      </div>
+    </div>
+
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · Inspired by <a
+        href="https://maplecoastfire.ca" style="color:inherit;">MapleCoastFIRE</a></footer>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    (function () {
+      initTheme();
+      initThemeToggle();
+      restoreInputs();
+
+      const DEFERRAL_TAX_THRESHOLD = 16500; // approx. federal tax owing (~$100k gain) before CRA requires security
+
+      function renderDepartureTax() {
+        const nonregGain = Math.max(0, num('dtNonregFmv') - num('dtNonregAcb'));
+        const otherGain = Math.max(0, num('dtOtherFmv') - num('dtOtherAcb'));
+        const totalGain = nonregGain + otherGain;
+        const taxable = totalGain * 0.5;
+        const rate = Math.max(0, Math.min(100, num('dtMarginalRate'))) / 100;
+        const taxOwing = taxable * rate;
+
+        $('dtGain').textContent = fmt(totalGain, 'CAD');
+        $('dtTaxable').textContent = fmt(taxable, 'CAD');
+        $('dtTaxOwing').textContent = fmt(taxOwing, 'CAD');
+
+        const note = $('dtDeferralNote');
+        if (taxOwing === 0) {
+          note.className = 'deferral-note auto';
+          note.textContent = 'No estimated gain, no estimated tax — nothing to defer.';
+        } else if (taxOwing < DEFERRAL_TAX_THRESHOLD) {
+          note.className = 'deferral-note auto';
+          note.textContent = `✅ Your estimated tax owing is under roughly $${DEFERRAL_TAX_THRESHOLD.toLocaleString()} CAD — you'd likely qualify for automatic deferral under subsection 220(4.5) by filing Form T1244, with no security required, until you actually sell.`;
+        } else {
+          note.className = 'deferral-note security';
+          note.textContent = `📋 Your estimated tax owing is above roughly $${DEFERRAL_TAX_THRESHOLD.toLocaleString()} CAD — you can still elect to defer under Form T1244, but the CRA will likely require you to post security to guarantee the debt.`;
+        }
+
+        // RRSP/TFSA/FHSA/RESP live on the CoastFIRE Calculator page now — read the last-saved
+        // values from storage instead of a live DOM listener, since those fields aren't here.
+        const stored = readStoredInputs();
+        const rrsp = parseFloat(stored.rrspBal) || 0, tfsa = parseFloat(stored.tfsaBal) || 0,
+          fhsa = parseFloat(stored.fhsaBal) || 0, resp = parseFloat(stored.respBal) || 0;
+        let excludedList = `your RRSP (${fmt(rrsp, 'CAD')}) and TFSA (${fmt(tfsa, 'CAD')})`;
+        if (fhsa > 0) excludedList += `, FHSA (${fmt(fhsa, 'CAD')})`;
+        if (resp > 0) excludedList += `, RESP (${fmt(resp, 'CAD')})`;
+        $('departureExemptBox').innerHTML = `<strong>Excluded from departure tax:</strong> ${excludedList} from the
+          CoastFIRE Calculator — plus Canadian real estate, CPP/QPP entitlements, employer pension rights, and
+          personal-use property under $10,000. None of that is included in the estimate below.`;
+      }
+
+      ['dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'dtMarginalRate'].forEach(id => {
+        $(id).addEventListener('input', () => { saveInputs(); renderDepartureTax(); });
+      });
+
+      renderDepartureTax();
+    })();
+  </script>
+</body>
+
+</html>

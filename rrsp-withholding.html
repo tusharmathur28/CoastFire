@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RRSP Withholding Tax — Two Currencies, One Number</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <a href="#rwWithdrawalType" class="skip-link">Skip to calculator</a>
+  <div class="wrap">
+
+    <header>
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
+            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
+            accounts in their native currencies.</p>
+        </div>
+        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+      </div>
+      <nav class="page-nav">
+        <a href="index.html">All Tools</a>
+        <a href="coastfire-calculator.html">Calculator</a>
+        <a href="action-items.html">Action Items</a>
+        <a href="departure-tax.html">Departure Tax</a>
+        <a href="rrsp-withholding.html">RRSP Withholding</a>
+        <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="moving-back.html">Moving Back to Canada</a>
+        <a href="compare-scenarios.html">Compare Scenarios</a>
+      </nav>
+    </header>
+
+    <div class="tool-header">
+      <h2>🏦 RRSP Withholding Tax (Non-Resident Withdrawals)</h2>
+      <p class="tool-sub">If you're living in the US when you eventually draw down your RRSP, Canada withholds tax
+        at the source — before you ever see the money. This isn't currently factored into "Required at Retirement"
+        on the CoastFIRE Calculator; treat it as an additional cushion to budget for. General information only, not
+        tax advice.</p>
+    </div>
+
+    <div class="tool-card">
+      <h3>How you withdraw changes the rate a lot</h3>
+      <div class="card-sub">Under Article XVIII(2) of the Canada-US tax treaty, the withholding rate depends
+        entirely on how the money comes out.</div>
+      <div class="grid3">
+        <div class="field">
+          <label for="rwWithdrawalType">Withdrawal strategy <span class="info"
+              title="This is generally the final Canadian tax on the withdrawal — no Canadian return needed — unless you elect under Section 217 to be taxed as if resident, which can sometimes produce a refund at lower income levels.">?</span></label>
+          <select id="rwWithdrawalType">
+            <option value="0.25" selected>Lump-sum RRSP collapse — 25% withholding</option>
+            <option value="0.15">RRIF periodic payments — 15% treaty rate</option>
+            <option value="0">I'll be a Canadian resident when I withdraw — no withholding</option>
+          </select>
+          <div class="label-plain">The 15% rate only applies to true periodic payments from a RRIF, not a single
+            lump-sum RRSP collapse — you generally need to convert your RRSP to a RRIF first.</div>
+        </div>
+        <div class="field">
+          <label for="rwRrspAtRetirement">Projected RRSP balance at retirement ($ CAD) <span class="info"
+              title="Defaults to your CoastFIRE Calculator projection — this is your RRSP balance in the year you plan to retire, not today's balance.">?</span></label>
+          <input type="number" id="rwRrspAtRetirement" value="0" min="0" step="100">
+          <div class="prefill-note"><span class="pn-icon">↺</span>Defaults to your projected RRSP balance at
+            retirement from the CoastFIRE Calculator — adjust if you expect to draw it down differently.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <h3>Estimated withholding impact</h3>
+      <div class="result-strip">
+        <div class="rs-stat">
+          <div class="rs-label">Projected RRSP at retirement</div>
+          <div class="rs-value" id="rwBalance">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Withholding rate</div>
+          <div class="rs-value" id="rwRate">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Estimated withheld at source</div>
+          <div class="rs-value" id="rwWithheld">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Net cash after withholding</div>
+          <div class="rs-value" id="rwNet">—</div>
+        </div>
+      </div>
+      <div class="deferral-note" id="rwNote">—</div>
+
+      <div class="consideration-item level-info">
+        <div class="ci-title"><span class="ci-icon">ℹ️</span>You'll also owe US tax on the same withdrawal</div>
+        <div class="ci-body">The IRS taxes RRSP/RRIF withdrawals as ordinary pension income regardless of what
+          Canada withholds. The Canadian withholding tax generally becomes a Foreign Tax Credit (Form 1116) against
+          your US tax on that income — but if your US rate is higher than the Canadian withholding rate, expect to
+          owe additional US tax on top.</div>
+      </div>
+      <div class="consideration-item level-good">
+        <div class="ci-title"><span class="ci-icon">✅</span>Converting to a RRIF is a real planning lever</div>
+        <div class="ci-body">Collapsing an RRSP as a lump sum locks in the 25% rate. Converting it to a RRIF first
+          and taking periodic payments instead — even the full balance spread over a few years — can qualify for
+          the 15% treaty rate on the entire amount, not just the CRA minimum.</div>
+      </div>
+      <div class="consideration-item level-action">
+        <div class="ci-title"><span class="ci-icon">📋</span>Section 217 election</div>
+        <div class="ci-body">Non-residents can elect under Section 217 to be taxed on Canadian-source pension
+          income as if they were still a resident, potentially reducing the effective rate below the withholding
+          rate if your total income is modest. This is a real option worth reviewing with an accountant closer to
+          retirement, not something this estimator models.</div>
+      </div>
+    </div>
+
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · Inspired by <a
+        href="https://maplecoastfire.ca" style="color:inherit;">MapleCoastFIRE</a></footer>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    (function () {
+      initTheme();
+      initThemeToggle();
+      restoreInputs();
+
+      // Seed the projected RRSP balance from the CoastFIRE Calculator's own projection, but only
+      // if this page doesn't already have its own saved value — respects anything the user has
+      // since hand-edited here, same spirit as the original single-page "one-time" prefill.
+      (function prefillIfNeeded() {
+        let stored = {};
+        try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) stored = JSON.parse(raw); } catch (e) { }
+        if (stored.rwRrspAtRetirement === undefined) {
+          const res = compute(readStoredInputs());
+          if (res && res.rows && res.rows.length) {
+            $('rwRrspAtRetirement').value = Math.round(res.rows[res.rows.length - 1].rrsp);
+          }
+        }
+      })();
+
+      function renderRrspWithholding() {
+        const balance = num('rwRrspAtRetirement');
+        const rate = parseFloat($('rwWithdrawalType').value) || 0;
+        const withheld = balance * rate;
+        const net = balance - withheld;
+
+        $('rwBalance').textContent = fmt(balance, 'CAD');
+        $('rwRate').textContent = Math.round(rate * 100) + '%';
+        $('rwWithheld').textContent = fmt(withheld, 'CAD');
+        $('rwNet').textContent = fmt(net, 'CAD');
+
+        const note = $('rwNote');
+        if (balance <= 0) {
+          note.className = 'deferral-note auto';
+          note.textContent = 'No projected RRSP balance to estimate against — fill in an RRSP balance and contributions on the CoastFIRE Calculator to see this.';
+        } else if (rate === 0) {
+          note.className = 'deferral-note auto';
+          note.textContent = `No Canadian withholding applies if you're a resident when you withdraw — standard resident tax rules would apply instead.`;
+        } else if (rate === 0.15) {
+          note.className = 'deferral-note auto';
+          note.textContent = `✅ At the 15% periodic-payment rate, you'd keep an estimated ${fmt(net, 'CAD')} of your projected ${fmt(balance, 'CAD')} RRSP balance after Canadian withholding — before any additional US tax owed.`;
+        } else {
+          note.className = 'deferral-note security';
+          note.textContent = `⚠️ At the 25% lump-sum rate, Canada would withhold an estimated ${fmt(withheld, 'CAD')} of your projected ${fmt(balance, 'CAD')} RRSP balance — before any additional US tax owed. Converting to a RRIF first could cut this roughly in half.`;
+        }
+      }
+      ['rwWithdrawalType', 'rwRrspAtRetirement'].forEach(id => {
+        $(id).addEventListener('input', () => { saveInputs(); renderRrspWithholding(); });
+        $(id).addEventListener('change', () => { saveInputs(); renderRrspWithholding(); });
+      });
+
+      renderRrspWithholding();
+    })();
+  </script>
+</body>
+
+</html>

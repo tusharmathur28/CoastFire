@@ -1,0 +1,2343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoastFIRE Calculator — Two Currencies, One Number</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <a href="#calcForm" class="skip-link">Skip to calculator</a>
+  <div class="wrap">
+
+    <header>
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
+            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
+            accounts in their native currencies.</p>
+        </div>
+        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+      </div>
+      <nav class="page-nav">
+        <a href="index.html">All Tools</a>
+        <a href="coastfire-calculator.html">Calculator</a>
+        <a href="action-items.html">Action Items</a>
+        <a href="departure-tax.html">Departure Tax</a>
+        <a href="rrsp-withholding.html">RRSP Withholding</a>
+        <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="moving-back.html">Moving Back to Canada</a>
+        <a href="compare-scenarios.html">Compare Scenarios</a>
+      </nav>
+    </header>
+
+    <div class="tool-header" id="calcFormHeader">
+      <h2>🧭 CoastFIRE Calculator</h2>
+      <p class="tool-sub"><strong>CoastFIRE</strong> is the point where your portfolio is projected to grow, on its own,
+        into everything you'll need for retirement — no further contributions required. Once you're there, you can
+        "coast": cover today's expenses while your accounts do the rest. This calculator walks through your Canadian
+        and US accounts, government benefits, and assumptions to estimate when you'll get there.</p>
+    </div>
+
+    <div class="sample-banner" id="sampleBanner">
+      <div class="sb-icon">👋</div>
+      <div class="sb-text">
+        <strong>Heads up:</strong> the form below is pre-filled with a made-up example scenario, just so you can see
+        how everything works before you commit to typing in your own numbers. None of this is your data.
+        Replace each field with your own numbers whenever you're ready — or use the button to reload this example any time.
+      </div>
+      <button type="button" id="loadExampleBtn">Reload example</button>
+      <button type="button" class="sb-dismiss" id="dismissSampleBtn">Got it</button>
+    </div>
+
+    <div class="scenarios-panel" id="scenariosPanel">
+      <h4>💾 My Scenarios</h4>
+      <div class="scenarios-row">
+        <select id="scenariosSelect"><option value="">— Select a saved scenario —</option></select>
+        <button type="button" class="ghost" id="loadScenarioBtn">Load</button>
+        <button type="button" class="ghost" id="deleteScenarioBtn">Delete</button>
+      </div>
+      <div class="scenarios-row">
+        <input type="text" id="scenarioNameInput" placeholder="Name this scenario, e.g. &quot;Retire at 55&quot;" maxlength="40">
+        <button type="button" class="primary" id="saveScenarioBtn">Save current as scenario</button>
+      </div>
+      <div class="scenarios-row">
+        <button type="button" class="ghost" id="exportAllBtn">⬇️ Export all data (JSON)</button>
+        <button type="button" class="ghost" id="importAllBtn">⬆️ Import data (JSON)</button>
+        <input type="file" id="importAllFile" accept="application/json,.json" hidden>
+      </div>
+      <div class="sp-note">Save as many scenarios as you like — e.g. "Retire at 55" vs "Retire at 60" — then load
+        either one any time to compare. Saved in this browser only.</div>
+      <div class="sp-note">Export downloads a single file with your current inputs and every saved scenario —
+        useful before clearing your browser, switching devices, or just keeping a backup. Import merges a
+        previously-exported file back in.</div>
+      <span class="scenario-feedback" id="scenarioFeedback" role="status" aria-live="polite">Saved!</span>
+    </div>
+
+    <form id="calcForm">
+
+      <div class="wizard-chrome" id="wizardChrome" hidden>
+        <div class="wizard-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+          aria-valuenow="25" id="wizardProgressBar">
+          <div class="wizard-progress-fill" id="wizardProgressFill"></div>
+        </div>
+        <div class="wizard-steps-row" id="wizardStepsRow">
+          <button type="button" class="wizard-step-pill" data-goto="1" aria-current="step">
+            <span class="wsp-num">1</span><span class="wsp-label">You</span>
+          </button>
+          <button type="button" class="wizard-step-pill" data-goto="2">
+            <span class="wsp-num">2</span><span class="wsp-label">Accounts</span>
+          </button>
+          <button type="button" class="wizard-step-pill" data-goto="3">
+            <span class="wsp-num">3</span><span class="wsp-label">Assumptions</span>
+          </button>
+          <button type="button" class="wizard-step-pill" data-goto="4">
+            <span class="wsp-num">4</span><span class="wsp-label">Benefits</span>
+          </button>
+        </div>
+        <div class="wizard-meta" id="wizardMeta" aria-live="polite">Step 1 of 4 · ~2 min</div>
+        <div class="wizard-step-header" aria-live="polite">
+          <h3 id="wizardStepTitle">Tell us about you</h3>
+          <p id="wizardStepSub">The basics that set your timeline and what you're saving toward.</p>
+        </div>
+        <div class="snapshot-stats-row" id="snapshotStatsRow" role="status" aria-live="polite">
+          <div class="ss-stat">
+            <span class="ss-label">Portfolio today</span>
+            <span class="ss-value" id="ssPortfolio">—</span>
+          </div>
+          <div class="ss-stat">
+            <span class="ss-label">Years to CoastFIRE</span>
+            <span class="ss-value" id="ssCoastYears">—</span>
+          </div>
+          <a class="ss-flag" id="ssFlag" href="action-items.html"></a>
+          <button type="button" class="ss-dismiss" id="ssDismissBtn" aria-label="Hide this summary bar">×</button>
+        </div>
+      </div>
+
+      <div class="error-banner" id="errorBanner">
+        <strong>Please fix the following before calculating:</strong>
+        <ul id="errorList" role="alert" aria-live="assertive"></ul>
+      </div>
+
+      <fieldset id="fieldsetPersonal">
+        <legend class="section-title"><span class="num">01</span> Personal information</legend>
+        <div class="section-explainer">These three basics set your timeline — how many years your money has to grow,
+          and how often it gets topped up.</div>
+        <div class="grid3" data-step="1">
+          <div class="field">
+            <label for="currentAge">Current age <span class="info" title="Your current age in years.">?</span></label>
+            <input type="number" id="currentAge" value="34" min="16" max="80" step="1" required>
+          </div>
+          <div class="field">
+            <label for="retireAge">Retirement age <span class="info"
+                title="The age you plan to fully retire and begin drawing on your investments.">?</span></label>
+            <input type="number" id="retireAge" value="60" min="17" max="90" step="1" required>
+          </div>
+          <div class="field">
+            <label for="contribFreq">Contribution frequency <span class="info"
+                title="How often you add to each account below. Applies to all accounts.">?</span></label>
+            <select id="contribFreq">
+              <option value="monthly" selected>Monthly</option>
+              <option value="annual">Annually</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset id="fieldsetAccounts">
+        <legend class="section-title"><span class="num">02</span> Accounts — by country</legend>
+        <div class="section-explainer">List what you already have, in whichever currency each account actually lives
+          in. Canadian accounts stay in CAD, US accounts stay in USD — we only combine them into one number at the very
+          end.</div>
+        <div class="grid2 border-crossing" data-step="2">
+          <div class="country-col left">
+            <div class="country-head"><span class="chip ca">CA</span>
+              <h3>Canadian accounts (CAD)</h3>
+            </div>
+
+            <div class="field">
+              <label for="rrspBal">RRSP balance ($ CAD) <span class="tag treaty">Treaty-protected</span></label>
+              <div class="label-plain">Canada's employer-style retirement account — similar to a 401(k)</div>
+              <input type="number" id="rrspBal" value="60000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label for="rrspContrib">RRSP contribution ($ CAD)</label>
+              <input type="number" id="rrspContrib" value="400" min="0" step="10">
+            </div>
+            <div class="field employer-match-field">
+              <label for="rrspMatch">+ Employer match ($ CAD, if any)</label>
+              <input type="number" id="rrspMatch" value="0" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label for="tfsaBal">TFSA balance ($ CAD) <span class="tag watch">Not tax-free to IRS</span></label>
+              <div class="label-plain">Canada's flexible tax-free savings account — just not tax-free to the IRS</div>
+              <input type="number" id="tfsaBal" value="25000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label for="tfsaContrib">TFSA contribution ($ CAD)</label>
+              <input type="number" id="tfsaContrib" value="200" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label for="nonregCadBal">Non-registered (CAD) balance ($)</label>
+              <div class="label-plain">A regular taxable investment account — no special tax treatment</div>
+              <input type="number" id="nonregCadBal" value="10000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label for="nonregCadContrib">Non-registered (CAD) contribution ($)</label>
+              <input type="number" id="nonregCadContrib" value="100" min="0" step="10">
+            </div>
+          </div>
+
+          <div class="country-col right">
+            <div class="country-head"><span class="chip us">US</span>
+              <h3>US accounts (USD)</h3>
+            </div>
+
+            <div class="field">
+              <label for="k401Bal">401(k) / 403(b) balance ($ USD)</label>
+              <div class="label-plain">Your US employer-sponsored retirement plan</div>
+              <input type="number" id="k401Bal" value="45000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label for="k401Contrib">401(k) / 403(b) contribution ($ USD)</label>
+              <input type="number" id="k401Contrib" value="500" min="0" step="10">
+            </div>
+            <div class="field employer-match-field">
+              <label for="k401Match">+ Employer match ($ USD, if any)</label>
+              <input type="number" id="k401Match" value="0" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label for="iraBal">Traditional / Rollover IRA balance ($ USD)</label>
+              <div class="label-plain">A US tax-deferred retirement account you contribute to yourself</div>
+              <input type="number" id="iraBal" value="8000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label for="iraContrib">Traditional IRA contribution ($ USD)</label>
+              <input type="number" id="iraContrib" value="50" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label for="rothBal">Roth IRA balance ($ USD)</label>
+              <div class="label-plain">Funded with after-tax dollars — growth and withdrawals are generally tax-free</div>
+              <input type="number" id="rothBal" value="12000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label for="rothContrib">Roth IRA contribution ($ USD)</label>
+              <input type="number" id="rothContrib" value="150" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label for="taxableUsdBal">Taxable brokerage balance ($ USD)</label>
+              <div class="label-plain">A regular taxable investment account — no special tax treatment</div>
+              <input type="number" id="taxableUsdBal" value="15000" min="0" step="100">
+            </div>
+            <div class="field">
+              <label for="taxableUsdContrib">Taxable brokerage contribution ($ USD)</label>
+              <input type="number" id="taxableUsdContrib" value="200" min="0" step="10">
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="extra-accounts-toggle" id="extraAccountsToggle" data-step="2">
+          + Add other account types (FHSA, RESP, HSA)
+        </button>
+
+        <div class="grid2 border-crossing extra-accounts-body" id="extraAccountsBody" data-step="2" hidden>
+          <div class="country-col left">
+            <div class="field">
+              <label for="fhsaBal">FHSA balance ($ CAD) <span class="tag uncertain">Uncertain US treatment</span></label>
+              <div class="label-plain">Canada's First Home Savings Account — the IRS has issued no guidance yet; many
+                cross-border preparers treat it cautiously, similar to (or more uncertain than) a TFSA.</div>
+              <input type="number" id="fhsaBal" value="0" min="0" step="100">
+            </div>
+            <div class="field">
+              <label for="fhsaContrib">FHSA contribution ($ CAD)</label>
+              <input type="number" id="fhsaContrib" value="0" min="0" step="10">
+            </div>
+
+            <div class="field">
+              <label for="respBal">RESP balance ($ CAD) <span class="tag watch">Not tax-free to IRS</span></label>
+              <div class="label-plain">Education savings account with government matching (CESG) — like the TFSA,
+                not recognized as tax-deferred by the IRS and can carry foreign trust reporting exposure.</div>
+              <input type="number" id="respBal" value="0" min="0" step="100">
+            </div>
+            <div class="field">
+              <label for="respContrib">RESP contribution ($ CAD)</label>
+              <input type="number" id="respContrib" value="0" min="0" step="10">
+            </div>
+          </div>
+
+          <div class="country-col right">
+            <div class="field">
+              <label for="hsaBal">HSA balance ($ USD) <span class="tag good-tag">No cross-border issue</span></label>
+              <div class="label-plain">US-only triple-tax-advantaged medical savings account — no treaty or reporting
+                complication, since it isn't a foreign account.</div>
+              <input type="number" id="hsaBal" value="0" min="0" step="100">
+            </div>
+            <div class="field">
+              <label for="hsaContrib">HSA contribution ($ USD) <span class="info"
+                  title="2026 IRS limits: $4,400/year self-only coverage, $8,750/year family coverage, plus a $1,000 catch-up at age 55+.">?</span></label>
+              <input type="number" id="hsaContrib" value="0" min="0" step="10">
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset id="fieldsetAssumptions">
+        <legend class="section-title"><span class="num">03</span> Currency &amp; growth assumptions</legend>
+        <div class="section-explainer">These assumptions do more to move your result than anything else here. If
+          you're not sure what to use, the presets below are a reasonable starting point — you can always come back
+          and adjust later.</div>
+        <div class="preset-row" data-step="3">
+          <span class="preset-label">Quick scenarios:</span>
+          <button type="button" class="preset-btn" data-preset="conservative">Conservative (5% / 3%)</button>
+          <button type="button" class="preset-btn active" data-preset="base">Base case (7% / 2.5%)</button>
+          <button type="button" class="preset-btn" data-preset="optimistic">Optimistic (9% / 2%)</button>
+        </div>
+        <div class="grid3">
+          <div class="field" data-step="3">
+            <label for="exchangeRate">Exchange rate <span class="info"
+                title="Used only to convert your combined totals — each account keeps growing in its own currency underneath.">?</span></label>
+            <div class="label-plain">How many US dollars one Canadian dollar buys right now</div>
+            <input type="number" id="exchangeRate" value="0.73" min="0.01" step="0.01">
+            <div class="field-note" style="font-size:12px;color:var(--ink-soft);margin-top:4px;">1 CAD = this many USD
+            </div>
+            <div class="fx-hint-row">
+              <div class="helper-hint" id="fxHint">Fetching live exchange rate...</div>
+              <button type="button" class="small ghost-small" id="fetchFxBtn"
+                style="padding: 4px 8px; font-size: 11px; margin-top: 2px;">Fetch live</button>
+            </div>
+          </div>
+          <div class="field" data-step="1">
+            <label for="reportCurrency">Report combined totals in</label>
+            <div class="label-plain">Which currency you'd like your big-picture numbers shown in</div>
+            <select id="reportCurrency">
+              <option value="USD" selected>USD</option>
+              <option value="CAD">CAD</option>
+            </select>
+          </div>
+          <div class="field" data-step="3">
+            <label for="stopAtCoast">Stop contributions at CoastFIRE?</label>
+            <div class="label-plain">Once you hit your number, should we assume you stop actively saving?</div>
+            <select id="stopAtCoast">
+              <option value="no" selected>No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <div class="field" data-step="3">
+            <label for="returnRate">Expected annual investment return (%)</label>
+            <input type="number" id="returnRate" value="7" min="0" step="0.1">
+            <div class="typical-range">Not sure? A diversified stock/bond portfolio has historically averaged
+              roughly 5–8% — the presets above pick reasonable low/mid/high values for you.</div>
+          </div>
+          <div class="field" data-step="3">
+            <label for="inflationRate">Expected annual inflation (%)</label>
+            <input type="number" id="inflationRate" value="2.5" min="0" step="0.1">
+            <div class="typical-range">Not sure? 2–3% matches the long-run average for both Canada and the US.</div>
+          </div>
+          <div class="field" data-step="3">
+            <label for="withdrawalRate">Annual withdrawal rate (%)</label>
+            <input type="number" id="withdrawalRate" value="4" min="0.5" step="0.1">
+            <div class="typical-range">Not sure? 4% is the classic "safe withdrawal rate" rule of thumb — how much
+              of your portfolio you draw down each year in retirement.</div>
+          </div>
+        </div>
+        <div class="assumptions-note" data-step="3">One growth rate is applied across every account — the same
+          portfolio, just in different wrappers and currencies.</div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="section-title"><span class="num">04</span> Retirement needs</legend>
+        <div class="section-explainer">What you expect to spend each month once retired, in today's dollars — we'll
+          automatically adjust this for inflation between now and your retirement date.</div>
+        <div class="grid3" data-step="1">
+          <div class="field">
+            <label for="monthlyExpenses">Monthly expenses in retirement (<span id="expenseCurrencyLabel">USD</span>, today's dollars)</label>
+            <input type="number" id="monthlyExpenses" value="5000" min="0" step="50">
+          </div>
+        </div>
+      </fieldset>
+
+      <details class="collapsible-section" id="govBenefitsDetails">
+        <summary class="section-title"><span class="num">05</span> Government benefits
+          <span class="collapse-teaser">optional — click to expand</span></summary>
+        <div class="collapsible-body">
+          <div class="section-explainer">Optional, but including CPP, OAS, and Social Security can meaningfully lower
+            how much your portfolio alone needs to cover. Don't know your numbers yet? It's completely fine to leave
+            this collapsed and come back later.</div>
+
+          <div class="grid2 border-crossing" data-step="4">
+            <div class="country-col left">
+              <div class="country-head"><span class="chip ca">CA</span>
+                <h3>CPP &amp; OAS</h3>
+              </div>
+
+              <div class="field">
+                <label for="cppMonthly">Expected monthly CPP ($ CAD) <span class="info"
+                    title="2026 max at age 65 is about $1,507.65/mo; the average new beneficiary gets about $925/mo. Based on your actual contribution history.">?</span></label>
+                <input type="number" id="cppMonthly" value="900" min="0" step="10">
+                <div class="not-sure-hint">Not sure? The average new CPP recipient gets about $925/mo — check your real
+                  estimate free at <a href="https://www.canada.ca/en/services/benefits/publicpensions/cpp.html" target="_blank" rel="noopener">canada.ca</a>.
+                  <button type="button" class="use-avg" data-target="cppMonthly" data-value="925">Use average ($925)</button>
+                </div>
+              </div>
+
+              <div class="helper-row">
+                <div class="field">
+                  <label for="oasYears">Years of Canadian residency since age 18 <span class="info"
+                      title="OAS pays a full pension after 40 years of Canadian residency since 18. Fewer years means a prorated (1/40 per year) amount. Living in the US, you generally need at least 20 years to receive OAS abroad — the Canada-US Totalization Agreement lets US residency count toward that 20-year threshold, though it doesn't increase the payment itself.">?</span></label>
+                  <input type="number" id="oasYears" value="18" min="0" max="40" step="1">
+                </div>
+                <button type="button" class="small" id="estimateOasBtn">Estimate my OAS</button>
+              </div>
+              <div class="helper-hint" id="oasEstimateHint">Based on 18 years, a prorated OAS would be about $334/mo
+                (18/40 × current max). Click "Estimate my OAS" to fill this in — then adjust as needed.</div>
+
+              <div class="field">
+                <label for="oasMonthly">Expected monthly OAS ($ CAD) <span class="tag watch">Income-tested</span></label>
+                <input type="number" id="oasMonthly" value="334" min="0" step="10">
+              </div>
+            </div>
+
+            <div class="country-col right">
+              <div class="country-head"><span class="chip us">US</span>
+                <h3>Social Security</h3>
+              </div>
+
+              <div class="field">
+                <label for="ssMonthly">Expected monthly Social Security ($ USD) <span class="info"
+                    title="2026 average retirement benefit is about $2,071-2,083/mo. Max at full retirement age (67) is about $4,152/mo, or $5,181/mo if you delay to 70. Since Jan 2025, WEP/GPO no longer reduce this for people also receiving a foreign pension like CPP.">?</span></label>
+                <input type="number" id="ssMonthly" value="2000" min="0" step="10">
+                <div class="not-sure-hint">Not sure? The average retirement benefit is about $2,071/mo — check your real
+                  estimate free at <a href="https://www.ssa.gov/myaccount/" target="_blank" rel="noopener">ssa.gov/myaccount</a>.
+                  <button type="button" class="use-avg" data-target="ssMonthly" data-value="2071">Use average ($2,071)</button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="benefitsStartAge">Government benefits start age <span class="info"
+                    title="Applied uniformly to CPP, OAS, and Social Security for simplicity — in reality you can start each independently between roughly 60-70 (CPP/OAS) or 62-70 (Social Security).">?</span></label>
+                <div class="label-plain">The age you'll start collecting CPP, OAS, and Social Security</div>
+                <input type="number" id="benefitsStartAge" value="65" min="55" max="70" step="1">
+              </div>
+            </div>
+          </div>
+          <div class="assumptions-note" data-step="4">If you retire before this age, your portfolio needs to cover 100% of expenses
+            until benefits start — that gap is funded from your portfolio in the calculation below. Don't know your
+            numbers yet? Leave these at 0 — the calculator will just assume no government benefits, which is a safe,
+            conservative starting point.</div>
+        </div>
+      </details>
+
+      <div class="wizard-nav-row" id="wizardNavRow" hidden>
+        <button type="button" class="ghost" id="wizardBackBtn">Back</button>
+        <button type="button" class="primary" id="wizardContinueBtn">Continue</button>
+        <button type="button" class="ghost" id="wizardSkipBenefitsBtn" hidden>Skip benefits for now</button>
+        <button type="button" class="wizard-skip-link" id="wizardSkipAllBtn">Skip to full form</button>
+      </div>
+
+      <div class="btn-row">
+        <button type="submit" class="primary">Calculate your CoastFIRE path</button>
+        <button type="button" class="ghost" id="resetBtn">Start new calculation</button>
+      </div>
+      <div class="share-row" style="margin-top:14px;">
+        <button type="button" class="ghost" id="shareLinkBtn">🔗 Copy shareable link</button>
+        <button type="button" class="ghost" id="printBtn">🖨️ Print summary</button>
+        <button type="button" class="ghost" id="downloadPdfBtn">📄 Download PDF report</button>
+        <span class="share-feedback" id="shareFeedback" role="status" aria-live="polite">Link copied!</span>
+      </div>
+      <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.
+      </div>
+    </form>
+    <div id="results" hidden>
+      <h2 class="results-title">Your cross-border CoastFIRE results</h2>
+      <p class="results-sub">Account balances stay in their native currency below; only the totals are converted, at the
+        exchange rate you set.</p>
+
+      <div class="result-headline" id="resultHeadline" role="status" aria-live="polite"></div>
+
+      <div class="results-tools-jump">
+        <span class="rtj-label">Jump to:</span>
+        <a href="action-items.html">Action Items</a>
+        <a href="departure-tax.html">Departure Tax</a>
+        <a href="rrsp-withholding.html">RRSP Withholding</a>
+        <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="moving-back.html">Moving Back to Canada</a>
+        <a href="compare-scenarios.html">Compare Scenarios</a>
+        <a href="index.html">All tools ↑</a>
+      </div>
+
+      <div class="stamp-row">
+        <div class="stat-cards">
+          <div class="stat">
+            <div class="label">Combined portfolio today</div>
+            <div class="stat-value" id="statCurrent">—</div>
+            <div class="stat-sub" id="statCurrencyNote">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Required at retirement</div>
+            <div class="stat-value" id="statRequired">—</div>
+            <div class="stat-sub">To sustain your monthly expenses</div>
+          </div>
+          <div class="stat">
+            <div class="label">CoastFIRE number today</div>
+            <div class="stat-value" id="statCoastNumber">—</div>
+            <div class="stat-sub">What you'd need right now, untouched</div>
+          </div>
+          <div class="stat">
+            <div class="label">Years until CoastFIRE</div>
+            <div class="stat-value" id="statYearsUntil">—</div>
+            <div class="stat-sub" id="statCoastYear">—</div>
+          </div>
+        </div>
+
+        <svg class="stamp" viewBox="0 0 200 200" id="stampSvg">
+          <defs>
+            <path id="stampArcTop" d="M 24,104 A 78,78 0 0 1 176,104" />
+            <path id="stampArcBottom" d="M 176,104 A 78,78 0 0 1 24,104" />
+          </defs>
+          <circle cx="100" cy="104" r="90" fill="none" stroke="var(--gold)" stroke-width="3" stroke-dasharray="4 4" />
+          <circle cx="100" cy="104" r="78" fill="none" stroke="var(--gold)" stroke-width="1.5" />
+          <text font-size="11.5" fill="var(--gold-text-on-soft)" letter-spacing="2" font-family="Inter, sans-serif"
+            font-weight="700">
+            <textPath href="#stampArcTop" startOffset="50%" text-anchor="middle" id="stampTopText">CROSS-BORDER CLEARED
+            </textPath>
+          </text>
+          <text font-size="11.5" fill="var(--gold-text-on-soft)" letter-spacing="2" font-family="Inter, sans-serif"
+            font-weight="700">
+            <textPath href="#stampArcBottom" startOffset="50%" text-anchor="middle" id="stampBottomText">COASTFIRE
+              STATUS</textPath>
+          </text>
+          <text id="stampYear" x="100" y="100" font-size="26" fill="var(--gold-text-on-soft)" text-anchor="middle"
+            font-family="Fraunces, serif" font-weight="700">—</text>
+          <text id="stampSub" x="100" y="122" font-size="11" fill="var(--gold-text-on-soft)" text-anchor="middle"
+            font-family="IBM Plex Mono, monospace">—</text>
+        </svg>
+      </div>
+
+      <div class="roadmap-card">
+        <h3>Your roadmap</h3>
+        <div class="roadmap-track" id="roadmapTrack">
+          <div class="roadmap-fill" id="roadmapFill"></div>
+        </div>
+      </div>
+
+      <div class="composition-card">
+        <div class="composition-head">
+          <h3>Where your money sits today</h3>
+          <div class="view-tabs" id="donutTabs" role="tablist" aria-label="Portfolio composition view">
+            <button type="button" data-view="account" class="active" role="tab" aria-selected="true">By account</button>
+            <button type="button" data-view="currency" role="tab" aria-selected="false">By currency</button>
+            <button type="button" data-view="tax" role="tab" aria-selected="false">By tax treatment</button>
+          </div>
+        </div>
+        <div class="composition-body">
+          <div class="donut-wrap">
+            <div class="donut" id="donutChart"></div>
+            <div class="donut-center">
+              <div class="dc-value" id="donutCenterValue">—</div>
+              <div class="dc-label">combined today</div>
+            </div>
+          </div>
+          <ul class="donut-legend" id="donutLegend"></ul>
+        </div>
+        <div class="composition-caveat" id="donutCaveat"></div>
+      </div>
+
+      <div class="progress-card">
+        <div class="progress-label"><span>Progress to your CoastFIRE number (today)</span><span id="progressPct">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-note" id="progressNote">—</div>
+      </div>
+
+      <div class="slider-panel">
+        <h4>Quick adjust — drag to see the projection update live</h4>
+        <div class="slider-row">
+          <label for="returnRateSlider">Expected return (%)</label>
+          <input type="range" id="returnRateSlider" min="0" max="12" step="0.5" value="7">
+          <span class="slider-val" id="returnRateSliderVal">7%</span>
+        </div>
+        <div class="slider-row">
+          <label for="retireAgeSlider">Retirement age</label>
+          <input type="range" id="retireAgeSlider" min="45" max="75" step="1" value="60">
+          <span class="slider-val" id="retireAgeSliderVal">60</span>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-controls">
+          <div class="chart-legend" id="chartLegendSingle">
+            <span><span class="legend-dot" style="background:var(--harbor);"></span>Combined portfolio</span>
+            <span><span class="legend-dot" style="background:var(--maple);"></span>CoastFIRE number</span>
+          </div>
+          <div class="chart-legend" id="chartLegendMulti" style="display:none;"></div>
+          <div class="view-tabs" id="chartModeTabs" role="tablist" aria-label="Chart view mode">
+            <button type="button" data-mode="single" class="active" role="tab" aria-selected="true">Projection</button>
+            <button type="button" data-mode="range" role="tab" aria-selected="false">Scenario range</button>
+            <button type="button" data-mode="coast" role="tab" aria-selected="false">Coast on vs off</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart" height="280"></canvas>
+          <div class="chart-tooltip" id="chartTooltip"></div>
+        </div>
+      </div>
+
+      <div class="income-stack-card">
+        <h3>Retirement income sources</h3>
+        <div class="subhead">From retirement to 20 years later — how much of your annual expenses comes from your portfolio versus CPP/OAS/Social Security once claimed.</div>
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:var(--gold);"></span>Government benefits</span>
+          <span><span class="legend-dot" style="background:var(--harbor);"></span>Funded from portfolio</span>
+        </div>
+        <canvas id="incomeStackChart" height="240"></canvas>
+      </div>
+
+      <details class="sensitivity-card card-collapsible" id="sensitivityDetails">
+        <summary>
+          <h3>Exchange-rate sensitivity</h3>
+          <span class="toggle-icon"></span>
+        </summary>
+        <div class="subhead">Same underlying CAD and USD balances — just re-converted at different exchange rates, so
+          you can see how much currency swings actually move your numbers.</div>
+        <div class="card-collapsible-body">
+          <div class="table-scroll">
+            <table class="sens">
+              <thead>
+                <tr>
+                  <th>1 CAD =</th>
+                  <th>Combined portfolio</th>
+                  <th>CoastFIRE number</th>
+                </tr>
+              </thead>
+              <tbody id="sensitivityBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <div class="insights">
+        <h3 style="font-size:18px;">Insights</h3>
+        <ul id="insightsList"></ul>
+      </div>
+
+      <div class="considerations" id="considerationsSection">
+        <h3>Cross-border considerations</h3>
+        <div class="subhead">General information, not tax or legal advice — rules below are commonly cited but you
+          should confirm current treatment with a cross-border specialist.</div>
+
+        <div class="considerations-legend">
+          <span><span class="ci-icon">✅</span> Good news</span>
+          <span><span class="ci-icon">⚠️</span> Watch out — could cost you</span>
+          <span><span class="ci-icon">📋</span> Action / reporting required</span>
+          <span><span class="ci-icon">ℹ️</span> Good to know</span>
+        </div>
+
+        <div class="consideration-item level-good">
+          <div class="ci-title"><span class="ci-icon">✅</span>RRSP <span class="ci-badge">Treaty-protected</span></div>
+          <div class="ci-body">Under the Canada–US tax treaty, the IRS treats your RRSP as a tax-deferred retirement
+            account — growth generally isn't taxed annually as a US person, similar to a traditional IRA.</div>
+        </div>
+
+        <div class="consideration-item level-warning">
+          <div class="ci-title"><span class="ci-icon">⚠️</span>TFSA <span class="ci-badge">Not tax-free to IRS</span></div>
+          <div class="ci-body">The US doesn't recognize the TFSA's tax-free status. Growth can be taxable each year, and
+            depending on structure it may trigger extra reporting (e.g. Form 3520/3520-A). Many cross-border planners
+            advise against actively contributing to a TFSA while a US resident.</div>
+        </div>
+
+        <div class="consideration-item level-warning">
+          <div class="ci-title"><span class="ci-icon">⚠️</span>PFIC exposure <span class="ci-badge">Non-reg &amp; RRSP holdings</span></div>
+          <div class="ci-body">Canadian-domiciled mutual funds and ETFs held by a US person can be classified as PFICs,
+            which carry punitive US tax treatment. US-domiciled funds are typically used instead once you're a US
+            resident.</div>
+        </div>
+
+        <div class="consideration-item level-action">
+          <div class="ci-title"><span class="ci-icon">📋</span>FBAR &amp; FATCA reporting <span class="ci-badge">Required</span></div>
+          <div class="ci-body">Canadian accounts above reporting thresholds generally need to be disclosed annually via
+            FBAR (FinCEN 114) and possibly Form 8938 — separate from your regular tax return.</div>
+        </div>
+
+        <div class="consideration-item level-info">
+          <div class="ci-title"><span class="ci-icon">ℹ️</span>Currency risk</div>
+          <div class="ci-body">Your CAD balances move in USD terms every time the exchange rate moves. This tool
+            applies one static rate you set — real results will vary with the market rate at withdrawal time. See the
+            sensitivity table above.</div>
+        </div>
+
+        <div class="consideration-item level-info">
+          <div class="ci-title"><span class="ci-icon">ℹ️</span>Totalization Agreement <span class="ci-badge">CPP/OAS/Social Security</span></div>
+          <div class="ci-body">The Canada-US Totalization Agreement can help you <em>qualify</em> for CPP, OAS, or
+            Social Security by combining your work/residency periods from both countries — for example, using US
+            residency to meet OAS's 20-year minimum for payments abroad. It does not increase the benefit amount
+            itself; that's still based on your actual contribution history or Canadian residency years in each country
+            separately.</div>
+        </div>
+
+        <div class="consideration-item level-good">
+          <div class="ci-title"><span class="ci-icon">✅</span>WEP/GPO repeal <span class="ci-badge">As of Jan 2025</span></div>
+          <div class="ci-body">The Windfall Elimination Provision and Government Pension Offset used to reduce a US
+            Social Security benefit for people who also received a foreign pension like CPP. The Social Security
+            Fairness Act repealed both, retroactive to January 2024 — so this calculator assumes your Social Security
+            estimate no longer needs a CPP-related reduction. Confirm your own Social Security statement reflects
+            this.</div>
+        </div>
+
+        <div class="consideration-item level-warning">
+          <div class="ci-title"><span class="ci-icon">⚠️</span>OAS recovery tax <span class="ci-badge">Clawback</span></div>
+          <div class="ci-body">OAS is income-tested: for 2026, it starts getting clawed back once net world income
+            passes roughly $95,300, at 15 cents per dollar above that, fully eliminated somewhere in the $155,000–
+            $161,000 range depending on age. If your retirement income (including RRSP/RRIF withdrawals) will be high,
+            your real OAS may be lower than the flat figure you enter here.</div>
+        </div>
+
+        <div class="consideration-item level-warning">
+          <div class="ci-title"><span class="ci-icon">⚠️</span>FHSA <span class="ci-badge">No IRS guidance yet</span></div>
+          <div class="ci-body">Canada's First Home Savings Account is too new for the IRS to have issued any formal
+            guidance on it — unlike the RRSP, there's no treaty provision covering it. Most cross-border preparers
+            treat it cautiously, potentially as a foreign trust requiring Form 3520/3520-A, until clearer rules
+            emerge. If you have one, this is worth a direct conversation with your accountant.</div>
+        </div>
+
+        <div class="consideration-item level-warning">
+          <div class="ci-title"><span class="ci-icon">⚠️</span>RESP <span class="ci-badge">Not tax-free to IRS</span></div>
+          <div class="ci-body">Like the TFSA, the RESP isn't recognized as tax-deferred by the IRS — growth can be
+            taxable annually and may trigger foreign trust reporting. The Canada Education Savings Grant (CESG, 20% of
+            contributions up to $500/year) is a real benefit worth keeping, but it doesn't change the US tax
+            treatment of the account itself.</div>
+        </div>
+
+        <div class="consideration-item level-action">
+          <div class="ci-title"><span class="ci-icon">📋</span>Pre-tax targets</div>
+          <div class="ci-body">This calculator doesn't model cross-border taxes, so treat "Required at Retirement" as a
+            pre-tax figure and build in a margin for tax drag on both sides of the border.</div>
+        </div>
+      </div>
+
+      <details class="card-collapsible" id="breakdownDetails">
+        <summary>
+          <h3>Yearly breakdown</h3>
+          <span class="toggle-icon"></span>
+        </summary>
+        <div class="subhead">Every account, year by year — for when you want to see exactly how the numbers add up.</div>
+        <div class="card-collapsible-body">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+            <button type="button" class="export" id="exportCsvBtn">Export CSV</button>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Age</th>
+                  <th>RRSP</th>
+                  <th>TFSA</th>
+                  <th>Non-Reg (CAD)</th>
+                  <th>CAD Total</th>
+                  <th>401(k)</th>
+                  <th>IRA</th>
+                  <th>Roth IRA</th>
+                  <th>Taxable (USD)</th>
+                  <th>USD Total</th>
+                  <th>Combined</th>
+                  <th>CoastFIRE #</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+          <div class="yearly-cards" id="yearlyCardsContainer"></div>
+        </div>
+      </details>
+    </div>
+
+    <details class="help-section" id="helpSection">
+      <summary>Guide: How to use this tool &amp; interpret your numbers</summary>
+      <div class="help-body">
+        <h4 style="margin-top:0;font-size:16px;">How to Use the Tool</h4>
+        <ol class="help-steps">
+          <li><strong>Enter personal details:</strong> Current age, retirement age, and contribution frequency (monthly
+            or annual).</li>
+          <li><strong>Log your accounts:</strong> Input balances and ongoing contributions for both Canadian (CAD) and
+            US (USD) accounts in their native currencies.</li>
+          <li><strong>Set assumptions:</strong> Investment returns, inflation, SWR (Safe Withdrawal Rate), and target
+            retirement expenses in your reporting currency.</li>
+          <li><strong>Include government benefits:</strong> Input projected CPP, OAS, and US Social Security claims and
+            select the claim start age.</li>
+          <li><strong>Calculate:</strong> View your CoastFIRE year, growth trajectory, and detailed yearly breakdown.
+          </li>
+        </ol>
+
+        <h4 style="margin-top:24px;font-size:16px;">Understanding Your Results</h4>
+        <dl class="glossary">
+          <dt>CoastFIRE Number Today</dt>
+          <dd>The amount your portfolio needs to have right now so that, with no future contributions, it will grow to
+            support your retirement expenses by your retirement age.</dd>
+          <dt>Required at Retirement</dt>
+          <dd>The total pre-tax portfolio size needed at your retirement age. This factors in the "bridge years" before
+            pensions start and the "gap years" after.</dd>
+          <dt>Bridge Years vs. Gap Years</dt>
+          <dd>Years between retirement and receiving government benefits are "bridge years" (100% funded by your
+            portfolio). "Gap years" are post-benefit, where you only cover the difference between expenses and combined
+            pensions.</dd>
+          <dt>Exchange-Rate Sensitivity</dt>
+          <dd>Shows how currency fluctuations affect your target milestones based on CAD vs. USD strength. This
+            demonstrates how much currency swings shift your planning numbers.</dd>
+          <dt>Pre-Tax Planning</dt>
+          <dd>No cross-border tax drag (e.g. TFSA taxability, PFICs) is modeled; all totals are pre-tax planning
+            targets.</dd>
+        </dl>
+
+        <h4 style="margin-top:24px;font-size:16px;">Key Concepts (Cross-Border Basics)</h4>
+        <dl class="glossary">
+          <dt>CoastFIRE</dt>
+          <dd>The point where your portfolio is projected to grow — with no further contributions — into everything
+            you'll need by retirement. Once you're there, you can "coast": cover today's expenses while your
+            accounts do the rest.</dd>
+          <dt>RRSP (Registered Retirement Savings Plan)</dt>
+          <dd>Canada's tax-deferred retirement account. Recognized by the IRS as tax-deferred under the Canada-US
+            treaty — growth isn't taxed annually as a US person, similar to a Traditional IRA.</dd>
+          <dt>TFSA (Tax-Free Savings Account)</dt>
+          <dd>Tax-free in Canada, but the IRS doesn't recognize that status — growth can be taxable annually to a US
+            person and may carry extra reporting requirements.</dd>
+          <dt>FHSA (First Home Savings Account)</dt>
+          <dd>A newer Canadian account with no IRS guidance yet at all — treat its US tax treatment as unresolved
+            until you've talked to a cross-border specialist.</dd>
+          <dt>RESP (Registered Education Savings Plan)</dt>
+          <dd>Canadian education savings with government matching (CESG). Like the TFSA, not recognized as
+            tax-deferred by the IRS.</dd>
+          <dt>Departure Tax (Canada) vs. Exit Tax (US)</dt>
+          <dd>Two different taxes from two different countries. Canada's departure tax is a deemed disposition —
+            most property is treated as sold at fair market value the day you cease Canadian residency. The US exit
+            tax is a separate rule under IRC 877A that can apply to US citizens who renounce citizenship, or
+            long-term Green Card holders (8+ of the last 15 years) who formally end their status. Leaving Canada
+            doesn't trigger the US exit tax, and vice versa.</dd>
+          <dt>Totalization Agreement</dt>
+          <dd>Lets you combine work/residency periods from both countries to qualify for CPP, OAS, or Social
+            Security — for example, using US residency to meet OAS's 20-year minimum for payments abroad. It doesn't
+            increase the benefit amount, only helps you qualify.</dd>
+          <dt>RRSP/RRIF Withholding Tax</dt>
+          <dd>Canada withholds tax at the source when a non-resident withdraws from an RRSP or RRIF — 25% for a
+            lump-sum RRSP collapse, or 15% for periodic RRIF payments under the treaty. This is generally the final
+            Canadian tax on that withdrawal.</dd>
+          <dt>PFIC (Passive Foreign Investment Company)</dt>
+          <dd>A punitive US tax classification that can apply to Canadian-domiciled mutual funds and ETFs held by a
+            US person. US-domiciled funds are typically used instead once you're a US resident, to avoid this.</dd>
+        </dl>
+      </div>
+    </details>
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · Inspired by <a
+        href="https://maplecoastfire.ca" style="color:inherit;">MapleCoastFIRE</a></footer>
+  </div>
+
+  <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
+
+  <script src="shared.js"></script>
+  <script>
+    (function () {
+      initTheme();
+      initThemeToggle();
+
+      const OAS_MAX_MONTHLY = 743.05; // 2026, age 65-74, Service Canada
+
+      // Chart colors come from CSS vars, so they need a manual redraw on theme flip —
+      // initThemeToggle() (shared.js) calls this after applying the new theme.
+      window.onThemeChange = () => {
+        if (!$('results').hidden) drawChart(chartRows, chartReportCurrency);
+      };
+
+      $('reportCurrency').addEventListener('change', () => {
+        $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+      });
+
+      $('resetBtn').addEventListener('click', () => {
+        applyScenario(DEFAULT_FIELD_VALUES);
+        $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+        $('results').hidden = true;
+        clearSavedInputs();
+        syncSlidersFromFields();
+        showBanner();
+      });
+
+      // ---- Scenario presets ----
+      const PRESETS = {
+        conservative: { returnRate: 5, inflationRate: 3 },
+        base: { returnRate: 7, inflationRate: 2.5 },
+        optimistic: { returnRate: 9, inflationRate: 2 }
+      };
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const p = PRESETS[btn.dataset.preset];
+          if (!p) return;
+          $('returnRate').value = p.returnRate;
+          $('inflationRate').value = p.inflationRate;
+          document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          saveInputs();
+          validateAndRender();
+        });
+      });
+      // If return/inflation are hand-edited, no preset is authoritative anymore
+      ['returnRate', 'inflationRate'].forEach(id => {
+        $(id).addEventListener('input', () => {
+          const match = Object.entries(PRESETS).find(([, p]) => p.returnRate == num('returnRate') && p.inflationRate == num('inflationRate'));
+          document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', match && b.dataset.preset === match[0]));
+        });
+      });
+
+      // ---- Live sliders (quick-adjust panel) ----
+      function syncSlidersFromFields() {
+        $('returnRateSlider').value = num('returnRate');
+        $('returnRateSliderVal').textContent = num('returnRate') + '%';
+        $('retireAgeSlider').value = num('retireAge');
+        $('retireAgeSliderVal').textContent = num('retireAge');
+      }
+      $('returnRateSlider').addEventListener('input', () => {
+        $('returnRate').value = $('returnRateSlider').value;
+        $('returnRateSliderVal').textContent = $('returnRateSlider').value + '%';
+        const match = Object.entries(PRESETS).find(([, p]) => p.returnRate == num('returnRate') && p.inflationRate == num('inflationRate'));
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', match && b.dataset.preset === match[0]));
+        quickUpdate();
+      });
+      $('returnRateSlider').addEventListener('change', () => { saveInputs(); validateAndRender(); });
+      $('retireAgeSlider').addEventListener('input', () => {
+        $('retireAge').value = $('retireAgeSlider').value;
+        $('retireAgeSliderVal').textContent = $('retireAgeSlider').value;
+        quickUpdate();
+      });
+      $('retireAgeSlider').addEventListener('change', () => { saveInputs(); validateAndRender(); });
+      // Typing directly into the number fields keeps the sliders in sync too
+      $('returnRate').addEventListener('input', () => {
+        $('returnRateSlider').value = num('returnRate');
+        $('returnRateSliderVal').textContent = num('returnRate') + '%';
+      });
+      $('retireAge').addEventListener('input', () => {
+        $('retireAgeSlider').value = num('retireAge');
+        $('retireAgeSliderVal').textContent = num('retireAge');
+      });
+
+      function updateOasHint() {
+        const yrs = Math.min(40, Math.max(0, num('oasYears')));
+        const est = Math.round((yrs / 40) * OAS_MAX_MONTHLY);
+        $('oasEstimateHint').textContent = `Based on ${yrs} years, a prorated OAS would be about $${est}/mo (${yrs}/40 × current max of $${OAS_MAX_MONTHLY}). Click "Estimate my OAS" to fill this in — then adjust as needed.`;
+        return est;
+      }
+      $('oasYears').addEventListener('input', updateOasHint);
+      $('estimateOasBtn').addEventListener('click', () => {
+        $('oasMonthly').value = updateOasHint();
+      });
+      updateOasHint();
+
+      // ---- Extra account types toggle (FHSA, RESP, HSA) ----
+      function expandExtraAccounts() {
+        $('extraAccountsBody').hidden = false;
+        $('extraAccountsToggle').textContent = '– Hide other account types';
+      }
+      function collapseExtraAccounts() {
+        $('extraAccountsBody').hidden = true;
+        $('extraAccountsToggle').textContent = '+ Add other account types (FHSA, RESP, HSA)';
+      }
+      $('extraAccountsToggle').addEventListener('click', () => {
+        if ($('extraAccountsBody').hidden) expandExtraAccounts();
+        else collapseExtraAccounts();
+      });
+
+      // ---- Validation ----
+      // Each validation error is tagged with the wizard step it belongs to (1-4), so the wizard's
+      // "Continue" button can validate just the current step. Classic full-form validation (no argument)
+      // still returns every error, exactly as before.
+      function validate(stepScope) {
+        const allErrors = [];
+        const currentAge = num('currentAge'), retireAge = num('retireAge'), benefitsStartAge = num('benefitsStartAge');
+        if (currentAge <= 0) allErrors.push({ step: 1, message: 'Current age must be greater than 0.' });
+        if (retireAge <= currentAge) allErrors.push({ step: 1, message: 'Retirement age must be after your current age.' });
+        if (parseFloat($('monthlyExpenses').value) < 0) allErrors.push({ step: 1, message: 'Monthly expenses cannot be negative.' });
+
+        ['rrspBal', 'tfsaBal', 'nonregCadBal', 'fhsaBal', 'respBal', 'k401Bal', 'iraBal', 'rothBal', 'taxableUsdBal', 'hsaBal'].forEach(id => {
+          if (parseFloat($(id).value) < 0) allErrors.push({ step: 2, message: 'Balances cannot be negative (' + id + ').' });
+        });
+
+        if (num('exchangeRate') <= 0) allErrors.push({ step: 3, message: 'Exchange rate must be greater than 0.' });
+        if (num('withdrawalRate') <= 0) allErrors.push({ step: 3, message: 'Annual withdrawal rate must be greater than 0%.' });
+        if (num('returnRate') < -50) allErrors.push({ step: 3, message: 'Expected annual investment return looks too extreme — double check it.' });
+
+        if (benefitsStartAge < currentAge) allErrors.push({ step: 4, message: 'Government benefits start age should be at or after your current age.' });
+
+        if (stepScope === undefined) return allErrors.map(e => e.message);
+        return allErrors.filter(e => e.step === stepScope).map(e => e.message);
+      }
+      function showErrors(errors) {
+        const banner = $('errorBanner');
+        if (errors.length === 0) { banner.classList.remove('show'); return false; }
+        $('errorList').innerHTML = errors.map(e => `<li>${e}</li>`).join('');
+        banner.classList.add('show');
+        banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return true;
+      }
+
+      // ---- Autosave inputs ----
+
+      function clearSavedInputs() {
+        if (!hasStorage) return;
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
+      }
+      if (!hasStorage) {
+        const note = document.querySelector('.save-note');
+        if (note) note.textContent = "Note: this preview can't save your inputs — they'll persist once you host this page yourself (e.g. on Netlify).";
+      }
+      FIELD_IDS.forEach(id => { const el = $(id); if (el) el.addEventListener('input', saveInputs); });
+
+      function refreshScenariosSelect() {
+        const store = loadScenariosStore();
+        const select = $('scenariosSelect');
+        const names = Object.keys(store).sort((a, b) => a.localeCompare(b));
+        const prevValue = select.value;
+        select.innerHTML = '<option value="">— Select a saved scenario —</option>' +
+          names.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n}</option>`).join('');
+        if (names.includes(prevValue)) select.value = prevValue;
+      }
+      function captureCurrentScenario() {
+        const snap = {};
+        FIELD_IDS.forEach(id => { const el = $(id); if (el) snap[id] = el.value; });
+        return snap;
+      }
+      function applyScenario(snap) {
+        FIELD_IDS.forEach(id => { const el = $(id); if (el && snap[id] !== undefined) el.value = snap[id]; });
+      }
+
+      function showScenarioFeedback(msg) {
+        const el = $('scenarioFeedback');
+        el.textContent = msg;
+        el.style.opacity = 1;
+        setTimeout(() => { el.style.opacity = 0; }, 3000);
+      }
+
+      $('saveScenarioBtn').addEventListener('click', () => {
+        const name = $('scenarioNameInput').value.trim();
+        if (!name) { showScenarioFeedback('Give your scenario a name first.'); return; }
+        const store = loadScenariosStore();
+        store[name] = captureCurrentScenario();
+        saveScenariosStore(store);
+        refreshScenariosSelect();
+        $('scenariosSelect').value = name;
+        $('scenarioNameInput').value = '';
+        showScenarioFeedback(`Saved "${name}".`);
+      });
+
+      $('loadScenarioBtn').addEventListener('click', () => {
+        const name = $('scenariosSelect').value;
+        if (!name) { showScenarioFeedback('Select a scenario to load first.'); return; }
+        const store = loadScenariosStore();
+        if (!store[name]) return;
+        applyScenario(store[name]);
+        $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+        updateOasHint();
+        syncSlidersFromFields();
+        saveInputs();
+        validateAndRender();
+        showScenarioFeedback(`Loaded "${name}".`);
+      });
+
+      $('deleteScenarioBtn').addEventListener('click', () => {
+        const name = $('scenariosSelect').value;
+        if (!name) { showScenarioFeedback('Select a scenario to delete first.'); return; }
+        const store = loadScenariosStore();
+        delete store[name];
+        saveScenariosStore(store);
+        refreshScenariosSelect();
+        showScenarioFeedback(`Deleted "${name}".`);
+      });
+
+      refreshScenariosSelect();
+
+      // ==================================================================
+      // Full data export / import (JSON) — separate from the CSV export,
+      // which is a spreadsheet-analysis dump of the yearly table, not a
+      // re-importable backup. This covers current inputs + every saved scenario.
+      // ==================================================================
+      $('exportAllBtn').addEventListener('click', () => {
+        const payload = {
+          tool: 'Cross-Border CoastFIRE Calculator',
+          exportVersion: 1,
+          exportedAt: new Date().toISOString(),
+          currentInputs: captureCurrentScenario(),
+          scenarios: loadScenariosStore()
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateStamp = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `coastfire-backup-${dateStamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showScenarioFeedback('Exported — check your downloads.');
+      });
+
+      $('importAllBtn').addEventListener('click', () => $('importAllFile').click());
+
+      $('importAllFile').addEventListener('change', () => {
+        const file = $('importAllFile').files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          let data;
+          try {
+            data = JSON.parse(reader.result);
+          } catch (e) {
+            alert("That file doesn't look like a valid export — couldn't read it as JSON.");
+            $('importAllFile').value = '';
+            return;
+          }
+          const hasCurrentInputs = data && typeof data.currentInputs === 'object' && data.currentInputs !== null;
+          const hasScenarios = data && typeof data.scenarios === 'object' && data.scenarios !== null;
+          if (!hasCurrentInputs && !hasScenarios) {
+            alert("That file doesn't look like a Cross-Border CoastFIRE export — nothing recognizable to import.");
+            $('importAllFile').value = '';
+            return;
+          }
+          const scenarioCount = hasScenarios ? Object.keys(data.scenarios).length : 0;
+          const confirmMsg = `Import this file?\n\n` +
+            (hasCurrentInputs ? '• Your current form inputs will be replaced with the ones in this file.\n' : '') +
+            (scenarioCount > 0 ? `• ${scenarioCount} saved scenario${scenarioCount === 1 ? '' : 's'} will be added, overwriting any with the same name.\n` : '') +
+            `\nThis can't be undone.`;
+          if (!window.confirm(confirmMsg)) { $('importAllFile').value = ''; return; }
+
+          if (hasScenarios) {
+            const store = loadScenariosStore();
+            // Only accept plain-object scenario snapshots; ignore anything malformed rather than trusting it blindly.
+            Object.entries(data.scenarios).forEach(([name, snap]) => {
+              if (snap && typeof snap === 'object' && typeof name === 'string' && name.trim()) {
+                store[name] = snap;
+              }
+            });
+            saveScenariosStore(store);
+            refreshScenariosSelect();
+          }
+
+          if (hasCurrentInputs) {
+            applyScenario(data.currentInputs);
+            $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+            updateOasHint();
+            syncSlidersFromFields();
+            saveInputs();
+            validateAndRender();
+          }
+
+          $('importAllFile').value = '';
+          showScenarioFeedback('Import complete.');
+        };
+        reader.onerror = () => {
+          alert("Couldn't read that file — try again.");
+          $('importAllFile').value = '';
+        };
+        reader.readAsText(file);
+      });
+
+      let chartRows = [], chartReportCurrency = 'USD', chartGeom = null, chartSeries = null;
+      let lastRes = null, donutMode = 'account', chartMode = 'single';
+
+      // Simplified from the single-page version: it used to show the top flagged Action Item
+      // live (via an in-memory variable Action Items populated), but that tool is a separate
+      // page now, so there's nothing to read here without duplicating its flagging logic.
+      // A static link is a fair trade for the lost live preview.
+      function updateSnapshotBar() {
+        if (!lastRes) return;
+        const first = lastRes.rows[0];
+        $('ssPortfolio').textContent = fmt(first.combined, lastRes.reportCurrency);
+        $('ssCoastYears').textContent = lastRes.coastYearIndex !== null ? lastRes.coastYearIndex : 'Not yet';
+        const flagEl = $('ssFlag');
+        flagEl.textContent = 'See your action items →';
+        flagEl.href = 'action-items.html';
+      }
+
+      function drawChart(rows, reportCurrency) {
+        chartRows = rows; chartReportCurrency = reportCurrency; chartSeries = null;
+        const canvas = $('chart');
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = canvas.parentElement.clientWidth - 40;
+        const cssH = 260;
+        canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+        canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, cssW, cssH);
+
+        const padL = 60, padR = 12, padT = 14, padB = 26;
+        const w = cssW - padL - padR, h = cssH - padT - padB;
+        const maxVal = Math.max(...rows.map(r => Math.max(r.combined, r.coastNum))) * 1.08 || 1;
+        const xFor = i => padL + (rows.length <= 1 ? 0 : (i / (rows.length - 1)) * w);
+        const yFor = v => padT + h - (v / maxVal) * h;
+        chartGeom = { padL, padR, padT, padB, w, h, cssW, cssH, maxVal };
+
+        const lineColor = cssVar('--line'), softColor = cssVar('--ink-soft');
+        const mapleColor = cssVar('--maple'), harborColor = cssVar('--harbor');
+
+        ctx.strokeStyle = lineColor;
+        ctx.fillStyle = softColor;
+        ctx.font = '11px IBM Plex Mono, monospace';
+        ctx.lineWidth = 1;
+        for (let g = 0; g <= 4; g++) {
+          const val = (maxVal / 4) * g;
+          const y = yFor(val);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
+          ctx.fillText((reportCurrency === 'CAD' ? 'CA$' : '$') + Math.round(val / 1000) + 'k', 4, y + 4);
+        }
+
+        const drawLine = (key, color) => {
+          ctx.beginPath();
+          ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+          rows.forEach((r, i) => {
+            const x = xFor(i), y = yFor(r[key]);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        };
+        drawLine('coastNum', mapleColor);
+        drawLine('combined', harborColor);
+
+        ctx.fillStyle = softColor;
+        const step = Math.max(1, Math.round(rows.length / 6));
+        rows.forEach((r, i) => {
+          if (i % step === 0 || i === rows.length - 1) {
+            ctx.fillText('Age ' + r.age, xFor(i) - 14, cssH - 6);
+          }
+        });
+      }
+
+      // Draws several "combined portfolio" lines on the same axes (scenario range / coast on-vs-off).
+      function drawChartMulti(seriesList, reportCurrency) {
+        chartSeries = seriesList; chartReportCurrency = reportCurrency; chartRows = seriesList[0].rows;
+        const canvas = $('chart');
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = canvas.parentElement.clientWidth - 40;
+        const cssH = 260;
+        canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+        canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, cssW, cssH);
+
+        const padL = 60, padR = 12, padT = 14, padB = 26;
+        const w = cssW - padL - padR, h = cssH - padT - padB;
+        const rows0 = seriesList[0].rows;
+        const maxVal = Math.max(...seriesList.flatMap(s => s.rows.map(r => r.combined))) * 1.08 || 1;
+        const xFor = i => padL + (rows0.length <= 1 ? 0 : (i / (rows0.length - 1)) * w);
+        const yFor = v => padT + h - (v / maxVal) * h;
+        chartGeom = { padL, padR, padT, padB, w, h, cssW, cssH, maxVal };
+
+        const lineColor = cssVar('--line'), softColor = cssVar('--ink-soft');
+        ctx.strokeStyle = lineColor; ctx.fillStyle = softColor;
+        ctx.font = '11px IBM Plex Mono, monospace'; ctx.lineWidth = 1;
+        for (let g = 0; g <= 4; g++) {
+          const val = (maxVal / 4) * g;
+          const y = yFor(val);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
+          ctx.fillText((reportCurrency === 'CAD' ? 'CA$' : '$') + Math.round(val / 1000) + 'k', 4, y + 4);
+        }
+
+        seriesList.forEach(s => {
+          ctx.beginPath(); ctx.strokeStyle = s.color; ctx.lineWidth = 2.5;
+          s.rows.forEach((r, i) => {
+            const x = xFor(i), y = yFor(r.combined);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        });
+
+        ctx.fillStyle = softColor;
+        const step = Math.max(1, Math.round(rows0.length / 6));
+        rows0.forEach((r, i) => {
+          if (i % step === 0 || i === rows0.length - 1) {
+            ctx.fillText('Age ' + r.age, xFor(i) - 14, cssH - 6);
+          }
+        });
+
+        const legend = $('chartLegendMulti');
+        legend.innerHTML = seriesList.map(s => `<span><span class="legend-dot" style="background:${s.color};"></span>${s.label}</span>`).join('');
+      }
+
+      function redrawChartBase() {
+        if (chartSeries) drawChartMulti(chartSeries, chartReportCurrency);
+        else if (chartRows.length) drawChart(chartRows, chartReportCurrency);
+      }
+
+      function renderMainChart(res) {
+        if (chartMode === 'single') {
+          $('chartLegendSingle').style.display = 'flex';
+          $('chartLegendMulti').style.display = 'none';
+          drawChart(res.rows, res.reportCurrency);
+        } else if (chartMode === 'range') {
+          $('chartLegendSingle').style.display = 'none';
+          $('chartLegendMulti').style.display = 'flex';
+          const scenarios = [
+            { key: 'conservative', label: 'Conservative (5%/3%)', color: cssVar('--maple') },
+            { key: 'base', label: 'Base case (7%/2.5%)', color: cssVar('--harbor') },
+            { key: 'optimistic', label: 'Optimistic (9%/2%)', color: cssVar('--gold') }
+          ];
+          const series = scenarios.map(s => ({
+            label: s.label, color: s.color,
+            rows: compute({ returnRate: PRESETS[s.key].returnRate, inflationRate: PRESETS[s.key].inflationRate }).rows
+          }));
+          drawChartMulti(series, res.reportCurrency);
+        } else if (chartMode === 'coast') {
+          $('chartLegendSingle').style.display = 'none';
+          $('chartLegendMulti').style.display = 'flex';
+          const series = [
+            { label: 'Stop contributing at CoastFIRE', color: cssVar('--gold'), rows: compute({ stopAtCoast: 'yes' }).rows },
+            { label: 'Keep contributing to retirement', color: cssVar('--harbor'), rows: compute({ stopAtCoast: 'no' }).rows }
+          ];
+          drawChartMulti(series, res.reportCurrency);
+        }
+      }
+
+      document.querySelectorAll('#chartModeTabs button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          chartMode = btn.dataset.mode;
+          document.querySelectorAll('#chartModeTabs button').forEach(b => {
+            const isActive = b === btn;
+            b.classList.toggle('active', isActive);
+            b.setAttribute('aria-selected', String(isActive));
+          });
+          if (lastRes) renderMainChart(lastRes);
+        });
+      });
+
+      // ---- Interactive hover: crosshair + tooltip (works for both single and multi-series modes) ----
+      function chartPointerHandler(clientX) {
+        if (!chartGeom || !chartRows.length) return;
+        const canvas = $('chart');
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = clientX - rect.left;
+        const { padL, padT, h, w, maxVal, cssW } = chartGeom;
+        let idx = Math.round(((mouseX - padL) / w) * (chartRows.length - 1));
+        idx = Math.max(0, Math.min(chartRows.length - 1, idx));
+        const x = padL + (chartRows.length <= 1 ? 0 : (idx / (chartRows.length - 1)) * w);
+        const yFor = v => padT + h - (v / maxVal) * h;
+
+        redrawChartBase();
+        const ctx = canvas.getContext('2d');
+        const softColor = cssVar('--ink-soft');
+
+        ctx.save();
+        ctx.strokeStyle = softColor;
+        ctx.globalAlpha = 0.5;
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + h); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+
+        const tip = $('chartTooltip');
+        let tipHtml = '';
+
+        if (chartSeries) {
+          const row0 = chartSeries[0].rows[idx];
+          tipHtml += `<div class="tip-age">Age ${row0.age} · ${row0.year}</div>`;
+          chartSeries.forEach(s => {
+            const r = s.rows[idx];
+            const y = yFor(r.combined);
+            ctx.beginPath(); ctx.fillStyle = s.color;
+            ctx.arc(x, y, 4.5, 0, Math.PI * 2); ctx.fill();
+            ctx.lineWidth = 1.5; ctx.strokeStyle = cssVar('--surface'); ctx.stroke();
+            tipHtml += `<div class="tip-line"><span class="tip-dot" style="background:${s.color}"></span>${s.label}: <strong>${fmt(r.combined, chartReportCurrency)}</strong></div>`;
+          });
+        } else {
+          const row = chartRows[idx];
+          const harborColor = cssVar('--harbor'), mapleColor = cssVar('--maple');
+          [{ y: yFor(row.coastNum), color: mapleColor }, { y: yFor(row.combined), color: harborColor }].forEach(pt => {
+            ctx.beginPath(); ctx.fillStyle = pt.color;
+            ctx.arc(x, pt.y, 4.5, 0, Math.PI * 2); ctx.fill();
+            ctx.lineWidth = 1.5; ctx.strokeStyle = cssVar('--surface'); ctx.stroke();
+          });
+          tipHtml = `<div class="tip-age">Age ${row.age} · ${row.year}</div>
+            <div class="tip-line"><span class="tip-dot" style="background:${harborColor}"></span>Portfolio: <strong>${fmt(row.combined, chartReportCurrency)}</strong></div>
+            <div class="tip-line"><span class="tip-dot" style="background:${mapleColor}"></span>Coast #: <strong>${fmt(row.coastNum, chartReportCurrency)}</strong></div>`;
+        }
+        ctx.restore();
+
+        tip.innerHTML = tipHtml;
+        tip.style.display = 'block';
+        let left = x + 14;
+        if (left + 190 > cssW) left = x - 202;
+        tip.style.left = Math.max(0, left) + 'px';
+      }
+      (function initChartHover() {
+        const canvas = $('chart');
+        canvas.addEventListener('mousemove', e => chartPointerHandler(e.clientX));
+        canvas.addEventListener('mouseleave', () => {
+          redrawChartBase();
+          $('chartTooltip').style.display = 'none';
+        });
+        canvas.addEventListener('touchmove', e => {
+          if (e.touches && e.touches[0]) { chartPointerHandler(e.touches[0].clientX); e.preventDefault(); }
+        }, { passive: false });
+        canvas.addEventListener('touchend', () => {
+          redrawChartBase();
+          $('chartTooltip').style.display = 'none';
+        });
+      })();
+
+      // ---- Roadmap timeline ----
+      function renderRoadmap(res) {
+        const track = $('roadmapTrack');
+        track.querySelectorAll('.roadmap-marker').forEach(m => m.remove());
+        const items = [{ label: 'Now', age: res.currentAge, color: cssVar('--ink-soft') }];
+        if (res.coastYearIndex !== null) {
+          items.push({ label: 'CoastFIRE', age: res.currentAge + res.coastYearIndex, color: cssVar('--gold') });
+        }
+        items.push({ label: 'Retire', age: res.retireAge, color: cssVar('--harbor') });
+        items.push({ label: 'Benefits start', age: res.benefitsStartAge, color: cssVar('--maple') });
+        items.sort((a, b) => a.age - b.age);
+
+        let min = Math.min(...items.map(i => i.age)), max = Math.max(...items.map(i => i.age));
+        if (max === min) { min -= 1; max += 1; }
+        const pad = (max - min) * 0.08;
+        min -= pad; max += pad;
+
+        $('roadmapFill').style.width = Math.max(0, Math.min(100, ((res.currentAge - min) / (max - min)) * 100)) + '%';
+
+        items.forEach((it, idx) => {
+          const pct = ((it.age - min) / (max - min)) * 100;
+          const div = document.createElement('div');
+          const below = idx % 2 === 1;
+          div.className = 'roadmap-marker' + (below ? ' below' : '');
+          div.style.left = pct + '%';
+          div.innerHTML = `<div class="roadmap-dot" style="background:${it.color}"></div>
+            <div class="roadmap-label-group"><div class="rm-label">${it.label}</div><div class="rm-age">Age ${it.age}</div></div>`;
+          track.appendChild(div);
+        });
+      }
+
+      // ---- Portfolio composition donut ----
+      function getCompositionData(res, mode) {
+        const first = res.rows[0];
+        const toR = (cad, usd) => convertToReport(cad, usd, res.reportCurrency, res.exchangeRate);
+        if (mode === 'account') {
+          return [
+            { name: 'RRSP', value: toR(first.rrsp, 0), color: '#A9362A' },
+            { name: 'TFSA', value: toR(first.tfsa, 0), color: '#D97A56' },
+            { name: 'Non-Reg (CAD)', value: toR(first.nonregCad, 0), color: '#E8A87C' },
+            { name: 'FHSA', value: toR(first.fhsa, 0), color: '#C79A3A' },
+            { name: 'RESP', value: toR(first.resp, 0), color: '#8C6E2F' },
+            { name: '401(k)/403(b)', value: toR(0, first.k401), color: '#2B5876' },
+            { name: 'Traditional IRA', value: toR(0, first.ira), color: '#4A7A94' },
+            { name: 'Roth IRA', value: toR(0, first.roth), color: '#6FA3BC' },
+            { name: 'Taxable (USD)', value: toR(0, first.taxableUsd), color: '#9CC5D6' },
+            { name: 'HSA', value: toR(0, first.hsa), color: '#5B8C6E' }
+          ];
+        } else if (mode === 'currency') {
+          return [
+            { name: 'Canadian accounts (CAD)', value: toR(first.cadTotal, 0), color: cssVar('--maple') },
+            { name: 'US accounts (USD)', value: toR(0, first.usdTotal), color: cssVar('--harbor') }
+          ];
+        }
+        const deferred = toR(first.rrsp, 0) + toR(0, first.k401) + toR(0, first.ira);
+        const taxFree = toR(first.tfsa, 0) + toR(0, first.roth) + toR(0, first.hsa);
+        const taxable = toR(first.nonregCad, 0) + toR(0, first.taxableUsd);
+        const uncertain = toR(first.fhsa, 0) + toR(first.resp, 0);
+        const buckets = [
+          { name: 'Tax-deferred (RRSP, 401k, Trad IRA)', value: deferred, color: cssVar('--harbor') },
+          { name: 'Tax-free growth (TFSA*, Roth IRA, HSA)', value: taxFree, color: cssVar('--gold') },
+          { name: 'Taxable (non-reg + brokerage)', value: taxable, color: cssVar('--maple') }
+        ];
+        if (uncertain > 0) buckets.push({ name: 'Uncertain / reportable (FHSA, RESP)', value: uncertain, color: cssVar('--ink-soft') });
+        return buckets;
+      }
+      function renderDonut(res, mode) {
+        const data = getCompositionData(res, mode).filter(d => d.value > 0.5);
+        const total = data.reduce((s, d) => s + d.value, 0) || 1;
+        let acc = 0;
+        const stops = data.map(d => {
+          const startPct = (acc / total) * 100;
+          acc += d.value;
+          return `${d.color} ${startPct}% ${(acc / total) * 100}%`;
+        });
+        $('donutChart').style.background = data.length ? `conic-gradient(${stops.join(',')})` : cssVar('--paper-2');
+        $('donutCenterValue').textContent = fmt(total, res.reportCurrency);
+        $('donutLegend').innerHTML = data.map(d => `<li><span class="dl-name"><span class="dl-dot" style="background:${d.color}"></span>${d.name}</span><span class="dl-val">${fmt(d.value, res.reportCurrency)} · ${Math.round((d.value / total) * 100)}%</span></li>`).join('');
+        $('donutCaveat').textContent = mode === 'tax'
+          ? '*TFSA growth is taxable to the IRS while Roth IRA and HSA growth are generally tax-free federally — grouping them together simplifies different US tax treatments. FHSA and RESP have no clear IRS guidance, so they\'re kept separate as "uncertain."'
+          : '';
+      }
+      document.querySelectorAll('#donutTabs button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          donutMode = btn.dataset.view;
+          document.querySelectorAll('#donutTabs button').forEach(b => {
+            const isActive = b === btn;
+            b.classList.toggle('active', isActive);
+            b.setAttribute('aria-selected', String(isActive));
+          });
+          if (lastRes) renderDonut(lastRes, donutMode);
+        });
+      });
+
+      // ---- Retirement income stack chart ----
+      function drawIncomeStack(res) {
+        const canvas = $('incomeStackChart');
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = canvas.parentElement.clientWidth - 40;
+        const cssH = 220;
+        canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+        canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, cssW, cssH);
+
+        const padL = 60, padR = 12, padT = 10, padB = 26;
+        const w = cssW - padL - padR, h = cssH - padT - padB;
+        const startAge = res.retireAge, endAge = Math.min(startAge + 20, 95);
+        const years = [];
+        for (let age = startAge; age <= endAge; age++) {
+          const afterBenefits = age >= res.benefitsStartAge;
+          const gov = afterBenefits ? Math.min(res.annualGovBenefit, res.futureAnnualExpense) : 0;
+          years.push({ age, gov, portfolio: Math.max(0, res.futureAnnualExpense - gov) });
+        }
+        const maxVal = res.futureAnnualExpense * 1.1 || 1;
+        const yFor = v => padT + h - (v / maxVal) * h;
+        const bandW = w / years.length;
+        const barW = Math.max(2, bandW * 0.6);
+
+        const lineColor = cssVar('--line'), softColor = cssVar('--ink-soft');
+        const govColor = cssVar('--gold'), portColor = cssVar('--harbor');
+
+        ctx.strokeStyle = lineColor; ctx.fillStyle = softColor;
+        ctx.font = '11px IBM Plex Mono, monospace'; ctx.lineWidth = 1;
+        for (let g = 0; g <= 4; g++) {
+          const val = (maxVal / 4) * g;
+          const y = yFor(val);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
+          ctx.fillText((res.reportCurrency === 'CAD' ? 'CA$' : '$') + Math.round(val / 1000) + 'k', 4, y + 4);
+        }
+
+        years.forEach((yr, i) => {
+          const x = padL + i * bandW + (bandW - barW) / 2;
+          const govH = (yr.gov / maxVal) * h, portH = (yr.portfolio / maxVal) * h;
+          ctx.fillStyle = govColor;
+          ctx.fillRect(x, padT + h - govH, barW, govH);
+          ctx.fillStyle = portColor;
+          ctx.fillRect(x, padT + h - govH - portH, barW, portH);
+        });
+
+        ctx.fillStyle = softColor;
+        const step = Math.max(1, Math.round(years.length / 6));
+        years.forEach((yr, i) => {
+          if (i % step === 0 || i === years.length - 1) {
+            ctx.fillText('Age ' + yr.age, padL + i * bandW + bandW / 2 - 14, cssH - 6);
+          }
+        });
+      }
+
+      // ---- Quick live update for sliders (skips the expensive table/insights rebuild) ----
+      // ---- Plain-language result summary sentence ----
+      function buildResultHeadline(res) {
+        const el = $('resultHeadline');
+        const monthlyExp = fmt(num('monthlyExpenses'), res.reportCurrency);
+
+        if (res.coastYearIndex !== null) {
+          const coastAge = res.currentAge + res.coastYearIndex;
+          const coastYear = res.currentYear + res.coastYearIndex;
+          const yearsBefore = res.retireAge - coastAge;
+          el.classList.remove('not-yet');
+          if (yearsBefore > 0) {
+            el.innerHTML = `<span class="rh-icon">🎉</span>You're on track to stop actively contributing around
+              <strong>age ${coastAge} (${coastYear})</strong> — about ${yearsBefore} year${yearsBefore === 1 ? '' : 's'}
+              before you plan to retire at ${res.retireAge}. From there, growth alone should carry your portfolio the
+              rest of the way to supporting ${monthlyExp}/month in retirement.`;
+          } else {
+            el.innerHTML = `<span class="rh-icon">✅</span>You're on track to reach your CoastFIRE number right
+              around your planned retirement age of <strong>${res.retireAge}</strong> — it works, but there's not
+              much room to spare. A little more saved now would give you breathing room.`;
+          }
+        } else {
+          el.classList.add('not-yet');
+          el.innerHTML = `<span class="rh-icon">📈</span>At today's pace, you're <strong>not yet on track</strong>
+            to reach your CoastFIRE number before retiring at age ${res.retireAge}. Saving a bit more each month,
+            planning to retire a little later, or revisiting your expected return would help close the gap.`;
+        }
+      }
+
+      function quickUpdate() {
+        const res = compute();
+        lastRes = res;
+        const first = res.rows[0];
+        $('statCurrent').textContent = fmt(first.combined, res.reportCurrency);
+        $('statRequired').textContent = fmt(res.requiredAtRetirement, res.reportCurrency);
+        $('statCoastNumber').textContent = fmt(res.coastNumberToday, res.reportCurrency);
+        $('statYearsUntil').textContent = res.coastYearIndex !== null ? res.coastYearIndex : '—';
+        buildResultHeadline(res);
+
+        const pct = res.coastNumberToday > 0 ? Math.max(0, Math.min(100, Math.round((first.combined / res.coastNumberToday) * 100))) : 0;
+        const fill = $('progressFill');
+        fill.style.width = pct + '%';
+        fill.classList.toggle('reached', pct >= 100);
+        $('progressPct').textContent = pct + '%';
+
+        renderMainChart(res);
+        renderRoadmap(res);
+        drawIncomeStack(res);
+        updateSnapshotBar();
+      }
+
+      function doRender(scrollToResults) {
+        if (scrollToResults === undefined) scrollToResults = true;
+        const res = compute();
+        lastRes = res;
+        $('results').hidden = false;
+
+        const first = res.rows[0];
+        $('statCurrent').textContent = fmt(first.combined, res.reportCurrency);
+        $('statCurrencyNote').textContent = 'CAD converted at 1 CAD = ' + res.exchangeRate + ' USD';
+        $('statRequired').textContent = fmt(res.requiredAtRetirement, res.reportCurrency);
+        $('statCoastNumber').textContent = fmt(res.coastNumberToday, res.reportCurrency);
+        buildResultHeadline(res);
+
+        const pct = res.coastNumberToday > 0 ? Math.max(0, Math.min(100, Math.round((first.combined / res.coastNumberToday) * 100))) : 0;
+        const fill = $('progressFill');
+        fill.style.width = pct + '%';
+        fill.classList.toggle('reached', pct >= 100);
+        $('progressPct').textContent = pct + '%';
+        $('progressNote').textContent = pct >= 100
+          ? `You're already past your CoastFIRE number today — ${fmt(first.combined - res.coastNumberToday, res.reportCurrency)} ahead of target.`
+          : `${fmt(res.coastNumberToday - first.combined, res.reportCurrency)} to go, based on today's balances.`;
+
+        const stampYear = $('stampYear'), stampSub = $('stampSub');
+        const stampTop = $('stampTopText'), stampBottom = $('stampBottomText');
+        const svg = $('stampSvg');
+
+        if (res.coastYearIndex !== null) {
+          $('statYearsUntil').textContent = res.coastYearIndex;
+          $('statCoastYear').textContent = 'Reached in ' + (res.currentYear + res.coastYearIndex) + ' (age ' + (res.currentAge + res.coastYearIndex) + ')';
+          stampYear.textContent = res.currentYear + res.coastYearIndex;
+          stampSub.textContent = 'AGE ' + (res.currentAge + res.coastYearIndex);
+          stampTop.textContent = 'CROSS-BORDER CLEARED';
+          stampBottom.textContent = 'COASTFIRE STATUS';
+          svg.querySelectorAll('circle').forEach(c => c.setAttribute('stroke', cssVar('--gold-text-on-soft')));
+          svg.querySelectorAll('text').forEach(t => t.setAttribute('fill', cssVar('--gold-text-on-soft')));
+        } else {
+          $('statYearsUntil').textContent = '—';
+          $('statCoastYear').textContent = 'Not reached by retirement age at current contributions';
+          stampYear.textContent = 'N/A';
+          stampSub.textContent = 'NOT YET';
+          stampTop.textContent = 'BORDER NOT CLEARED';
+          stampBottom.textContent = 'INCREASE SAVINGS';
+          svg.querySelectorAll('circle').forEach(c => c.setAttribute('stroke', cssVar('--ink-soft')));
+          svg.querySelectorAll('text').forEach(t => t.setAttribute('fill', cssVar('--ink-soft')));
+        }
+
+        renderMainChart(res);
+        renderRoadmap(res);
+        renderDonut(res, donutMode);
+        drawIncomeStack(res);
+
+        const insights = [];
+        insights.push(`Your combined portfolio today is ${fmt(first.combined, res.reportCurrency)}, converted using 1 CAD = ${res.exchangeRate} USD.`);
+        insights.push(`To sustain ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month in retirement (today's dollars) at a ${num('withdrawalRate')}% withdrawal rate, you'll need about ${fmt(res.requiredAtRetirement, res.reportCurrency)} by age ${res.retireAge}.`);
+        if (res.coastYearIndex !== null) {
+          insights.push(`At your current contribution rate, you're projected to hit your CoastFIRE number around ${res.currentYear + res.coastYearIndex} (age ${res.currentAge + res.coastYearIndex}) — ${res.coastYearIndex} year${res.coastYearIndex === 1 ? '' : 's'} from now.`);
+          if (res.stopAtCoast === 'yes') {
+            insights.push(`Contributions are modeled to pause once you reach that number — the projection after that point relies purely on market growth.`);
+          }
+        } else {
+          insights.push(`At your current contribution rate, you're not projected to reach your CoastFIRE number by age ${res.retireAge}. Try increasing contributions, extending your timeline, or revisiting your expected return.`);
+        }
+        if (first.tfsa > 0) {
+          insights.push(`Your TFSA balance is growing in this model like any other account — but remember it isn't tax-sheltered from the IRS. Its real after-tax value in the US may be lower than shown.`);
+        }
+        if (res.bridgeYears > 0) {
+          insights.push(`Government benefits start ${res.bridgeYears} year${res.bridgeYears === 1 ? '' : 's'} after your planned retirement age — that gap is funded 100% from your portfolio in this model before CPP, OAS, and Social Security kick in.`);
+        }
+        if (res.annualGovBenefit > 0) {
+          insights.push(`Once claimed, your combined CPP + OAS + Social Security is projected to cover ${fmt(res.annualGovBenefit / 12, res.reportCurrency)}/month of your ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month expense target (today's dollars) — reducing how much your portfolio alone needs to fund.`);
+        }
+        $('insightsList').innerHTML = insights.map(t => `<li><span class="mark">→</span><span>${t}</span></li>`).join('');
+
+        const baseRate = res.exchangeRate;
+        const rateOffsets = [-0.05, -0.02, 0, 0.02, 0.05];
+        $('sensitivityBody').innerHTML = rateOffsets.map(off => {
+          const rate = Math.max(0.01, Math.round((baseRate + off) * 1000) / 1000);
+          const at = computeAtRate(res, rate);
+          const isCurrent = off === 0;
+          return `<tr class="${isCurrent ? 'current-rate' : ''}">
+        <td>${rate.toFixed(3)} USD${isCurrent ? ' (your rate)' : ''}</td>
+        <td>${fmt(at.combined, res.reportCurrency)}</td>
+        <td>${fmt(at.coastNumber, res.reportCurrency)}</td>
+      </tr>`;
+        }).join('');
+
+        const tbody = $('tableBody');
+        tbody.innerHTML = res.rows.map(r => `
+      <tr class="${r.isCoastRow ? 'coast-row' : ''}">
+        <td>${r.year}</td><td>${r.age}</td>
+        <td>${fmt(r.rrsp, 'CAD')}</td><td>${fmt(r.tfsa, 'CAD')}</td><td>${fmt(r.nonregCad, 'CAD')}</td><td>${fmt(r.cadTotal, 'CAD')}</td>
+        <td>${fmt(r.k401, 'USD')}</td><td>${fmt(r.ira, 'USD')}</td><td>${fmt(r.roth, 'USD')}</td><td>${fmt(r.taxableUsd, 'USD')}</td><td>${fmt(r.usdTotal, 'USD')}</td>
+        <td><strong>${fmt(r.combined, res.reportCurrency)}</strong></td><td>${fmt(r.coastNum, res.reportCurrency)}</td>
+        <td class="notes">${r.notes}</td>
+      </tr>
+    `).join('');
+
+        // Same data as the table above, restructured as stacked cards for narrow screens — a wide
+        // horizontally-scrolling table is a poor fit for mobile, so this is a genuinely different layout,
+        // not just a CSS reflow of the same markup.
+        $('yearlyCardsContainer').innerHTML = res.rows.map(r => `
+      <div class="year-card${r.isCoastRow ? ' coast-row' : ''}">
+        <div class="year-card-top">
+          <div>
+            <div class="year-card-year">${r.year}</div>
+            <div class="year-card-age">Age ${r.age}</div>
+          </div>
+          <div class="year-card-combined">
+            <div class="ycc-label">Combined</div>
+            <div class="ycc-value">${fmt(r.combined, res.reportCurrency)}</div>
+          </div>
+        </div>
+        <div class="year-card-coast">CoastFIRE target: <strong>${fmt(r.coastNum, res.reportCurrency)}</strong></div>
+        ${r.notes ? `<div class="year-card-notes">${r.notes}</div>` : ''}
+        <details class="year-card-detail">
+          <summary>Account breakdown</summary>
+          <div class="year-card-detail-grid">
+            <div class="ycd-group-label">Canadian (CAD)</div>
+            <div class="ycd-row"><span>RRSP</span><span>${fmt(r.rrsp, 'CAD')}</span></div>
+            <div class="ycd-row"><span>TFSA</span><span>${fmt(r.tfsa, 'CAD')}</span></div>
+            <div class="ycd-row"><span>Non-Reg</span><span>${fmt(r.nonregCad, 'CAD')}</span></div>
+            <div class="ycd-row ycd-subtotal"><span>CAD Total</span><span>${fmt(r.cadTotal, 'CAD')}</span></div>
+            <div class="ycd-group-label">US (USD)</div>
+            <div class="ycd-row"><span>401(k)</span><span>${fmt(r.k401, 'USD')}</span></div>
+            <div class="ycd-row"><span>IRA</span><span>${fmt(r.ira, 'USD')}</span></div>
+            <div class="ycd-row"><span>Roth IRA</span><span>${fmt(r.roth, 'USD')}</span></div>
+            <div class="ycd-row"><span>Taxable</span><span>${fmt(r.taxableUsd, 'USD')}</span></div>
+            <div class="ycd-row ycd-subtotal"><span>USD Total</span><span>${fmt(r.usdTotal, 'USD')}</span></div>
+          </div>
+        </details>
+      </div>
+    `).join('');
+
+        if (scrollToResults) $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function validateAndRender(scrollToResults) {
+        const errors = validate();
+        if (showErrors(errors)) return;
+        doRender(scrollToResults);
+      }
+
+      $('calcForm').addEventListener('submit', e => {
+        e.preventDefault();
+        if (wizardActive) { $('wizardContinueBtn').click(); return; }
+        saveInputs();
+        validateAndRender();
+      });
+
+      let resizeDebounceTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeDebounceTimer);
+        resizeDebounceTimer = setTimeout(() => {
+          if (!$('results').hidden && lastRes) {
+            renderMainChart(lastRes);
+            drawIncomeStack(lastRes);
+          }
+        }, 150);
+      });
+
+      // ---- Back to top ----
+      const backToTopBtn = $('backToTopBtn');
+      let backToTopTicking = false;
+      window.addEventListener('scroll', () => {
+        if (backToTopTicking) return;
+        backToTopTicking = true;
+        requestAnimationFrame(() => {
+          backToTopBtn.classList.toggle('visible', window.scrollY > 600);
+          backToTopTicking = false;
+        });
+      });
+      backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+      // Pressing Enter in the scenario name field saves, same as clicking the button
+      $('scenarioNameInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); $('saveScenarioBtn').click(); }
+      });
+
+      $('exportCsvBtn').addEventListener('click', () => {
+        const res = compute();
+        const headers = ['Year', 'Age', 'RRSP (CAD)', 'TFSA (CAD)', 'Non-Reg CAD', 'CAD Total', '401k (USD)', 'IRA (USD)', 'Roth IRA (USD)', 'Taxable USD', 'USD Total', 'Combined (' + res.reportCurrency + ')', 'CoastFIRE Number', 'Notes'];
+        const lines = [headers.join(',')];
+        res.rows.forEach(r => {
+          lines.push([r.year, r.age, Math.round(r.rrsp), Math.round(r.tfsa), Math.round(r.nonregCad), Math.round(r.cadTotal),
+          Math.round(r.k401), Math.round(r.ira), Math.round(r.roth), Math.round(r.taxableUsd), Math.round(r.usdTotal),
+          Math.round(r.combined), Math.round(r.coastNum), '"' + r.notes.replace(/"/g, "'") + '"'].join(','));
+        });
+        const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'coastfire-breakdown.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      // ---- Shareable permalink ----
+      function buildShareUrl() {
+        const params = new URLSearchParams();
+        FIELD_IDS.forEach(id => { const el = $(id); if (el) params.set(id, el.value); });
+        return window.location.origin + window.location.pathname + '?' + params.toString();
+      }
+      function showShareFeedback(msg) {
+        const el = $('shareFeedback');
+        el.textContent = msg;
+        el.style.opacity = 1;
+        setTimeout(() => { el.style.opacity = 0; }, 2500);
+      }
+      $('shareLinkBtn').addEventListener('click', async () => {
+        const url = buildShareUrl();
+        try {
+          await navigator.clipboard.writeText(url);
+          showShareFeedback('Link copied — paste it anywhere to share this exact scenario.');
+        } catch (e) {
+          window.prompt('Copy this link to share your scenario:', url);
+        }
+      });
+      function applyQueryParams() {
+        const params = new URLSearchParams(window.location.search);
+        let applied = false;
+        FIELD_IDS.forEach(id => {
+          if (params.has(id)) {
+            const el = $(id);
+            if (el) { el.value = params.get(id); applied = true; }
+          }
+        });
+        return applied;
+      }
+
+      // ---- Sample-scenario banner ----
+      const BANNER_DISMISS_KEY = 'ccfire:bannerDismissed';
+      function hideBanner() { $('sampleBanner').style.display = 'none'; }
+      function showBanner() { $('sampleBanner').style.display = 'flex'; }
+      $('dismissSampleBtn').addEventListener('click', () => {
+        hideBanner();
+        try { if (hasStorage) localStorage.setItem(BANNER_DISMISS_KEY, '1'); } catch (e) { }
+      });
+      $('loadExampleBtn').addEventListener('click', () => {
+        applyScenario(DEFAULT_FIELD_VALUES);
+        $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+        updateOasHint();
+        syncSlidersFromFields();
+        showBanner();
+        saveInputs();
+        validateAndRender();
+        window.scrollTo({ top: $('calcForm').offsetTop - 20, behavior: 'smooth' });
+      });
+
+      // ---- Generic "use average" quick-fill buttons ----
+      document.querySelectorAll('.use-avg').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.dataset.target;
+          const value = btn.dataset.value;
+          if (targetId && $(targetId)) {
+            $(targetId).value = value;
+            saveInputs();
+            validateAndRender();
+          }
+        });
+      });
+
+      // ---- Print summary ----
+      $('printBtn').addEventListener('click', () => window.print());
+
+      // ---- PDF report generation ----
+      // Load jsPDF on demand — only when someone actually clicks the PDF button — so a third-party
+      // library never blocks the rest of the app from initializing.
+      let jsPdfLoadPromise = null;
+      function loadJsPdfIfNeeded() {
+        if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+        if (jsPdfLoadPromise) return jsPdfLoadPromise;
+        jsPdfLoadPromise = new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js';
+          script.onload = () => resolve();
+          script.onerror = () => { jsPdfLoadPromise = null; reject(new Error('jsPDF failed to load')); };
+          document.body.appendChild(script);
+        });
+        return jsPdfLoadPromise;
+      }
+
+      async function handleDownloadPdfClick() {
+        if (!lastRes) { alert('Please calculate your results first.'); return; }
+        const btn = $('downloadPdfBtn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Preparing PDF…';
+        btn.disabled = true;
+        try {
+          await loadJsPdfIfNeeded();
+          buildPdfDocument();
+        } catch (e) {
+          alert("Couldn't load the PDF library — check your internet connection and try again.");
+        } finally {
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      }
+
+      const DEFERRAL_TAX_THRESHOLD = 16500; // approx. federal tax owing (~$100k gain) before CRA requires security
+      function buildPdfDocument() {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+          alert("Couldn't load the PDF library — check your internet connection and try again.");
+          return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const marginX = 54;
+        const contentW = pageW - marginX * 2;
+        let y = 60;
+        let pageNum = 1;
+
+        const maple = [169, 54, 42], harbor = [43, 88, 118], inkSoft = [91, 100, 112], ink = [23, 33, 43];
+
+        function addFooter() {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.setTextColor(...inkSoft);
+          doc.text('Not tax, legal, or immigration advice — confirm all figures with a cross-border specialist.', marginX, pageH - 30);
+          doc.text('Page ' + pageNum, pageW - marginX, pageH - 30, { align: 'right' });
+          doc.text('Generated ' + new Date().toLocaleDateString(), marginX, pageH - 18);
+        }
+        function ensureSpace(needed) {
+          if (y + needed > pageH - 50) {
+            addFooter();
+            doc.addPage();
+            pageNum++;
+            y = 60;
+          }
+        }
+        function sectionHeader(text) {
+          ensureSpace(30);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(13);
+          doc.setTextColor(...harbor);
+          doc.text(text, marginX, y);
+          doc.setDrawColor(220, 210, 184);
+          doc.setLineWidth(0.75);
+          doc.line(marginX, y + 6, pageW - marginX, y + 6);
+          y += 24;
+        }
+        function bodyLine(label, value) {
+          ensureSpace(18);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(10.5);
+          doc.setTextColor(...inkSoft);
+          doc.text(label, marginX, y);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...ink);
+          doc.text(String(value), marginX + 220, y);
+          y += 17;
+        }
+        function tableSubhead(text) {
+          ensureSpace(16);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10.5);
+          doc.setTextColor(...harbor);
+          doc.text(text, marginX, y);
+          y += 15;
+        }
+        function tableRow(name, value, opts) {
+          opts = opts || {};
+          ensureSpace(16);
+          doc.setFont('helvetica', opts.bold ? 'bold' : 'normal');
+          doc.setFontSize(10);
+          doc.setTextColor(...(opts.bold ? ink : inkSoft));
+          doc.text(name, marginX + (opts.indent || 0), y);
+          doc.setTextColor(...ink);
+          doc.text(value, pageW - marginX, y, { align: 'right' });
+          y += 15;
+        }
+
+        // Title
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(20);
+        doc.setTextColor(...ink);
+        doc.text('Cross-Border CoastFIRE Summary', marginX, y);
+        y += 20;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(...inkSoft);
+        doc.text('Generated ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), marginX, y);
+        y += 18;
+        doc.setFontSize(9);
+        const disclaimerLines = doc.splitTextToSize(
+          'This is not tax, legal, or immigration advice. Figures are pre-tax planning estimates based on the assumptions you entered — confirm everything with a cross-border-specialist accountant or financial planner.',
+          contentW
+        );
+        doc.text(disclaimerLines, marginX, y);
+        y += disclaimerLines.length * 12 + 16;
+
+        const res = lastRes;
+        const first = res.rows[0];
+
+        sectionHeader('Your Snapshot');
+        bodyLine('Current age', res.currentAge);
+        bodyLine('Planned retirement age', res.retireAge);
+        bodyLine('Reporting currency', res.reportCurrency);
+        bodyLine('Exchange rate used', '1 CAD = ' + res.exchangeRate + ' USD');
+        y += 8;
+
+        sectionHeader('Key Results');
+        bodyLine('Combined portfolio today', fmt(first.combined, res.reportCurrency));
+        bodyLine('Required at retirement', fmt(res.requiredAtRetirement, res.reportCurrency));
+        bodyLine('CoastFIRE number today', fmt(res.coastNumberToday, res.reportCurrency));
+        bodyLine('Years until CoastFIRE', res.coastYearIndex !== null ? res.coastYearIndex : 'Not yet on track');
+        y += 6;
+        const headlineText = $('resultHeadline').textContent.trim();
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(10);
+        doc.setTextColor(...ink);
+        const headlineLines = doc.splitTextToSize(headlineText, contentW);
+        ensureSpace(headlineLines.length * 13 + 10);
+        doc.text(headlineLines, marginX, y);
+        y += headlineLines.length * 13 + 16;
+
+        sectionHeader('Account Balances Today');
+        tableSubhead('Canadian accounts (CAD)');
+        tableRow('RRSP', fmt(first.rrsp, 'CAD'), { indent: 10 });
+        tableRow('TFSA', fmt(first.tfsa, 'CAD'), { indent: 10 });
+        tableRow('Non-registered', fmt(first.nonregCad, 'CAD'), { indent: 10 });
+        if (first.fhsa > 0) tableRow('FHSA', fmt(first.fhsa, 'CAD'), { indent: 10 });
+        if (first.resp > 0) tableRow('RESP', fmt(first.resp, 'CAD'), { indent: 10 });
+        tableRow('CAD Total', fmt(first.cadTotal, 'CAD'), { bold: true });
+        y += 6;
+
+        tableSubhead('US accounts (USD)');
+        tableRow('401(k)/403(b)', fmt(first.k401, 'USD'), { indent: 10 });
+        tableRow('Traditional IRA', fmt(first.ira, 'USD'), { indent: 10 });
+        tableRow('Roth IRA', fmt(first.roth, 'USD'), { indent: 10 });
+        tableRow('Taxable brokerage', fmt(first.taxableUsd, 'USD'), { indent: 10 });
+        if (first.hsa > 0) tableRow('HSA', fmt(first.hsa, 'USD'), { indent: 10 });
+        tableRow('USD Total', fmt(first.usdTotal, 'USD'), { bold: true });
+        y += 10;
+
+        doc.setDrawColor(...harbor);
+        doc.setLineWidth(1);
+        ensureSpace(24);
+        doc.line(marginX, y, pageW - marginX, y);
+        y += 16;
+        tableRow('Combined portfolio (' + res.reportCurrency + ')', fmt(first.combined, res.reportCurrency), { bold: true });
+        y += 10;
+
+        // Departure Tax / Benefit Timing / Moving Back all live on their own pages now — read
+        // their last-saved values from storage instead of the DOM, which no longer has them.
+        const stored = readStoredInputs();
+        const storedNum = id => parseFloat(stored[id]) || 0;
+
+        // ---- Departure Tax (only if there's a meaningful gain on the books) ----
+        const dtGain = Math.max(0, storedNum('dtNonregFmv') - storedNum('dtNonregAcb')) + Math.max(0, storedNum('dtOtherFmv') - storedNum('dtOtherAcb'));
+        if (dtGain > 0) {
+          const dtTaxable = dtGain * 0.5;
+          const dtRate = Math.max(0, Math.min(100, storedNum('dtMarginalRate'))) / 100;
+          const dtOwing = dtTaxable * dtRate;
+          sectionHeader('Departure Tax Estimate (if leaving Canada)');
+          bodyLine('Estimated capital gain', fmt(dtGain, 'CAD'));
+          bodyLine('Taxable amount (50% inclusion)', fmt(dtTaxable, 'CAD'));
+          bodyLine('Estimated tax owing', fmt(dtOwing, 'CAD'));
+          bodyLine('Deferral likely available (Form T1244)', dtOwing < DEFERRAL_TAX_THRESHOLD ? 'Yes, without security' : 'Yes, may require posted security');
+          y += 8;
+        }
+
+        // ---- Claiming-age choices (only if benefit amounts were entered) ----
+        const claimCppBase = storedNum('claimCppBase'), claimOasBase = storedNum('claimOasBase'), claimSsBase = storedNum('claimSsBase');
+        if (claimCppBase > 0 || claimOasBase > 0 || claimSsBase > 0) {
+          sectionHeader('Benefit Claiming-Age Choices');
+          if (claimCppBase > 0) bodyLine('CPP, claiming at age ' + stored.claimCppAge, fmt(claimCppBase * cppFactor(parseInt(stored.claimCppAge, 10)), 'CAD') + '/mo');
+          if (claimOasBase > 0) bodyLine('OAS, claiming at age ' + stored.claimOasAge, fmt(claimOasBase * oasFactor(parseInt(stored.claimOasAge, 10)), 'CAD') + '/mo');
+          if (claimSsBase > 0) bodyLine('Social Security, claiming at age ' + stored.claimSsAge, fmt(claimSsBase * ssFactor(parseInt(stored.claimSsAge, 10)), 'USD') + '/mo');
+          y += 8;
+        }
+
+        // ---- Moving Back to Canada (only if there's something relevant to say) ----
+        const mbIsCitizen = stored.mbIsCitizen === 'yes';
+        const mbHasGreenCard = stored.mbHasGreenCard === 'yes';
+        if (mbIsCitizen || mbHasGreenCard || first.rrsp > 0 || first.tfsa > 0 || first.roth > 0) {
+          sectionHeader('Moving Back to Canada — Key Flags');
+          bodyLine('US citizen', mbIsCitizen ? 'Yes — US filing continues for life' : 'No');
+          if (mbHasGreenCard) {
+            const gcYears = storedNum('mbGreenCardYears');
+            bodyLine('Green Card, years held (of 15)', String(gcYears) + (gcYears >= 8 ? ' — past Long-Term Resident threshold' : ''));
+          }
+          if (first.tfsa > 0) bodyLine('TFSA note', 'Room does not accrue while non-resident');
+          if (first.roth > 0) bodyLine('Roth IRA note', 'Needs one-time treaty election if returning to Canada');
+          y += 8;
+        }
+
+        addFooter();
+        doc.save('coastfire-summary.pdf');
+      }
+      $('downloadPdfBtn').addEventListener('click', handleDownloadPdfClick);
+
+      const hadSavedDataBeforeLoad = hasStorage && !!localStorage.getItem(STORAGE_KEY);
+      let bannerDismissedBefore = false;
+      try { bannerDismissedBefore = hasStorage && localStorage.getItem(BANNER_DISMISS_KEY) === '1'; } catch (e) { }
+
+      const WIZARD_SEEN_KEY = 'ccfire:wizardSeen';
+      const WIZARD_STEPS = [
+        { num: 1, title: 'Tell us about you', sub: "The basics that set your timeline and what you're saving toward." },
+        { num: 2, title: 'Your accounts', sub: 'Canadian accounts stay in CAD, US accounts stay in USD — we only combine them at the very end.' },
+        { num: 3, title: 'Growth assumptions', sub: "These do more to move your result than anything else. Not sure? Use a preset below." },
+        { num: 4, title: 'Government benefits (optional)', sub: "CPP, OAS, and Social Security can lower how much your portfolio needs to cover — but it's fine to skip this and add it later." }
+      ];
+      let wizardActive = false;
+      let wizardStep = 1;
+      let completedSteps = new Set();
+
+      function markWizardSeen() {
+        try { if (hasStorage) localStorage.setItem(WIZARD_SEEN_KEY, '1'); } catch (e) { }
+      }
+
+      function applyStepVisibility(n) {
+        // Show/hide every tagged element based on whether it belongs to the active step.
+        document.querySelectorAll('#calcForm [data-step]').forEach(el => {
+          el.style.display = (parseInt(el.dataset.step, 10) === n) ? '' : 'none';
+        });
+        // A fieldset/details is only shown if it contains at least one visible element for this step
+        // (fieldset 03 is split between steps 1 and 3, so this keeps it visible in both, showing only
+        // the relevant fields each time).
+        document.querySelectorAll('#calcForm > fieldset, #calcForm > details').forEach(container => {
+          const hasContentForStep = !!container.querySelector(`[data-step="${n}"]`);
+          container.style.display = hasContentForStep ? '' : 'none';
+        });
+      }
+
+      function showAllFormSections() {
+        document.querySelectorAll('#calcForm [data-step]').forEach(el => { el.style.display = ''; });
+        document.querySelectorAll('#calcForm > fieldset, #calcForm > details').forEach(c => { c.style.display = ''; });
+      }
+
+      function updateWizardChrome() {
+        const pct = (wizardStep / 4) * 100;
+        $('wizardProgressFill').style.width = pct + '%';
+        $('wizardProgressBar').setAttribute('aria-valuenow', String(pct));
+        $('wizardMeta').textContent = `Step ${wizardStep} of 4 · ~2 min`;
+        document.querySelectorAll('.wizard-step-pill').forEach(pill => {
+          const n = parseInt(pill.dataset.goto, 10);
+          pill.classList.toggle('active', n === wizardStep);
+          const isDone = completedSteps.has(n);
+          pill.classList.toggle('completed', isDone);
+          pill.querySelector('.wsp-num').textContent = isDone ? '✓' : String(n);
+          if (n === wizardStep) pill.setAttribute('aria-current', 'step'); else pill.removeAttribute('aria-current');
+        });
+        const step = WIZARD_STEPS[wizardStep - 1];
+        $('wizardStepTitle').textContent = step.title;
+        $('wizardStepSub').textContent = step.sub;
+        $('wizardBackBtn').style.visibility = wizardStep === 1 ? 'hidden' : 'visible';
+        $('wizardSkipBenefitsBtn').hidden = wizardStep !== 4;
+        $('wizardContinueBtn').textContent = wizardStep === 4 ? 'Finish' : 'Continue';
+      }
+
+      function showWizardStep(n, isInitial) {
+        wizardStep = Math.max(1, Math.min(4, n));
+        applyStepVisibility(wizardStep);
+        if (wizardStep === 2) expandExtraAccounts();
+        updateWizardChrome();
+        if (isInitial) return; // first paint: don't scroll or steal focus, just show step 1 where it sits
+        $('wizardChrome').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Focus the first input/select of the newly-shown step for keyboard users
+        const stepFields = document.querySelectorAll(`#calcForm [data-step="${wizardStep}"]`);
+        for (const group of stepFields) {
+          const firstField = group.matches('input, select') ? group : group.querySelector('input, select');
+          if (firstField) { firstField.focus({ preventScroll: false }); break; }
+        }
+      }
+
+      function switchChromeToChecklistMode() {
+        $('wizardChrome').hidden = false;
+        $('wizardChrome').classList.add('checklist-mode');
+        $('wizardProgressFill').style.width = '100%';
+        $('wizardMeta').textContent = 'All set — click any step below to jump back and edit it.';
+        completedSteps = new Set([1, 2, 3, 4]);
+        document.querySelectorAll('.wizard-step-pill').forEach(pill => {
+          pill.classList.add('completed');
+          pill.classList.remove('active');
+          pill.querySelector('.wsp-num').textContent = '✓';
+        });
+      }
+
+      // For classic/returning visitors who never go through the wizard — same sticky bar,
+      // just the live numbers without the 4-step checklist (which wouldn't apply to them).
+      function showSnapshotOnlyMode() {
+        let dismissed = false;
+        try { dismissed = hasStorage && sessionStorage.getItem('ccfire:snapshotDismissed') === '1'; } catch (e) { }
+        if (dismissed) return;
+        $('wizardChrome').hidden = false;
+        $('wizardChrome').classList.add('snapshot-mode');
+      }
+      $('ssDismissBtn').addEventListener('click', () => {
+        $('wizardChrome').hidden = true;
+        try { sessionStorage.setItem('ccfire:snapshotDismissed', '1'); } catch (e) { }
+      });
+
+      function finishWizard() {
+        wizardActive = false;
+        document.body.classList.remove('wizard-mode');
+        showAllFormSections();
+        $('wizardNavRow').hidden = true;
+        markWizardSeen();
+        if (!bannerDismissedBefore) showBanner();
+        switchChromeToChecklistMode();
+        saveInputs();
+        validateAndRender();
+      }
+
+      function startWizard() {
+        wizardActive = true;
+        completedSteps = new Set();
+        document.body.classList.add('wizard-mode');
+        $('wizardChrome').hidden = false;
+        $('wizardChrome').classList.remove('checklist-mode');
+        $('wizardNavRow').hidden = false;
+        hideBanner();
+        showWizardStep(1, true);
+      }
+
+      $('wizardContinueBtn').addEventListener('click', () => {
+        const errors = validate(wizardStep);
+        if (showErrors(errors)) return;
+        completedSteps.add(wizardStep);
+        if (wizardStep < 4) { showWizardStep(wizardStep + 1); }
+        else { finishWizard(); }
+      });
+      $('wizardBackBtn').addEventListener('click', () => showWizardStep(wizardStep - 1));
+      $('wizardSkipAllBtn').addEventListener('click', finishWizard);
+      $('wizardSkipBenefitsBtn').addEventListener('click', () => {
+        $('cppMonthly').value = 0;
+        $('oasMonthly').value = 0;
+        $('ssMonthly').value = 0;
+        completedSteps.add(4);
+        finishWizard();
+      });
+      document.querySelectorAll('.wizard-step-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          const n = parseInt(pill.dataset.goto, 10);
+          if (wizardActive) {
+            showWizardStep(n);
+          } else {
+            // Checklist mode: jump to and open that section in the classic full form
+            const targetIds = { 1: 'fieldsetPersonal', 2: 'fieldsetAccounts', 3: 'fieldsetAssumptions', 4: 'govBenefitsDetails' };
+            const el = $(targetIds[n]);
+            if (el) {
+              if (el.tagName === 'DETAILS') el.open = true;
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+        });
+      });
+
+      // Restore inputs: a shared link (query params) takes priority over local autosave
+      const loadedFromLink = applyQueryParams();
+      if (loadedFromLink) { saveInputs(); } else { restoreInputs(); }
+      $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
+      updateOasHint();
+      syncSlidersFromFields();
+      (function syncPresetActiveOnLoad() {
+        const match = Object.entries(PRESETS).find(([, p]) => p.returnRate == num('returnRate') && p.inflationRate == num('inflationRate'));
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', match && b.dataset.preset === match[0]));
+      })();
+
+      let wizardSeenBefore = false;
+      try { wizardSeenBefore = hasStorage && localStorage.getItem(WIZARD_SEEN_KEY) === '1'; } catch (e) { }
+      const shouldShowWizard = !loadedFromLink && !hadSavedDataBeforeLoad && !wizardSeenBefore && !bannerDismissedBefore;
+
+
+      if (shouldShowWizard) {
+        startWizard();
+        // Results stay hidden until the wizard is completed or skipped — no auto-render here.
+      } else {
+        if (loadedFromLink || hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
+        validateAndRender(false); // initial page load — show results in place, don't jump the page
+        showSnapshotOnlyMode();
+      }
+
+      // Fetch exchange rate on load
+      let liveFetchedRate = null;
+      async function fetchExchangeRate(isInitialLoad = false) {
+        const hintEl = $('fxHint');
+        const btnEl = $('fetchFxBtn');
+        if (!hintEl || !btnEl) return;
+
+        // If we already have a live rate cached and the user just wants to apply it, skip the network call.
+        if (!isInitialLoad && liveFetchedRate && btnEl.textContent === 'Apply live') {
+          $('exchangeRate').value = liveFetchedRate.toFixed(4);
+          hintEl.textContent = `Live rate: 1 CAD = ${liveFetchedRate.toFixed(4)} USD (applied)`;
+          btnEl.textContent = 'Refresh live rate';
+          saveInputs();
+          validateAndRender();
+          return;
+        }
+
+        hintEl.textContent = 'Fetching live rate...';
+        btnEl.disabled = true;
+
+        try {
+          const response = await fetch('https://api.frankfurter.app/latest?from=CAD&to=USD');
+          if (!response.ok) throw new Error('API response not OK');
+          const data = await response.json();
+          const rate = data.rates.USD;
+          if (!rate || typeof rate !== 'number') throw new Error('Invalid rate format');
+          liveFetchedRate = rate;
+
+          const hasSaved = hasStorage && localStorage.getItem(STORAGE_KEY);
+
+          if (isInitialLoad && hasSaved && !loadedFromLink) {
+            const dataObj = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            const savedRateStr = dataObj ? dataObj.exchangeRate : '';
+            const savedRate = parseFloat(savedRateStr);
+
+            if (!savedRateStr || savedRate === 0.73) {
+              $('exchangeRate').value = rate.toFixed(4);
+              hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)`;
+              btnEl.textContent = 'Refresh live rate';
+              saveInputs();
+              validateAndRender(!isInitialLoad);
+            } else {
+              hintEl.textContent = `Live rate available: 1 CAD = ${rate.toFixed(4)} USD.`;
+              btnEl.textContent = 'Apply live';
+            }
+          } else {
+            $('exchangeRate').value = rate.toFixed(4);
+            hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)`;
+            btnEl.textContent = 'Refresh live rate';
+            saveInputs();
+            validateAndRender(!isInitialLoad);
+          }
+        } catch (err) {
+          console.error('Error fetching exchange rate:', err);
+          hintEl.textContent = "Couldn't fetch a live rate — enter one manually (your bank or Bank of Canada both publish current rates).";
+        } finally {
+          btnEl.disabled = false;
+        }
+      }
+
+      $('fetchFxBtn').addEventListener('click', () => {
+        fetchExchangeRate(false);
+      });
+
+      fetchExchangeRate(true);
+    })();
+  </script>
+</body>
+
+</html>

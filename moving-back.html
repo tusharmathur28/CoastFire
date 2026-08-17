@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moving Back to Canada — Two Currencies, One Number</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <a href="#mbIsCitizen" class="skip-link">Skip to calculator</a>
+  <div class="wrap">
+
+    <header>
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
+            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
+            accounts in their native currencies.</p>
+        </div>
+        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+      </div>
+      <nav class="page-nav">
+        <a href="index.html">All Tools</a>
+        <a href="coastfire-calculator.html">Calculator</a>
+        <a href="action-items.html">Action Items</a>
+        <a href="departure-tax.html">Departure Tax</a>
+        <a href="rrsp-withholding.html">RRSP Withholding</a>
+        <a href="benefit-timing.html">Benefit Timing</a>
+        <a href="moving-back.html">Moving Back to Canada</a>
+        <a href="compare-scenarios.html">Compare Scenarios</a>
+      </nav>
+    </header>
+
+    <div class="tool-header">
+      <h2>🍁 Moving Back to Canada</h2>
+      <p class="tool-sub">The mirror image of leaving — re-establishing Canadian residency has its own rules,
+        deadlines, and a couple of genuinely good surprises. General information only, not tax or immigration
+        advice; confirm your specific situation with a cross-border specialist before you file anything.</p>
+    </div>
+
+    <div class="tool-card">
+      <h3>Your situation</h3>
+      <div class="card-sub">A couple of questions to figure out which US exit rules — if any — apply to you when
+        you leave.</div>
+      <div class="grid3">
+        <div class="field">
+          <label for="mbIsCitizen">Are you a US citizen? <span class="info"
+              title="Citizenship-based taxation means US citizens must file US tax returns for life, no matter where they live, unless they formally renounce citizenship.">?</span></label>
+          <select id="mbIsCitizen">
+            <option value="no" selected>No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mbHasGreenCard">Do you hold a US Green Card? <span class="info"
+              title="Held separately from citizenship. Long-term Green Card holders can be subject to the same exit tax rules as citizens who renounce.">?</span></label>
+          <select id="mbHasGreenCard">
+            <option value="no" selected>No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mbGreenCardYears">Years held, out of the last 15</label>
+          <input type="number" id="mbGreenCardYears" value="0" min="0" max="15" step="1">
+        </div>
+        <div class="field">
+          <label for="mbNetWorth">Approx. worldwide net worth ($ USD) <span class="info"
+              title="All assets minus debts, worldwide — not just US assets. This only matters if you hold a Green Card for 8+ of the last 15 years.">?</span></label>
+          <input type="number" id="mbNetWorth" value="0" min="0" step="10000">
+        </div>
+        <div class="field">
+          <label for="mbTaxLiability">Avg. annual US federal tax paid, last 5 years ($ USD) <span class="info"
+              title="Your average net US income tax liability, not your income. Only relevant for long-term Green Card holders.">?</span></label>
+          <input type="number" id="mbTaxLiability" value="0" min="0" step="1000">
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <h3>What this means for you</h3>
+      <div id="mbStatusResult"></div>
+    </div>
+
+    <div class="tool-card">
+      <h3>Your registered &amp; retirement accounts checklist</h3>
+      <div class="card-sub">What happens to each account type the moment you become a Canadian resident again.</div>
+      <div id="mbAccountChecklist"></div>
+    </div>
+
+    <div class="tool-card">
+      <h3>Practical timing &amp; logistics</h3>
+      <div class="consideration-item level-info">
+        <div class="ci-title"><span class="ci-icon">ℹ️</span>CPP &amp; OAS resume automatically</div>
+        <div class="ci-body">Nothing special is required — CPP is based on your contribution record and keeps
+          accruing value regardless of residency. If you haven't started collecting OAS yet, years of Canadian
+          residency after you return continue counting toward the 40-year full-pension calculation.</div>
+      </div>
+      <div class="consideration-item level-action">
+        <div class="ci-title"><span class="ci-icon">📋</span>Provincial healthcare waiting period</div>
+        <div class="ci-body">Most provinces impose a waiting period of up to three months after you establish
+          residency before public health coverage begins. Budget for private travel/health insurance to bridge
+          that gap — don't assume coverage starts the day you land.</div>
+      </div>
+      <div class="consideration-item level-action">
+        <div class="ci-title"><span class="ci-icon">📋</span>Coordinate your exit and entry dates</div>
+        <div class="ci-body">You'll likely file a part-year return in both countries for the year you move — a US
+          return covering up to your departure date and a Canadian return from the date residency is
+          re-established. Getting these dates to line up cleanly (and documented) avoids gaps or overlaps that
+          create double-taxation headaches.</div>
+      </div>
+    </div>
+
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · Inspired by <a
+        href="https://maplecoastfire.ca" style="color:inherit;">MapleCoastFIRE</a></footer>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    (function () {
+      initTheme();
+      initThemeToggle();
+      restoreInputs();
+
+      const MB_NET_WORTH_THRESHOLD = 2000000;    // 2026, fixed, not inflation-adjusted
+      const MB_TAX_LIABILITY_THRESHOLD = 211000; // 2026, indexed annually
+
+      function ciHtml(level, icon, title, body, badge) {
+        return `<div class="consideration-item level-${level}">
+          <div class="ci-title"><span class="ci-icon">${icon}</span>${title}${badge ? ` <span class="ci-badge">${badge}</span>` : ''}</div>
+          <div class="ci-body">${body}</div>
+        </div>`;
+      }
+
+      function renderMovingBack() {
+        const isCitizen = $('mbIsCitizen').value === 'yes';
+        const hasGreenCard = $('mbHasGreenCard').value === 'yes';
+        const years = Math.max(0, Math.min(15, num('mbGreenCardYears')));
+        const netWorth = num('mbNetWorth');
+        const taxLiability = num('mbTaxLiability');
+
+        let statusHtml = '';
+
+        if (isCitizen) {
+          statusHtml += ciHtml('action', '📋', 'US filing obligations continue for life',
+            `Citizenship-based taxation means moving back to Canada does <strong>not</strong> end your US tax filing
+            requirement. You'll keep filing a US return (1040) every year alongside your Canadian return, no matter
+            where you live — that only stops if you formally renounce US citizenship, which is a separate, bigger
+            decision with its own exit-tax analysis.`, 'Ongoing');
+        }
+
+        if (hasGreenCard) {
+          const isLTR = years >= 8;
+          if (isLTR) {
+            const netWorthTest = netWorth >= MB_NET_WORTH_THRESHOLD;
+            const taxTest = taxLiability > 0 && taxLiability > MB_TAX_LIABILITY_THRESHOLD;
+            if (netWorthTest || taxTest) {
+              statusHtml += ciHtml('warning', '⚠️', 'You may be a "covered expatriate"',
+                `You've held Green Card status for ${years} of the last 15 years, crossing the 8-year Long-Term
+                Resident threshold. Based on what you entered, you likely meet at least one covered-expatriate test
+                (net worth ≥ ${fmt(MB_NET_WORTH_THRESHOLD, 'USD')}, or average tax liability over
+                ${fmt(MB_TAX_LIABILITY_THRESHOLD, 'USD')}/year). If you formally terminate your Green Card, the IRS
+                may treat it as a deemed sale of your worldwide assets at fair market value, with gains above
+                ${fmt(910000, 'USD')} (2026 exclusion) taxed as capital gains. This is a real planning conversation
+                to have before you file anything.`, 'Long-Term Resident');
+            } else {
+              statusHtml += ciHtml('good', '✅', 'Likely not a "covered expatriate"',
+                `You've held Green Card status for ${years} of the last 15 years, crossing the 8-year Long-Term
+                Resident threshold — but based on what you entered, you likely don't meet the net worth or tax
+                liability tests. There's a third test worth knowing about: you must also be able to certify 5 years
+                of full US tax compliance on Form 8854 — missing filings can trigger covered status regardless of
+                wealth.`, 'Long-Term Resident');
+            }
+          } else {
+            statusHtml += ciHtml('good', '✅', 'Long-Term Resident rules don\'t apply yet',
+              `You've held Green Card status for ${years} of the last 15 years — under the 8-year threshold, so the
+              exit tax rules for long-term residents don't apply to you, regardless of net worth or tax liability.`,
+              'Under 8 years');
+          }
+        }
+
+        if (!isCitizen && !hasGreenCard) {
+          statusHtml += ciHtml('info', 'ℹ️', 'No US exit tax exposure expected',
+            `As a non-citizen without a Green Card (e.g. on a work visa), there's typically no US exit tax when your
+            status ends. You'll still need to file a final US tax return for your departure year — often a
+            dual-status return covering the period you were a US tax resident.`);
+        }
+
+        $('mbStatusResult').innerHTML = statusHtml || '<div class="card-sub">Answer the questions above to see what applies to you.</div>';
+
+        // TFSA/RRSP live on the CoastFIRE Calculator page now — read the last-saved values from
+        // storage instead of the DOM, which doesn't have those fields on this page.
+        const stored = readStoredInputs();
+        const tfsa = parseFloat(stored.tfsaBal) || 0, rrsp = parseFloat(stored.rrspBal) || 0;
+        let acctHtml = '';
+        acctHtml += ciHtml('warning', '⚠️', 'TFSA — room does not accrue while non-resident',
+          `This one catches people off guard: you do <strong>not</strong> earn new TFSA contribution room for any
+          calendar year you spend as a non-resident — there's no catch-up once you're back. Contributing while
+          non-resident triggers a 1%-per-month penalty tax until it's withdrawn or you regain residency.
+          ${tfsa > 0 ? `Your current TFSA balance (${fmt(tfsa, 'CAD')}) stays intact and keeps growing tax-free the whole time — you just don't add new room during the years away.` : ''}`);
+        acctHtml += ciHtml('good', '✅', 'RRSP — unaffected by the move',
+          `${rrsp > 0 ? `Your RRSP (${fmt(rrsp, 'CAD')}) ` : 'Your RRSP '}stays tax-deferred throughout, regardless
+          of residency changes. New contribution room only resumes once you have Canadian earned income again.`);
+        acctHtml += ciHtml('good', '✅', 'Traditional IRA / 401(k) — automatically stays tax-deferred',
+          `No election needed. Canadian domestic tax rules already defer taxation on undistributed IRA and 401(k)
+          growth for Canadian residents — you're only taxed when you actually withdraw.`);
+        acctHtml += ciHtml('action', '📋', 'Roth IRA — needs a one-time election, with a deadline',
+          `Unlike a Traditional IRA, a Roth IRA is <strong>not</strong> automatically protected. File a one-time,
+          irrevocable election under Article XVIII(7) of the Canada-US treaty by the tax-filing deadline for your
+          first year back as a Canadian resident, and make no further contributions or conversions to it after that
+          — miss either one and the growth becomes taxable in Canada every year.`, 'Deadline: first year back');
+        acctHtml += ciHtml('good', '✅', 'Deemed acquisition — a step-up, not a tax bill',
+          `Becoming a Canadian resident again triggers a "deemed acquisition" of most property at fair market value
+          — the mirror image of departure tax. This resets your cost base for future Canadian capital gains purposes,
+          which generally works in your favor rather than costing you anything.`);
+        $('mbAccountChecklist').innerHTML = acctHtml;
+      }
+
+      ['mbIsCitizen', 'mbHasGreenCard', 'mbGreenCardYears', 'mbNetWorth', 'mbTaxLiability'].forEach(id => {
+        $(id).addEventListener('input', () => { saveInputs(); renderMovingBack(); });
+        $(id).addEventListener('change', () => { saveInputs(); renderMovingBack(); });
+      });
+
+      renderMovingBack();
+    })();
+  </script>
+</body>
+
+</html>
