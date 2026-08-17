@@ -13,16 +13,23 @@
   <meta property="og:title" content="Two Currencies, One Number — Cross-Border Financial Tools for Canadians">
   <meta property="og:description" content="Free cross-border financial planning tools for Canadians living in the US — CoastFIRE retirement math, departure tax, RRSP withholding, benefit timing, and moving back to Canada.">
   <meta property="og:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
-  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/index.html">
+  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Two Currencies, One Number — Cross-Border Financial Tools for Canadians">
   <meta name="twitter:description" content="Free cross-border financial planning tools for Canadians living in the US — CoastFIRE retirement math, departure tax, RRSP withholding, benefit timing, and moving back to Canada.">
   <meta name="twitter:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('ccfire:theme');
+        if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css?v=1">
 </head>
 
 <body>
@@ -44,15 +51,15 @@
         <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
       </div>
       <nav class="page-nav">
-        <a href="index.html">All Tools</a>
-        <a href="coastfire-calculator.html">CoastFIRE Calculator</a>
-        <a href="action-items.html">Action Items</a>
-        <a href="departure-tax.html">Departure Tax</a>
-        <a href="rrsp-withholding.html">RRSP Withholding</a>
-        <a href="benefit-timing.html">Benefit Timing</a>
-        <a href="drawdown-optimizer.html">Drawdown Optimizer</a>
-        <a href="moving-back.html">Moving Back to Canada</a>
-        <a href="compare-scenarios.html">Compare Scenarios</a>
+        <a href="/" aria-current="page">All Tools</a>
+        <a href="/coastfire-calculator">CoastFIRE Calculator</a>
+        <a href="/action-items">Action Items</a>
+        <a href="/departure-tax">Departure Tax</a>
+        <a href="/rrsp-withholding">RRSP Withholding</a>
+        <a href="/benefit-timing">Benefit Timing</a>
+        <a href="/drawdown-optimizer">Drawdown Optimizer</a>
+        <a href="/moving-back">Moving Back to Canada</a>
+        <a href="/compare-scenarios">Compare Scenarios</a>
       </nav>
     </header>
 
@@ -74,7 +81,7 @@
         <h3>Not sure where to start?</h3>
         <p class="card-sub">Answer one quick question and we'll point you at the right tool.</p>
         <div class="quiz-options">
-          <button type="button" class="quiz-option" data-next="departure-tax.html">
+          <button type="button" class="quiz-option" data-next="/departure-tax">
             <span class="qo-icon">🛫</span>
             <span class="qo-label">Still in Canada, planning a move to the US</span>
           </button>
@@ -82,11 +89,11 @@
             <span class="qo-icon">🇺🇸</span>
             <span class="qo-label">Already living in the US</span>
           </button>
-          <button type="button" class="quiz-option" data-next="moving-back.html">
+          <button type="button" class="quiz-option" data-next="/moving-back">
             <span class="qo-icon">🍁</span>
             <span class="qo-label">Thinking about moving back to Canada</span>
           </button>
-          <button type="button" class="quiz-option" data-next="coastfire-calculator.html">
+          <button type="button" class="quiz-option" data-next="/coastfire-calculator">
             <span class="qo-icon">🤔</span>
             <span class="qo-label">Just exploring — not sure yet</span>
           </button>
@@ -98,19 +105,19 @@
         <p class="card-sub">You can always visit the other tools later — nothing here requires filling out the
           others first.</p>
         <div class="quiz-options">
-          <button type="button" class="quiz-option" data-next="coastfire-calculator.html">
+          <button type="button" class="quiz-option" data-next="/coastfire-calculator">
             <span class="qo-icon">🧭</span>
             <span class="qo-label">My overall CoastFIRE / retirement number</span>
           </button>
-          <button type="button" class="quiz-option" data-next="benefit-timing.html">
+          <button type="button" class="quiz-option" data-next="/benefit-timing">
             <span class="qo-icon">📅</span>
             <span class="qo-label">When to claim CPP, OAS &amp; Social Security</span>
           </button>
-          <button type="button" class="quiz-option" data-next="rrsp-withholding.html">
+          <button type="button" class="quiz-option" data-next="/rrsp-withholding">
             <span class="qo-icon">🏦</span>
             <span class="qo-label">The tax hit on drawing down my RRSP</span>
           </button>
-          <button type="button" class="quiz-option" data-next="action-items.html">
+          <button type="button" class="quiz-option" data-next="/action-items">
             <span class="qo-icon">✅</span>
             <span class="qo-label">Just show me my to-do list</span>
           </button>
@@ -123,49 +130,49 @@
       <h2 class="tools-hub-title">All tools</h2>
       <p class="tools-hub-sub">Jump straight to any tool below — nothing here requires filling out the others first.</p>
       <div class="tool-directory-grid">
-        <a class="tool-directory-card" href="coastfire-calculator.html">
+        <a class="tool-directory-card" href="/coastfire-calculator">
           <div class="tdc-icon">🧭</div>
           <div class="tdc-title">CoastFIRE Calculator</div>
           <div class="tdc-sub">The core cross-border retirement calculator — see when your portfolio can coast.</div>
           <span class="tdc-arrow">Start here →</span>
         </a>
-        <a class="tool-directory-card" href="action-items.html">
+        <a class="tool-directory-card" href="/action-items">
           <div class="tdc-icon">✅</div>
           <div class="tdc-title">Your Action Items</div>
           <div class="tdc-sub">A prioritized checklist of deadlines and to-dos based on what you've entered.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
-        <a class="tool-directory-card" href="departure-tax.html">
+        <a class="tool-directory-card" href="/departure-tax">
           <div class="tdc-icon">🛫</div>
           <div class="tdc-title">Departure Tax Estimator</div>
           <div class="tdc-sub">Leaving Canada? Estimate the one-time deemed-disposition tax bill.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
-        <a class="tool-directory-card" href="rrsp-withholding.html">
+        <a class="tool-directory-card" href="/rrsp-withholding">
           <div class="tdc-icon">🏦</div>
           <div class="tdc-title">RRSP Withholding Tax</div>
           <div class="tdc-sub">See how much Canada withholds when you draw down your RRSP as a US resident.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
-        <a class="tool-directory-card" href="benefit-timing.html">
+        <a class="tool-directory-card" href="/benefit-timing">
           <div class="tdc-icon">📅</div>
           <div class="tdc-title">Benefit Claiming-Age Optimizer</div>
           <div class="tdc-sub">Compare claiming CPP, OAS &amp; Social Security early vs. late.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
-        <a class="tool-directory-card" href="drawdown-optimizer.html">
+        <a class="tool-directory-card" href="/drawdown-optimizer">
           <div class="tdc-icon">🧮</div>
           <div class="tdc-title">Drawdown-Order Optimizer</div>
           <div class="tdc-sub">Sequence RRSP, TFSA, 401(k)/IRA, Roth &amp; taxable withdrawals to minimize tax in retirement.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
-        <a class="tool-directory-card" href="moving-back.html">
+        <a class="tool-directory-card" href="/moving-back">
           <div class="tdc-icon">🍁</div>
           <div class="tdc-title">Moving Back to Canada</div>
           <div class="tdc-sub">Re-entering Canada? See what happens to each account and whether exit-tax rules apply.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
-        <a class="tool-directory-card" href="compare-scenarios.html">
+        <a class="tool-directory-card" href="/compare-scenarios">
           <div class="tdc-icon">⚖️</div>
           <div class="tdc-title">Compare Scenarios</div>
           <div class="tdc-sub">Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.</div>
@@ -187,7 +194,7 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice</footer>
   </div>
 
-  <script src="shared.js"></script>
+  <script src="shared.js?v=1"></script>
   <script>
     initTheme();
     initThemeToggle();

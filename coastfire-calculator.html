@@ -13,23 +13,30 @@
   <meta property="og:title" content="CoastFIRE Calculator — Two Currencies, One Number">
   <meta property="og:description" content="See when your Canadian and US accounts can coast to retirement — tracked in their native currencies until the final conversion.">
   <meta property="og:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
-  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/coastfire-calculator.html">
+  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/coastfire-calculator">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CoastFIRE Calculator — Two Currencies, One Number">
   <meta name="twitter:description" content="See when your Canadian and US accounts can coast to retirement — tracked in their native currencies until the final conversion.">
   <meta name="twitter:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('ccfire:theme');
+        if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css?v=1">
 </head>
 
 <body>
   <a href="#calcForm" class="skip-link">Skip to calculator</a>
   <div class="wrap">
 
-    <header>
+    <header class="compact">
       <div class="header-row">
         <div>
           <div class="eyebrow">
@@ -44,21 +51,22 @@
         <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
       </div>
       <nav class="page-nav">
-        <a href="index.html">All Tools</a>
-        <a href="coastfire-calculator.html">CoastFIRE Calculator</a>
-        <a href="action-items.html">Action Items</a>
-        <a href="departure-tax.html">Departure Tax</a>
-        <a href="rrsp-withholding.html">RRSP Withholding</a>
-        <a href="benefit-timing.html">Benefit Timing</a>
-        <a href="drawdown-optimizer.html">Drawdown Optimizer</a>
-        <a href="moving-back.html">Moving Back to Canada</a>
-        <a href="compare-scenarios.html">Compare Scenarios</a>
+        <a href="/">All Tools</a>
+        <a href="/coastfire-calculator" aria-current="page">CoastFIRE Calculator</a>
+        <a href="/action-items">Action Items</a>
+        <a href="/departure-tax">Departure Tax</a>
+        <a href="/rrsp-withholding">RRSP Withholding</a>
+        <a href="/benefit-timing">Benefit Timing</a>
+        <a href="/drawdown-optimizer">Drawdown Optimizer</a>
+        <a href="/moving-back">Moving Back to Canada</a>
+        <a href="/compare-scenarios">Compare Scenarios</a>
       </nav>
     </header>
 
     <div class="sample-banner stale-banner" id="staleBanner" hidden></div>
 
     <div class="tool-header" id="calcFormHeader">
+      <a class="tool-breadcrumb" href="/">&larr; All tools</a>
       <h2>🧭 CoastFIRE Calculator</h2>
       <p class="tool-sub"><strong>CoastFIRE</strong> is the point where your portfolio is projected to grow, on its own,
         into everything you'll need for retirement — no further contributions required. Once you're there, you can
@@ -95,7 +103,7 @@
       </div>
       <div class="sp-note">Save as many scenarios as you like — e.g. "Retire at 55" vs "Retire at 60" — then load
         either one any time to compare. Saved in this browser only.</div>
-      <div class="sp-note">Have two or more saved? <a href="compare-scenarios.html">Compare them side by side →</a>
+      <div class="sp-note">Have two or more saved? <a href="/compare-scenarios">Compare them side by side →</a>
       </div>
       <div class="sp-note">Export downloads a single file with your current inputs and every saved scenario —
         useful before clearing your browser, switching devices, or just keeping a backup. Import merges a
@@ -138,7 +146,7 @@
             <span class="ss-label">Years to CoastFIRE</span>
             <span class="ss-value" id="ssCoastYears">—</span>
           </div>
-          <a class="ss-flag" id="ssFlag" href="action-items.html"></a>
+          <a class="ss-flag" id="ssFlag" href="/action-items"></a>
           <button type="button" class="ss-dismiss" id="ssDismissBtn" aria-label="Hide this summary bar">×</button>
         </div>
       </div>
@@ -505,14 +513,14 @@
 
       <div class="results-tools-jump">
         <span class="rtj-label">Jump to:</span>
-        <a href="action-items.html">Action Items</a>
-        <a href="departure-tax.html">Departure Tax</a>
-        <a href="rrsp-withholding.html">RRSP Withholding</a>
-        <a href="benefit-timing.html">Benefit Timing</a>
-        <a href="drawdown-optimizer.html">Drawdown Optimizer</a>
-        <a href="moving-back.html">Moving Back to Canada</a>
-        <a href="compare-scenarios.html">Compare Scenarios</a>
-        <a href="index.html">All tools ↑</a>
+        <a href="/action-items">Action Items</a>
+        <a href="/departure-tax">Departure Tax</a>
+        <a href="/rrsp-withholding">RRSP Withholding</a>
+        <a href="/benefit-timing">Benefit Timing</a>
+        <a href="/drawdown-optimizer">Drawdown Optimizer</a>
+        <a href="/moving-back">Moving Back to Canada</a>
+        <a href="/compare-scenarios">Compare Scenarios</a>
+        <a href="/">All tools ↑</a>
       </div>
 
       <div class="stamp-row">
@@ -939,7 +947,7 @@
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js"></script>
+  <script src="shared.js?v=1"></script>
   <script>
     (function () {
       initTheme();
@@ -1358,7 +1366,7 @@
         $('ssCoastYears').textContent = lastRes.coastYearIndex !== null ? lastRes.coastYearIndex : 'Not yet';
         const flagEl = $('ssFlag');
         flagEl.textContent = 'See your action items →';
-        flagEl.href = 'action-items.html';
+        flagEl.href = '/action-items';
       }
 
       function drawChart(rows, reportCurrency) {

@@ -13,23 +13,30 @@
   <meta property="og:title" content="Your Action Items — Two Currencies, One Number">
   <meta property="og:description" content="A prioritized checklist of cross-border deadlines and to-dos, built automatically from what you've entered across every tool on this site.">
   <meta property="og:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
-  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/action-items.html">
+  <meta property="og:url" content="https://crossborder.tusharmathur28.workers.dev/action-items">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Your Action Items — Two Currencies, One Number">
   <meta name="twitter:description" content="A prioritized checklist of cross-border deadlines and to-dos, built automatically from what you've entered across every tool on this site.">
   <meta name="twitter:image" content="https://crossborder.tusharmathur28.workers.dev/og-image.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('ccfire:theme');
+        if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css?v=1">
 </head>
 
 <body>
   <a href="#actionItemsSummary" class="skip-link">Skip to checklist</a>
   <div class="wrap">
 
-    <header>
+    <header class="compact">
       <div class="header-row">
         <div>
           <div class="eyebrow">
@@ -44,21 +51,22 @@
         <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
       </div>
       <nav class="page-nav">
-        <a href="index.html">All Tools</a>
-        <a href="coastfire-calculator.html">CoastFIRE Calculator</a>
-        <a href="action-items.html">Action Items</a>
-        <a href="departure-tax.html">Departure Tax</a>
-        <a href="rrsp-withholding.html">RRSP Withholding</a>
-        <a href="benefit-timing.html">Benefit Timing</a>
-        <a href="drawdown-optimizer.html">Drawdown Optimizer</a>
-        <a href="moving-back.html">Moving Back to Canada</a>
-        <a href="compare-scenarios.html">Compare Scenarios</a>
+        <a href="/">All Tools</a>
+        <a href="/coastfire-calculator">CoastFIRE Calculator</a>
+        <a href="/action-items" aria-current="page">Action Items</a>
+        <a href="/departure-tax">Departure Tax</a>
+        <a href="/rrsp-withholding">RRSP Withholding</a>
+        <a href="/benefit-timing">Benefit Timing</a>
+        <a href="/drawdown-optimizer">Drawdown Optimizer</a>
+        <a href="/moving-back">Moving Back to Canada</a>
+        <a href="/compare-scenarios">Compare Scenarios</a>
       </nav>
     </header>
 
     <div class="sample-banner stale-banner" id="staleBanner" hidden></div>
 
     <div class="tool-header">
+      <a class="tool-breadcrumb" href="/">&larr; All tools</a>
       <h2>✅ Your Action Items</h2>
       <p class="tool-sub">A prioritized checklist built from what you've actually entered across every tool on
         this site — deadlines, elections, and forms worth putting on your radar. Not a substitute for professional
@@ -83,7 +91,7 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice</footer>
   </div>
 
-  <script src="shared.js"></script>
+  <script src="shared.js?v=1"></script>
   <script>
     (function () {
       initTheme();
@@ -109,70 +117,70 @@
           add('tfsa-treatment', 'warning', '⚠️', 'Confirm your TFSA\'s US tax treatment',
             `Your TFSA (${fmt(tfsa, 'CAD')}) isn't recognized as tax-free by the IRS — growth can be taxable
             annually and may need extra reporting. Worth a direct conversation with your accountant.`,
-            'coastfire-calculator.html#considerationsSection', 'See Cross-Border Notes');
+            '/coastfire-calculator#considerationsSection', 'See Cross-Border Notes');
         }
         if (rrsp > 0) {
           add('rrsp-withholding', 'info', 'ℹ️', 'Budget for RRSP withholding tax at withdrawal',
             `You have an RRSP (${fmt(rrsp, 'CAD')} today). Withdrawing it as a US resident triggers 25% Canadian
             withholding for a lump sum, or 15% for periodic RRIF payments — not currently included in "Required at
             Retirement" above. Worth estimating the drag before you rely on that number.`,
-            'rrsp-withholding.html', 'Open RRSP Withholding Tax');
+            '/rrsp-withholding', 'Open RRSP Withholding Tax');
         }
         if (fhsa > 0) {
           add('fhsa-guidance', 'warning', '⚠️', 'FHSA has no IRS guidance yet',
             `Your FHSA (${fmt(fhsa, 'CAD')}) is new enough that the IRS hasn't issued formal guidance — treat its
             US tax treatment as unresolved until you've discussed it with a cross-border specialist.`,
-            'coastfire-calculator.html#considerationsSection', 'See Cross-Border Notes');
+            '/coastfire-calculator#considerationsSection', 'See Cross-Border Notes');
         }
         if (resp > 0) {
           add('resp-reporting', 'warning', '⚠️', 'RESP may require foreign trust reporting',
             `Your RESP (${fmt(resp, 'CAD')}) isn't tax-deferred to the IRS and can trigger Form 3520/3520-A
             reporting — confirm your filing requirements.`,
-            'coastfire-calculator.html#considerationsSection', 'See Cross-Border Notes');
+            '/coastfire-calculator#considerationsSection', 'See Cross-Border Notes');
         }
         if (rrsp + tfsa + nonregCad + fhsa + resp > 0) {
           add('fbar-fatca', 'action', '📋', 'Check your FBAR / FATCA filing requirement',
             `If your combined Canadian financial accounts exceed $10,000 USD at any point in the year, you likely
             need to file an FBAR (FinCEN 114), and possibly Form 8938 — separate from your regular tax return.`,
-            'coastfire-calculator.html#considerationsSection', 'See Cross-Border Notes');
+            '/coastfire-calculator#considerationsSection', 'See Cross-Border Notes');
         }
         if (dtGain > 0) {
           add('departure-tax-gain', 'action', '📋', 'You have an estimated departure-tax gain on the books',
             `Based on what you entered, you have roughly ${fmt(dtGain, 'CAD')} in unrealized capital gains that
             would be subject to departure tax if you left Canada. Consider whether filing Form T1244 to defer the
             tax makes sense for you.`,
-            'departure-tax.html', 'Open Departure Tax Estimator');
+            '/departure-tax', 'Open Departure Tax Estimator');
         }
         if (totalCadProperty > 25000) {
           add('t1161-threshold', 'action', '📋', 'You may need to file Form T1161',
             `Your total property subject to departure tax (${fmt(totalCadProperty, 'CAD')}) is over the $25,000 CAD
             threshold that requires listing everything on Form T1161 when you leave Canada.`,
-            'departure-tax.html', 'Open Departure Tax Estimator');
+            '/departure-tax', 'Open Departure Tax Estimator');
         }
         if (cpp > 0 || oas > 0 || ss > 0) {
           add('claiming-age-review', 'info', 'ℹ️', 'Review your government-benefit claiming age',
             `You've entered CPP, OAS, or Social Security amounts — when you claim each one can meaningfully change
             your lifetime total. Worth a few minutes in the claiming-age comparison.`,
-            'benefit-timing.html', 'Open Benefit Timing Optimizer');
+            '/benefit-timing', 'Open Benefit Timing Optimizer');
         }
         if (isCitizen) {
           add('us-citizen-filing', 'action', '📋', 'Your US filing obligations don\'t end when you leave',
             `As a US citizen, you'll keep filing US tax returns for life, regardless of where you live — that only
             changes if you formally renounce citizenship, a separate and much bigger decision.`,
-            'moving-back.html', 'Open Moving Back to Canada');
+            '/moving-back', 'Open Moving Back to Canada');
         }
         if (hasGreenCard && gcYears >= 8) {
           add('green-card-exit-tax', 'warning', '⚠️', 'Review potential exit-tax exposure',
             `You've held Green Card status for ${gcYears} of the last 15 years — past the threshold where exit-tax
             rules can apply if you formally terminate it. Worth reviewing before you make that decision.`,
-            'moving-back.html', 'Open Moving Back to Canada');
+            '/moving-back', 'Open Moving Back to Canada');
         }
         if (roth > 0) {
           add('roth-ira-election', 'info', 'ℹ️', 'Remember the Roth IRA election if you move back to Canada',
             `Your Roth IRA (${fmt(roth, 'USD')}) isn't automatically protected from Canadian tax the way a
             Traditional IRA is. If you ever move back to Canada, you'll need a one-time treaty election filed by a
             specific deadline to keep it tax-free.`,
-            'moving-back.html', 'Open Moving Back to Canada');
+            '/moving-back', 'Open Moving Back to Canada');
         }
 
         const order = { warning: 0, action: 1, info: 2, good: 3 };

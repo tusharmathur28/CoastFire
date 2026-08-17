@@ -74,7 +74,7 @@ function initStaleBanner() {
     <div class="sb-text"><strong>Your numbers are getting stale.</strong> You last updated your inputs
       about ${monthsAgo} month${monthsAgo === 1 ? '' : 's'} ago (${days} days) — balances, contribution
       amounts, and benefit estimates likely need a refresh for accurate results.</div>
-    <a href="coastfire-calculator.html"><button type="button">Update my numbers</button></a>
+    <a href="/coastfire-calculator"><button type="button">Update my numbers</button></a>
     <button type="button" class="sb-dismiss" id="staleDismissBtn">Remind me later</button>`;
   el.hidden = false;
   el.className = 'sample-banner stale-banner';
