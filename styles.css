@@ -178,7 +178,6 @@ h1 {
 }
 
 header p.sub {
-  max-width: 640px;
   color: var(--ink-soft);
   font-size: 17px;
   margin: 0;
@@ -203,7 +202,6 @@ section.intro {
 }
 
 section.intro p {
-  max-width: 680px;
   color: var(--ink);
   font-size: 15.5px;
 }
@@ -1308,17 +1306,19 @@ table.sens th {
 
 .page-nav {
   display: flex;
-  gap: 22px;
+  gap: 9px;
   padding: 14px 0;
   border-bottom: 1px solid var(--line);
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 600;
   flex-wrap: wrap;
+  row-gap: 6px;
 }
 
 .page-nav a {
   color: var(--ink-soft);
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .page-nav a:hover {
@@ -1477,15 +1477,19 @@ button.theme-toggle {
 button.theme-toggle:hover { border-color: var(--gold); }
 
 nav.page-nav {
-  display: flex; gap: 22px; padding: 14px 0; border-bottom: 1px solid var(--line);
-  font-size: 13.5px; font-weight: 600; flex-wrap: wrap;
+  display: flex; gap: 9px; padding: 14px 0; border-bottom: 1px solid var(--line);
+  font-size: 12.5px; font-weight: 600; flex-wrap: wrap; row-gap: 6px;
 }
-nav.page-nav a { color: var(--ink-soft); text-decoration: none; }
+nav.page-nav a { color: var(--ink-soft); text-decoration: none; white-space: nowrap; }
 nav.page-nav a:hover { color: var(--ink); }
 nav.page-nav a[aria-current="page"] {
   color: var(--ink);
   border-bottom: 2px solid var(--maple);
   padding-bottom: 2px;
+}
+
+@media(max-width: 760px) {
+  .page-nav, nav.page-nav { justify-content: center; }
 }
 
 .preset-row { display: flex; align-items: center; gap: 10px; margin: -8px 0 20px; flex-wrap: wrap; }
@@ -1647,7 +1651,7 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
 /* ---- Standalone tool header (used once per tool page, above its content) ---- */
 .tool-header { border-top: 1px solid var(--line); padding-top: 48px; margin-bottom: 6px; }
 .tool-header h2 { font-size: 26px; margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
-.tool-header .tool-sub { color: var(--ink-soft); font-size: 14.5px; max-width: 680px; margin: 0 0 28px; }
+.tool-header .tool-sub { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 28px; }
 .tool-breadcrumb {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 12.5px; font-weight: 600; color: var(--ink-soft);
