@@ -48,7 +48,10 @@
             retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
             accounts in their native currencies.</p>
         </div>
-        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+        <div class="header-actions">
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+        </div>
       </div>
       <nav class="page-nav">
         <a href="/">All Tools</a>
@@ -112,7 +115,9 @@
 
     </main>
 
-    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice</footer>
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice
+      <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
+    </footer>
   </div>
 
   <script src="shared.js?v=2"></script>
@@ -120,6 +125,7 @@
     (function () {
       initTheme();
       initThemeToggle();
+      initToolSearch();
       initStaleBanner();
       seedLiveFxRateIfNeeded();
 
@@ -208,6 +214,32 @@
             Traditional IRA is. If you ever move back to Canada, you'll need a one-time treaty election filed by a
             specific deadline to keep it tax-free.`,
             '/moving-back', 'Open Moving Back to Canada');
+        }
+
+        // ---- Cross-tool consistency checks — flag when two tools' own inputs actually
+        // contradict each other, not just "here's a thing worth knowing" (the checks above). ----
+        const claimCppAge = num('claimCppAge'), claimOasAge = num('claimOasAge'), claimSsAge = num('claimSsAge');
+        const claimAgesCustomized = claimCppAge !== 65 || claimOasAge !== 65 || claimSsAge !== 67;
+        const benefitsStartAge = num('benefitsStartAge');
+        const expectedStartAge = Math.max(claimCppAge, claimOasAge, claimSsAge);
+        if (claimAgesCustomized && benefitsStartAge !== expectedStartAge) {
+          add('claiming-ages-not-applied', 'warning', '⚠️', 'Your chosen claiming ages aren\'t reflected in your CoastFIRE plan',
+            `You explored claiming CPP/OAS/Social Security at ages ${claimCppAge}/${claimOasAge}/${claimSsAge} on
+            Benefit Timing, but your CoastFIRE plan is still using age ${benefitsStartAge} for when benefits start.
+            Hit "Apply to my CoastFIRE plan" on Benefit Timing to sync them.`,
+            '/benefit-timing', 'Open Benefit Timing Optimizer');
+        }
+
+        if (hasGreenCard && gcYears >= 8 && num('mbNetWorth') === 0) {
+          const combinedPortfolioToday = compute(stored).rows[0].combined;
+          if (combinedPortfolioToday > 0) {
+            add('mb-networth-missing', 'warning', '⚠️', 'Exit-tax check may be understating your exposure',
+              `You've held a Green Card for ${gcYears} of the last 15 years — enough to trigger the US exit-tax
+              Long-Term Resident test — but your entered worldwide net worth on Moving Back to Canada is still $0.
+              With a combined portfolio of ${fmt(combinedPortfolioToday, 'USD')} elsewhere on this site, that check
+              is likely understating your actual exposure.`,
+              '/moving-back', 'Open Moving Back to Canada');
+          }
         }
 
         const order = { warning: 0, action: 1, info: 2, good: 3 };

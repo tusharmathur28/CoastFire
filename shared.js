@@ -158,6 +158,102 @@ function initGlossaryTerms() {
 }
 
 // ==================================================================
+// Ctrl/Cmd+K tool search — a small overlay listing every tool on the site, filtered by
+// substring match on name + description. Lazily built the first time it's opened, same
+// pattern as the glossary popover above. Tools-only in this first version — no glossary terms.
+// ==================================================================
+const SEARCH_TOOLS = [
+  { icon: '🧭', title: 'CoastFIRE Calculator', desc: 'The core cross-border retirement calculator — see when your portfolio can coast.', href: '/coastfire-calculator' },
+  { icon: '✅', title: 'Your Action Items', desc: "A prioritized checklist of deadlines and to-dos based on what you've entered.", href: '/action-items' },
+  { icon: '🛫', title: 'Departure Tax Estimator', desc: 'Leaving Canada? Estimate the one-time deemed-disposition tax bill.', href: '/departure-tax' },
+  { icon: '🏦', title: 'RRSP Withholding Tax', desc: 'See how much Canada withholds when you draw down your RRSP as a US resident.', href: '/rrsp-withholding' },
+  { icon: '📅', title: 'Benefit Claiming-Age Optimizer', desc: 'Compare claiming CPP, OAS & Social Security early vs. late.', href: '/benefit-timing' },
+  { icon: '🧮', title: 'Drawdown-Order Optimizer', desc: 'Sequence RRSP, TFSA, 401(k)/IRA, Roth & taxable withdrawals to minimize tax in retirement.', href: '/drawdown-optimizer' },
+  { icon: '🍁', title: 'Moving Back to Canada', desc: 'Re-entering Canada? See what happens to each account and whether exit-tax rules apply.', href: '/moving-back' },
+  { icon: '⚖️', title: 'Compare Scenarios', desc: 'Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.', href: '/compare-scenarios' },
+  { icon: '🏠', title: 'All Tools (Home)', desc: 'Your snapshot, the "where do I start" quiz, and the full tool directory.', href: '/' }
+];
+
+let toolSearchEl = null, toolSearchInputEl = null, toolSearchResultsEl = null,
+  toolSearchActiveIndex = 0, toolSearchFiltered = [];
+
+function buildToolSearchModal() {
+  toolSearchEl = document.createElement('div');
+  toolSearchEl.className = 'tool-search-overlay';
+  toolSearchEl.hidden = true;
+  toolSearchEl.innerHTML = `
+    <div class="tool-search-modal" role="dialog" aria-modal="true" aria-label="Search tools">
+      <input type="text" id="toolSearchInput" placeholder="Search tools by name..." autocomplete="off">
+      <ul class="tool-search-results" id="toolSearchResults"></ul>
+    </div>`;
+  document.body.appendChild(toolSearchEl);
+  toolSearchInputEl = document.getElementById('toolSearchInput');
+  toolSearchResultsEl = document.getElementById('toolSearchResults');
+
+  toolSearchEl.addEventListener('click', e => { if (e.target === toolSearchEl) closeToolSearch(); });
+  toolSearchResultsEl.addEventListener('click', e => {
+    const item = e.target.closest('.tsr-item');
+    if (item && item.dataset.href) window.location.href = item.dataset.href;
+  });
+  toolSearchInputEl.addEventListener('input', renderToolSearchResults);
+  toolSearchInputEl.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); moveToolSearchSelection(1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); moveToolSearchSelection(-1); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      const t = toolSearchFiltered[toolSearchActiveIndex];
+      if (t) window.location.href = t.href;
+    } else if (e.key === 'Escape') { closeToolSearch(); }
+  });
+}
+
+function renderToolSearchResults() {
+  const q = toolSearchInputEl.value.trim().toLowerCase();
+  toolSearchFiltered = !q ? SEARCH_TOOLS : SEARCH_TOOLS.filter(t =>
+    t.title.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q));
+  toolSearchActiveIndex = 0;
+  toolSearchResultsEl.innerHTML = toolSearchFiltered.length
+    ? toolSearchFiltered.map((t, i) => `
+        <li class="tsr-item${i === 0 ? ' active' : ''}" data-href="${t.href}">
+          <span class="tsr-icon">${t.icon}</span>
+          <span class="tsr-text"><span class="tsr-title">${t.title}</span><span class="tsr-desc">${t.desc}</span></span>
+        </li>`).join('')
+    : `<li class="tsr-empty">No tools match "${toolSearchInputEl.value}".</li>`;
+}
+
+function moveToolSearchSelection(delta) {
+  if (!toolSearchFiltered.length) return;
+  toolSearchActiveIndex = (toolSearchActiveIndex + delta + toolSearchFiltered.length) % toolSearchFiltered.length;
+  [...toolSearchResultsEl.children].forEach((el, i) => el.classList.toggle('active', i === toolSearchActiveIndex));
+  const activeEl = toolSearchResultsEl.children[toolSearchActiveIndex];
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+}
+
+function openToolSearch() {
+  if (!toolSearchEl) buildToolSearchModal();
+  toolSearchEl.hidden = false;
+  toolSearchInputEl.value = '';
+  renderToolSearchResults();
+  toolSearchInputEl.focus();
+}
+function closeToolSearch() {
+  if (toolSearchEl) toolSearchEl.hidden = true;
+}
+
+// Wires the header's search button (if present) plus the global Ctrl/Cmd+K shortcut. Safe to
+// call on every page even before the modal itself exists, since it's built lazily on first open.
+function initToolSearch() {
+  const btn = $('searchToolsBtn');
+  if (btn) btn.addEventListener('click', openToolSearch);
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (toolSearchEl && !toolSearchEl.hidden) closeToolSearch(); else openToolSearch();
+    }
+  });
+}
+
+// ==================================================================
 // Soft (non-blocking) sanity warnings — distinct from a page's own hard-error validation.
 // Renders into the given container using the same visual language as the stale-data banner,
 // so a typo'd rate or an out-of-range percentage gets flagged without stopping the user.
@@ -185,6 +281,22 @@ async function fetchLiveFxRate() {
   return rate;
 }
 
+// Timestamp of the last time a live-fetched rate was actually applied to exchangeRate — distinct
+// from a rate the user typed in by hand, which leaves no stamp. Read by renderFxIndicator() and
+// the CoastFIRE Calculator's own fxHint so both can show "(as of ...)" instead of a bare number.
+const FX_FETCHED_AT_KEY = 'ccfire:fxFetchedAt';
+function stampFxFetched() {
+  if (!hasStorage) return;
+  try { localStorage.setItem(FX_FETCHED_AT_KEY, String(Date.now())); } catch (e) { }
+}
+function fxFetchedAtLabel() {
+  if (!hasStorage) return '';
+  let ts;
+  try { ts = parseInt(localStorage.getItem(FX_FETCHED_AT_KEY), 10); } catch (e) { return ''; }
+  if (!ts) return '';
+  return ' (as of ' + new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ')';
+}
+
 // For a genuinely first-ever visitor (nothing saved yet under ccfire:v2) landing on any page
 // other than the calculator — which already runs its own richer live-fetch flow on load — seed
 // a live rate in place of the static 0.73 default. No-ops silently if a rate was ever saved
@@ -194,6 +306,7 @@ function seedLiveFxRateIfNeeded(onSeeded) {
   if (readRawStore().exchangeRate !== undefined) return;
   fetchLiveFxRate().then(rate => {
     writeStoredInputs({ exchangeRate: rate.toFixed(4) });
+    stampFxFetched();
     if (typeof onSeeded === 'function') onSeeded(rate);
   }).catch(() => { /* stays on DEFAULT_FIELD_VALUES.exchangeRate */ });
 }
@@ -204,7 +317,7 @@ function renderFxIndicator(containerId) {
   const el = $(containerId);
   if (!el) return;
   const rate = parseFloat(readStoredInputs().exchangeRate) || 0.73;
-  el.innerHTML = `Using 1 CAD = ${rate.toFixed(4)} USD · <a href="/coastfire-calculator#exchangeRate">edit on the CoastFIRE Calculator</a>`;
+  el.innerHTML = `Using 1 CAD = ${rate.toFixed(4)} USD${fxFetchedAtLabel()} · <a href="/coastfire-calculator#exchangeRate">edit on the CoastFIRE Calculator</a>`;
 }
 
 // ==================================================================

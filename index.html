@@ -48,7 +48,10 @@
             retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
             accounts in their native currencies.</p>
         </div>
-        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+        <div class="header-actions">
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+        </div>
       </div>
       <nav class="page-nav">
         <a href="/" aria-current="page">All Tools</a>
@@ -148,6 +151,7 @@
     <section class="tools-hub" id="toolsHub">
       <h2 class="tools-hub-title">All tools</h2>
       <p class="tools-hub-sub">Jump straight to any tool below — nothing here requires filling out the others first.</p>
+      <p class="tools-hub-progress" id="toolsHubProgress" hidden></p>
       <div class="tool-directory-grid">
         <a class="tool-directory-card" href="/coastfire-calculator">
           <div class="tdc-icon">🧭</div>
@@ -212,13 +216,16 @@
 
     </main>
 
-    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice</footer>
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice
+      <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
+    </footer>
   </div>
 
   <script src="shared.js?v=2"></script>
   <script>
     initTheme();
     initThemeToggle();
+    initToolSearch();
     initStaleBanner();
     seedLiveFxRateIfNeeded();
 
@@ -258,6 +265,32 @@
       $('snapLastUpdated').textContent = daysAgo <= 0 ? 'Updated today' : `Updated ${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
 
       $('snapshotCard').hidden = false;
+    })();
+
+    // Completion tracker — only the 6 tools that take their own inputs count (Action Items and
+    // Compare Scenarios are derived views with nothing of their own to "complete").
+    (function renderCompletionTracker() {
+      if (!hasStorage || !localStorage.getItem(LAST_SAVED_KEY)) return;
+      const TOOL_FIELD_GROUPS = [
+        { href: '/coastfire-calculator', fieldIds: ['currentAge', 'retireAge', 'contribFreq', 'rrspBal', 'rrspContrib', 'rrspMatch', 'tfsaBal', 'tfsaContrib', 'nonregCadBal', 'nonregCadContrib', 'fhsaBal', 'fhsaContrib', 'respBal', 'respContrib', 'k401Bal', 'k401Contrib', 'k401Match', 'iraBal', 'iraContrib', 'rothBal', 'rothContrib', 'taxableUsdBal', 'taxableUsdContrib', 'hsaBal', 'hsaContrib', 'returnRate', 'inflationRate', 'withdrawalRate', 'monthlyExpenses', 'cppMonthly', 'oasYears', 'oasMonthly', 'ssMonthly', 'benefitsStartAge', 'lifeEvents'] },
+        { href: '/departure-tax', fieldIds: ['dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'dtMarginalRate'] },
+        { href: '/rrsp-withholding', fieldIds: ['rwWithdrawalType', 'rwRrspAtRetirement'] },
+        { href: '/benefit-timing', fieldIds: ['claimCppBase', 'claimOasBase', 'claimSsBase', 'claimCppAge', 'claimOasAge', 'claimSsAge', 'claimPlanToAge'] },
+        { href: '/drawdown-optimizer', fieldIds: ['ddoPlanToAge', 'ddoFilingStatus', 'ddoCapGainsRate', 'ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal'] },
+        { href: '/moving-back', fieldIds: ['mbIsCitizen', 'mbHasGreenCard', 'mbGreenCardYears', 'mbNetWorth', 'mbTaxLiability'] }
+      ];
+      const stored = readStoredInputs();
+      let completedCount = 0;
+      TOOL_FIELD_GROUPS.forEach(group => {
+        const isComplete = group.fieldIds.some(id => stored[id] !== DEFAULT_FIELD_VALUES[id]);
+        if (!isComplete) return;
+        completedCount++;
+        const card = document.querySelector(`.tool-directory-card[href="${group.href}"] .tdc-title`);
+        if (card) card.insertAdjacentHTML('beforeend', ' <span class="tdc-check" title="You\'ve entered numbers here">✓</span>');
+      });
+      const progressEl = $('toolsHubProgress');
+      progressEl.textContent = `${completedCount} of ${TOOL_FIELD_GROUPS.length} tools completed`;
+      progressEl.hidden = false;
     })();
 
     (function () {

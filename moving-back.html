@@ -48,7 +48,10 @@
             retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
             accounts in their native currencies.</p>
         </div>
-        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+        <div class="header-actions">
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+        </div>
       </div>
       <nav class="page-nav">
         <a href="/">All Tools</a>
@@ -72,6 +75,17 @@
       <p class="tool-sub">The mirror image of leaving — re-establishing Canadian residency has its own rules,
         deadlines, and a couple of genuinely good surprises. General information only, not tax or immigration
         advice; confirm your specific situation with a cross-border specialist before you file anything.</p>
+    </div>
+
+    <div class="sample-banner" id="sampleBanner">
+      <div class="sb-icon">👋</div>
+      <div class="sb-text">
+        <strong>Heads up:</strong> the questions below default to a "no exposure" example scenario, just so you can
+        see how this tool works before you answer for your own situation. None of this is your data. Replace each
+        answer with your own whenever you're ready — or use the button to reset back to these defaults any time.
+      </div>
+      <button type="button" id="loadExampleBtn">Reset to defaults</button>
+      <button type="button" class="sb-dismiss" id="dismissSampleBtn">Got it</button>
     </div>
 
     <div class="tool-card">
@@ -177,7 +191,9 @@
 
     </main>
 
-    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice</footer>
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice
+      <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
+    </footer>
   </div>
 
   <script src="shared.js?v=2"></script>
@@ -185,10 +201,29 @@
     (function () {
       initTheme();
       initThemeToggle();
+      initToolSearch();
       initStaleBanner();
       initGlossaryTerms();
       restoreInputs();
       seedLiveFxRateIfNeeded();
+
+      const BANNER_DISMISS_KEY = 'ccfire:bannerDismissed';
+      function hideBanner() { $('sampleBanner').style.display = 'none'; }
+      function showBanner() { $('sampleBanner').style.display = 'flex'; }
+      const hadSavedDataBeforeLoad = hasStorage && !!localStorage.getItem(STORAGE_KEY);
+      let bannerDismissedBefore = false;
+      try { bannerDismissedBefore = hasStorage && localStorage.getItem(BANNER_DISMISS_KEY) === '1'; } catch (e) { }
+      if (hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
+      $('dismissSampleBtn').addEventListener('click', () => {
+        hideBanner();
+        try { if (hasStorage) localStorage.setItem(BANNER_DISMISS_KEY, '1'); } catch (e) { }
+      });
+      $('loadExampleBtn').addEventListener('click', () => {
+        FIELD_IDS.forEach(id => { const el = $(id); if (el && DEFAULT_FIELD_VALUES[id] !== undefined) el.value = DEFAULT_FIELD_VALUES[id]; });
+        showBanner();
+        saveInputs();
+        renderMovingBack();
+      });
 
       const MB_NET_WORTH_THRESHOLD = 2000000;    // 2026, fixed, not inflation-adjusted
       const MB_TAX_LIABILITY_THRESHOLD = 211000; // 2026, indexed annually

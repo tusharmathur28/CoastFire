@@ -48,7 +48,10 @@
             retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
             accounts in their native currencies.</p>
         </div>
-        <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+        <div class="header-actions">
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+        </div>
       </div>
       <nav class="page-nav">
         <a href="/">All Tools</a>
@@ -975,7 +978,9 @@
 
     </main>
 
-    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice</footer>
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice
+      <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
+    </footer>
   </div>
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
@@ -985,6 +990,7 @@
     (function () {
       initTheme();
       initThemeToggle();
+      initToolSearch();
       initStaleBanner();
 
       const OAS_MAX_MONTHLY = 743.05; // 2026, age 65-74, Service Canada
@@ -2768,7 +2774,8 @@
         // If we already have a live rate cached and the user just wants to apply it, skip the network call.
         if (!isInitialLoad && liveFetchedRate && btnEl.textContent === 'Apply live') {
           $('exchangeRate').value = liveFetchedRate.toFixed(4);
-          hintEl.textContent = `Live rate: 1 CAD = ${liveFetchedRate.toFixed(4)} USD (applied)`;
+          stampFxFetched();
+          hintEl.textContent = `Live rate: 1 CAD = ${liveFetchedRate.toFixed(4)} USD (applied)${fxFetchedAtLabel()}`;
           btnEl.textContent = 'Refresh live rate';
           saveInputs();
           validateAndRender();
@@ -2791,7 +2798,8 @@
 
             if (!savedRateStr || savedRate === 0.73) {
               $('exchangeRate').value = rate.toFixed(4);
-              hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)`;
+              stampFxFetched();
+              hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)${fxFetchedAtLabel()}`;
               btnEl.textContent = 'Refresh live rate';
               saveInputs();
               validateAndRender(!isInitialLoad);
@@ -2801,7 +2809,8 @@
             }
           } else {
             $('exchangeRate').value = rate.toFixed(4);
-            hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)`;
+            stampFxFetched();
+            hintEl.textContent = `Live rate: 1 CAD = ${rate.toFixed(4)} USD (applied)${fxFetchedAtLabel()}`;
             btnEl.textContent = 'Refresh live rate';
             saveInputs();
             validateAndRender(!isInitialLoad);

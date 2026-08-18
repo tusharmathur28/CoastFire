@@ -1216,6 +1216,40 @@ button.export:hover {
 .gterm-popover strong { color: var(--harbor); }
 .gterm-popover[hidden] { display: none; }
 
+.header-actions { display: flex; gap: 8px; flex: none; }
+@media(max-width: 640px) { .header-actions { flex-wrap: wrap; justify-content: flex-end; } }
+
+.tool-search-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0, 0, 0, .4);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 12vh 16px 16px;
+}
+.tool-search-overlay[hidden] { display: none; }
+.tool-search-modal {
+  width: 100%; max-width: 480px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
+  overflow: hidden;
+}
+.tool-search-modal input {
+  width: 100%; border: none; border-bottom: 1px solid var(--line);
+  background: transparent; color: var(--ink);
+  padding: 14px 16px; font-size: 15px; font-family: inherit;
+}
+.tool-search-modal input:focus { outline: none; }
+.tool-search-results { list-style: none; margin: 0; padding: 6px; max-height: 340px; overflow-y: auto; }
+.tsr-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 10px; border-radius: 6px; cursor: pointer;
+}
+.tsr-item.active, .tsr-item:hover { background: var(--harbor-soft); }
+.tsr-icon { font-size: 18px; flex: none; }
+.tsr-text { display: flex; flex-direction: column; min-width: 0; }
+.tsr-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.tsr-desc { font-size: 12px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tsr-empty { padding: 14px 10px; font-size: 13px; color: var(--ink-soft); }
+
 .scenarios-panel {
   background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
   padding: 16px 18px; margin: 20px 0; display: flex; flex-direction: column; gap: 10px;
@@ -1413,6 +1447,9 @@ footer {
   border-top: 1px solid var(--line);
   margin-top: 40px;
 }
+footer a { color: var(--harbor); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+footer .footer-feedback { display: block; margin-top: 4px; }
 
 .freshness-note { margin: 24px 0 0; font-size: 12px; color: var(--ink-soft); }
 .freshness-note summary { cursor: pointer; list-style: none; font-weight: 600; }
@@ -1622,6 +1659,8 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
 .tools-hub { margin: 36px 0; }
 .tools-hub-title { font-size: 22px; margin: 0 0 4px; }
 .tools-hub-sub { color: var(--ink-soft); font-size: 14px; margin: 0 0 18px; }
+.tools-hub-progress { color: var(--good); font-size: 13px; font-weight: 600; margin: -10px 0 18px; }
+.tdc-check { color: var(--good); font-weight: 700; margin-left: 4px; }
 
 /* ---- Compact jump row inside results (replaces the full directory grid there) ---- */
 .results-tools-jump {
