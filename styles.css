@@ -1214,7 +1214,7 @@ button.export:hover {
 .gterm-popover strong { color: var(--harbor); }
 .gterm-popover[hidden] { display: none; }
 
-.header-actions { display: flex; gap: 8px; flex: none; }
+.header-actions { display: flex; gap: 8px; flex: none; margin-left: auto; }
 @media(max-width: 640px) { .header-actions { flex-wrap: wrap; justify-content: flex-end; } }
 
 .tool-search-overlay {
@@ -1463,12 +1463,8 @@ footer .footer-feedback { display: block; margin-top: 4px; }
 
 body { transition: background .2s ease, color .2s ease; }
 
-.header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-
-@media(max-width: 640px) {
-  .header-row { flex-wrap: wrap; }
-  .header-row > div:first-child { flex: 1 1 100%; }
-}
+.header-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.header-row > div:first-child { flex: 1 1 100%; }
 button.theme-toggle {
   background: var(--surface); border: 1px solid var(--line); color: var(--ink);
   padding: 8px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600;
