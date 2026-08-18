@@ -131,8 +131,9 @@
         <ul id="errorList" role="alert" aria-live="assertive"></ul>
       </div>
 
-      <fieldset id="fieldsetPersonal">
-        <legend class="section-title"><span class="num">01</span> Personal information</legend>
+      <details class="collapsible-section" id="fieldsetPersonal" open>
+        <summary class="section-title"><span class="num">01</span> Personal information</summary>
+        <div class="collapsible-body">
         <div class="section-explainer">These three basics set your timeline — how many years your money has to grow,
           and how often it gets topped up.</div>
         <div class="grid3" data-step="1">
@@ -162,10 +163,12 @@
             <input type="number" id="monthlyExpenses" value="5000" min="0" step="50">
           </div>
         </div>
-      </fieldset>
+        </div>
+      </details>
 
-      <fieldset id="fieldsetAccounts">
-        <legend class="section-title"><span class="num">02</span> Accounts — by country</legend>
+      <details class="collapsible-section" id="fieldsetAccounts" open>
+        <summary class="section-title"><span class="num">02</span> Accounts — by country</summary>
+        <div class="collapsible-body">
         <div class="section-explainer">List what you already have, in whichever currency each account actually lives
           in. Canadian accounts stay in CAD, US accounts stay in USD — we only combine them into one number at the very
           end.</div>
@@ -304,10 +307,12 @@
             </div>
           </div>
         </div>
-      </fieldset>
+        </div>
+      </details>
 
-      <fieldset id="fieldsetAssumptions">
-        <legend class="section-title"><span class="num">03</span> Currency &amp; growth assumptions</legend>
+      <details class="collapsible-section" id="fieldsetAssumptions" open>
+        <summary class="section-title"><span class="num">03</span> Currency &amp; growth assumptions</summary>
+        <div class="collapsible-body">
         <div class="section-explainer">These assumptions do more to move your result than anything else here. If
           you're not sure what to use, the presets below are a reasonable starting point — you can always come back
           and adjust later.</div>
@@ -368,7 +373,8 @@
         <div class="assumptions-note" data-step="3">One growth rate is applied across every account — the same
           portfolio, just in different wrappers and currencies.</div>
         <div class="sample-banner warn-banner" id="calcWarnBanner" hidden></div>
-      </fieldset>
+        </div>
+      </details>
 
       <details class="collapsible-section" id="govBenefitsDetails">
         <summary class="section-title"><span class="num">04</span> Government benefits
@@ -1002,6 +1008,7 @@
         clearSavedInputs();
         syncSlidersFromFields();
         refreshLifeEventsFromField();
+        openSectionsForSteps([1, 2, 3]); // starting fresh — open the sections back up for editing
         showBanner();
       });
 
@@ -1187,7 +1194,7 @@
       // Each validation error is tagged with the wizard step it belongs to (1-4), so the wizard's
       // "Continue" button can validate just the current step. Classic full-form validation (no argument)
       // still returns every error, exactly as before.
-      function validate(stepScope) {
+      function getValidationErrors() {
         const allErrors = [];
         const currentAge = num('currentAge'), retireAge = num('retireAge'), benefitsStartAge = num('benefitsStartAge');
         if (currentAge <= 0) allErrors.push({ step: 1, message: 'Current age must be greater than 0.' });
@@ -1204,8 +1211,28 @@
 
         if (benefitsStartAge < currentAge) allErrors.push({ step: 4, message: 'Government benefits start age should be at or after your current age.' });
 
+        return allErrors;
+      }
+      function validate(stepScope) {
+        const allErrors = getValidationErrors();
         if (stepScope === undefined) return allErrors.map(e => e.message);
         return allErrors.filter(e => e.step === stepScope).map(e => e.message);
+      }
+
+      // Maps a wizard step number to the collapsible section that holds its fields — used both by
+      // the checklist pills (jump to a section) and by validation (auto-open a collapsed section that
+      // contains an error, since returning visitors may not have opened it themselves).
+      const SECTION_STEP_IDS = { 1: 'fieldsetPersonal', 2: 'fieldsetAccounts', 3: 'fieldsetAssumptions', 4: 'govBenefitsDetails' };
+      function openSectionsForSteps(steps) {
+        steps.forEach(n => {
+          const el = $(SECTION_STEP_IDS[n]);
+          if (el && el.tagName === 'DETAILS') el.open = true;
+        });
+      }
+      // Returning visitors already have values in these sections — start them collapsed, same clean
+      // "one section at a time" feel as the first-time wizard, instead of the whole form wide open.
+      function collapseInputSections() {
+        [1, 2, 3].forEach(n => { const el = $(SECTION_STEP_IDS[n]); if (el) el.open = false; });
       }
       function showErrors(errors) {
         const banner = $('errorBanner');
@@ -2156,7 +2183,11 @@
       }
 
       function validateAndRender(scrollToResults) {
-        const errors = validate();
+        const rawErrors = getValidationErrors();
+        // A collapsed section (returning visitor) may hold the field an error refers to — open it
+        // so the error is actually reachable, not just named in the banner above the form.
+        if (!wizardActive) openSectionsForSteps([...new Set(rawErrors.map(e => e.step))]);
+        const errors = rawErrors.map(e => e.message);
         if (showErrors(errors)) return;
         renderSoftWarning('calcWarnBanner', [
           { condition: num('returnRate') > 15, message: `A ${num('returnRate')}% expected annual return looks unusually high — even the Optimistic preset above uses 9%. Double check for a typo.` }
@@ -2690,12 +2721,9 @@
             showWizardStep(n);
           } else {
             // Checklist mode: jump to and open that section in the classic full form
-            const targetIds = { 1: 'fieldsetPersonal', 2: 'fieldsetAccounts', 3: 'fieldsetAssumptions', 4: 'govBenefitsDetails' };
-            const el = $(targetIds[n]);
-            if (el) {
-              if (el.tagName === 'DETAILS') el.open = true;
-              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            openSectionsForSteps([n]);
+            const el = $(SECTION_STEP_IDS[n]);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         });
       });
@@ -2725,6 +2753,7 @@
         // Results stay hidden until the wizard is completed or skipped — no auto-render here.
       } else {
         if (loadedFromLink || hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
+        collapseInputSections();
         validateAndRender(false); // initial page load — show results in place, don't jump the page
         showSnapshotOnlyMode();
       }

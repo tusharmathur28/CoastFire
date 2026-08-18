@@ -1800,6 +1800,7 @@ table.compare-table th.col-b { color: var(--maple); }
 }
 
 .wizard-nav-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.wizard-nav-row[hidden] { display: none; }
 .wizard-skip-link {
   background: none; border: none; color: var(--ink-soft); font-size: 13px; text-decoration: underline;
   cursor: pointer; margin-left: auto; padding: 8px 4px;
