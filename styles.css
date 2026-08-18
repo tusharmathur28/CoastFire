@@ -774,7 +774,15 @@ h2.results-title {
 }
 
 .insights {
+  background: var(--paper-2);
+  border-radius: var(--radius);
+  padding: 22px 24px;
   margin-bottom: 32px;
+}
+
+.insights h3 {
+  margin: 0 0 4px;
+  font-size: 19px;
 }
 
 .insights ul {
@@ -784,9 +792,9 @@ h2.results-title {
 }
 
 .insights li {
-  padding: 12px 0;
+  padding: 13px 0;
   border-bottom: 1px solid var(--line);
-  font-size: 14.5px;
+  font-size: 15px;
   display: flex;
   gap: 10px;
 }
@@ -797,9 +805,11 @@ h2.results-title {
 
 .insights li .mark {
   flex: none;
-  font-weight: 700;
-  color: var(--gold-text-on-soft);
+  font-size: 15px;
+  line-height: 1.5;
 }
+
+.insights li:first-child { font-weight: 600; font-size: 15.5px; }
 
 .considerations {
   background: var(--paper-2);
@@ -833,6 +843,19 @@ h2.results-title {
   margin-top: 10px;
 }
 .considerations-legend + .consideration-item { margin-top: 0; }
+
+.considerations-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.considerations-grid .consideration-item { margin-top: 0; }
+@media(max-width: 900px) {
+  .considerations-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media(max-width: 640px) {
+  .considerations-grid { grid-template-columns: 1fr; }
+}
 
 .action-items-summary {
   font-size: 14px; color: var(--ink-soft); margin-bottom: 18px;
@@ -1197,7 +1220,6 @@ button.export:hover {
   background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
   padding: 16px 18px; margin: 20px 0; display: flex; flex-direction: column; gap: 10px;
 }
-.scenarios-panel h4 { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 8px; }
 .scenarios-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .scenarios-row select, .scenarios-row input[type="text"] {
   flex: 1; min-width: 180px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px;

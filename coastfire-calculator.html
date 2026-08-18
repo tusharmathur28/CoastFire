@@ -85,32 +85,6 @@
       <button type="button" class="sb-dismiss" id="dismissSampleBtn">Got it</button>
     </div>
 
-    <div class="scenarios-panel" id="scenariosPanel">
-      <h4>💾 My Scenarios</h4>
-      <div class="scenarios-row">
-        <select id="scenariosSelect"><option value="">— Select a saved scenario —</option></select>
-        <button type="button" class="ghost" id="loadScenarioBtn">Load</button>
-        <button type="button" class="ghost" id="deleteScenarioBtn">Delete</button>
-      </div>
-      <div class="scenarios-row">
-        <input type="text" id="scenarioNameInput" placeholder="Name this scenario, e.g. &quot;Retire at 55&quot;" maxlength="40">
-        <button type="button" class="primary" id="saveScenarioBtn">Save current as scenario</button>
-      </div>
-      <div class="scenarios-row">
-        <button type="button" class="ghost" id="exportAllBtn">⬇️ Export all data (JSON)</button>
-        <button type="button" class="ghost" id="importAllBtn">⬆️ Import data (JSON)</button>
-        <input type="file" id="importAllFile" accept="application/json,.json" hidden>
-      </div>
-      <div class="sp-note">Save as many scenarios as you like — e.g. "Retire at 55" vs "Retire at 60" — then load
-        either one any time to compare. Saved in this browser only.</div>
-      <div class="sp-note">Have two or more saved? <a href="/compare-scenarios">Compare them side by side →</a>
-      </div>
-      <div class="sp-note">Export downloads a single file with your current inputs and every saved scenario —
-        useful before clearing your browser, switching devices, or just keeping a backup. Import merges a
-        previously-exported file back in.</div>
-      <span class="scenario-feedback" id="scenarioFeedback" role="status" aria-live="polite">Saved!</span>
-    </div>
-
     <form id="calcForm">
 
       <div class="wizard-chrome" id="wizardChrome" hidden>
@@ -572,6 +546,11 @@
         </svg>
       </div>
 
+      <div class="insights">
+        <h3>What this means for you</h3>
+        <ul id="insightsList"></ul>
+      </div>
+
       <div class="roadmap-card">
         <h3>Your roadmap</h3>
         <div class="roadmap-track" id="roadmapTrack">
@@ -721,15 +700,14 @@
         </div>
       </details>
 
-      <div class="insights">
-        <h3 style="font-size:18px;">Insights</h3>
-        <ul id="insightsList"></ul>
-      </div>
-
-      <div class="considerations" id="considerationsSection">
-        <h3>Cross-border considerations</h3>
+      <details class="considerations card-collapsible" id="considerationsSection">
+        <summary>
+          <h3>Cross-border considerations</h3>
+          <span class="toggle-icon"></span>
+        </summary>
         <div class="subhead">General information, not tax or legal advice — rules below are commonly cited but you
           should confirm current treatment with a cross-border specialist.</div>
+        <div class="card-collapsible-body">
 
         <div class="considerations-legend">
           <span><span class="ci-icon">✅</span> Good news</span>
@@ -738,6 +716,7 @@
           <span><span class="ci-icon">ℹ️</span> Good to know</span>
         </div>
 
+        <div class="considerations-grid">
         <div class="consideration-item level-good">
           <div class="ci-title"><span class="ci-icon">✅</span>RRSP <span class="ci-badge">Treaty-protected</span></div>
           <div class="ci-body">Under the Canada–US tax treaty, the IRS treats your RRSP as a tax-deferred retirement
@@ -818,7 +797,9 @@
           <div class="ci-body">This calculator doesn't model cross-border taxes, so treat "Required at Retirement" as a
             pre-tax figure and build in a margin for tax drag on both sides of the border.</div>
         </div>
-      </div>
+        </div>
+        </div>
+      </details>
 
       <details class="card-collapsible" id="breakdownDetails">
         <summary>
@@ -933,6 +914,37 @@
         </dl>
       </div>
     </details>
+    <details class="scenarios-panel card-collapsible" id="scenariosPanel">
+      <summary>
+        <h3>💾 My Scenarios</h3>
+        <span class="toggle-icon"></span>
+      </summary>
+      <div class="card-collapsible-body">
+      <div class="scenarios-row">
+        <select id="scenariosSelect"><option value="">— Select a saved scenario —</option></select>
+        <button type="button" class="ghost" id="loadScenarioBtn">Load</button>
+        <button type="button" class="ghost" id="deleteScenarioBtn">Delete</button>
+      </div>
+      <div class="scenarios-row">
+        <input type="text" id="scenarioNameInput" placeholder="Name this scenario, e.g. &quot;Retire at 55&quot;" maxlength="40">
+        <button type="button" class="primary" id="saveScenarioBtn">Save current as scenario</button>
+      </div>
+      <div class="scenarios-row">
+        <button type="button" class="ghost" id="exportAllBtn">⬇️ Export all data (JSON)</button>
+        <button type="button" class="ghost" id="importAllBtn">⬆️ Import data (JSON)</button>
+        <input type="file" id="importAllFile" accept="application/json,.json" hidden>
+      </div>
+      <div class="sp-note">Save as many scenarios as you like — e.g. "Retire at 55" vs "Retire at 60" — then load
+        either one any time to compare. Saved in this browser only.</div>
+      <div class="sp-note">Have two or more saved? <a href="/compare-scenarios">Compare them side by side →</a>
+      </div>
+      <div class="sp-note">Export downloads a single file with your current inputs and every saved scenario —
+        useful before clearing your browser, switching devices, or just keeping a backup. Import merges a
+        previously-exported file back in.</div>
+      <span class="scenario-feedback" id="scenarioFeedback" role="status" aria-live="polite">Saved!</span>
+      </div>
+    </details>
+
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
       <ul>
@@ -1981,6 +1993,7 @@
         if (scrollToResults === undefined) scrollToResults = true;
         const res = compute();
         lastRes = res;
+        updateSnapshotBar();
         $('results').hidden = false;
 
         const first = res.rows[0];
@@ -2028,31 +2041,35 @@
         renderDonut(res, donutMode);
         drawIncomeStack(res);
 
+        // Each insight is tagged good/warning/info so the list can lead with the single most
+        // important takeaway (on track or not) and give a screen-reader-friendly icon per item,
+        // reusing the same ✅/⚠️/ℹ️ language as Cross-Border Considerations below.
         const insights = [];
-        insights.push(`Your combined portfolio today is ${fmt(first.combined, res.reportCurrency)}, converted using 1 CAD = ${res.exchangeRate} USD.`);
-        insights.push(`To sustain ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month in retirement (today's dollars) at a ${num('withdrawalRate')}% withdrawal rate, you'll need about ${fmt(res.requiredAtRetirement, res.reportCurrency)} by age ${res.retireAge}.`);
         if (res.coastYearIndex !== null) {
-          insights.push(`At your current contribution rate, you're projected to hit your CoastFIRE number around ${res.currentYear + res.coastYearIndex} (age ${res.currentAge + res.coastYearIndex}) — ${res.coastYearIndex} year${res.coastYearIndex === 1 ? '' : 's'} from now.`);
+          insights.push({ type: 'good', text: `You're on track to reach your CoastFIRE number around ${res.currentYear + res.coastYearIndex} (age ${res.currentAge + res.coastYearIndex}) — ${res.coastYearIndex} year${res.coastYearIndex === 1 ? '' : 's'} from now, at your current contribution rate.` });
           if (res.stopAtCoast === 'yes') {
-            insights.push(`Contributions are modeled to pause once you reach that number — the projection after that point relies purely on market growth.`);
+            insights.push({ type: 'info', text: `Contributions are modeled to pause once you reach that number — the projection after that point relies purely on market growth.` });
           }
         } else {
-          insights.push(`At your current contribution rate, you're not projected to reach your CoastFIRE number by age ${res.retireAge}. Try increasing contributions, extending your timeline, or revisiting your expected return.`);
+          insights.push({ type: 'warning', text: `You're not yet on track to reach your CoastFIRE number by age ${res.retireAge} at your current contribution rate. Try increasing contributions, extending your timeline, or revisiting your expected return.` });
         }
+        insights.push({ type: 'info', text: `Your combined portfolio today is ${fmt(first.combined, res.reportCurrency)}, converted using 1 CAD = ${res.exchangeRate} USD.` });
+        insights.push({ type: 'info', text: `To sustain ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month in retirement (today's dollars) at a ${num('withdrawalRate')}% withdrawal rate, you'll need about ${fmt(res.requiredAtRetirement, res.reportCurrency)} by age ${res.retireAge}.` });
         if (first.tfsa > 0) {
-          insights.push(`Your TFSA balance is growing in this model like any other account — but remember it isn't tax-sheltered from the IRS. Its real after-tax value in the US may be lower than shown.`);
+          insights.push({ type: 'warning', text: `Your TFSA balance is growing in this model like any other account — but remember it isn't tax-sheltered from the IRS. Its real after-tax value in the US may be lower than shown.` });
         }
         if (res.bridgeYears > 0) {
-          insights.push(`Government benefits start ${res.bridgeYears} year${res.bridgeYears === 1 ? '' : 's'} after your planned retirement age — that gap is funded 100% from your portfolio in this model before CPP, OAS, and Social Security kick in.`);
+          insights.push({ type: 'info', text: `Government benefits start ${res.bridgeYears} year${res.bridgeYears === 1 ? '' : 's'} after your planned retirement age — that gap is funded 100% from your portfolio in this model before CPP, OAS, and Social Security kick in.` });
         }
         if (res.annualGovBenefit > 0) {
-          insights.push(`Once claimed, your combined CPP + OAS + Social Security is projected to cover ${fmt(res.annualGovBenefit / 12, res.reportCurrency)}/month of your ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month expense target (today's dollars) — reducing how much your portfolio alone needs to fund.`);
+          insights.push({ type: 'good', text: `Once claimed, your combined CPP + OAS + Social Security is projected to cover ${fmt(res.annualGovBenefit / 12, res.reportCurrency)}/month of your ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month expense target (today's dollars) — reducing how much your portfolio alone needs to fund.` });
         }
         if (lifeEventsState.length) {
           const inRange = lifeEventsState.filter(ev => ev.age >= res.currentAge && ev.age <= res.retireAge);
-          insights.push(`${inRange.length} of your ${lifeEventsState.length} life event${lifeEventsState.length === 1 ? '' : 's'} fall${inRange.length === 1 ? 's' : ''} within this projection (age ${res.currentAge}-${res.retireAge}) and ${inRange.length === 1 ? 'is' : 'are'} applied at ${inRange.length === 1 ? 'its' : 'their'} scheduled age — an event larger than the account's balance at that time simply empties it rather than going negative.`);
+          insights.push({ type: 'info', text: `${inRange.length} of your ${lifeEventsState.length} life event${lifeEventsState.length === 1 ? '' : 's'} fall${inRange.length === 1 ? 's' : ''} within this projection (age ${res.currentAge}-${res.retireAge}) and ${inRange.length === 1 ? 'is' : 'are'} applied at ${inRange.length === 1 ? 'its' : 'their'} scheduled age — an event larger than the account's balance at that time simply empties it rather than going negative.` });
         }
-        $('insightsList').innerHTML = insights.map(t => `<li><span class="mark">→</span><span>${t}</span></li>`).join('');
+        const insightIcons = { good: '✅', warning: '⚠️', info: 'ℹ️' };
+        $('insightsList').innerHTML = insights.map(ins => `<li class="insight-${ins.type}"><span class="mark">${insightIcons[ins.type]}</span><span>${ins.text}</span></li>`).join('');
 
         const baseRate = res.exchangeRate;
         const rateOffsets = [-0.10, -0.05, -0.02, 0, 0.02, 0.05, 0.10];
