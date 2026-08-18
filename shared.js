@@ -789,6 +789,25 @@ function drawdownYear(bal, netNeed, strategy, grossOrdinaryCeiling) {
   return { withdrawals, shortfall: Math.max(0, remaining) };
 }
 
+// Tax on a given set of withdrawals — pulled out of the simulation loop so it can be called
+// against trial withdrawals (for grossing up) without touching real balances.
+function taxOnWithdrawals(withdrawals, standardDeduction, brackets, capGainsRate) {
+  const ordinaryGross = withdrawals.k401 + withdrawals.ira + withdrawals.rrsp;
+  const taxableOrdinaryIncome = Math.max(0, ordinaryGross - standardDeduction);
+  const usTaxOnOrdinary = progressiveTax(taxableOrdinaryIncome, brackets);
+  // FTC simplification: the RRSP "slice" of ordinary income is taxed at whichever is
+  // higher of its marginal US rate or the flat Canadian withholding — modeling a foreign
+  // tax credit that fully absorbs the smaller of the two. Real FTC mechanics (basket
+  // limits, carryovers) are out of scope; flagged as a consideration-item on the page.
+  const taxableIncomeExRrsp = Math.max(0, taxableOrdinaryIncome - withdrawals.rrsp);
+  const usTaxExRrsp = progressiveTax(taxableIncomeExRrsp, brackets);
+  const rrspMarginalUsTax = usTaxOnOrdinary - usTaxExRrsp;
+  const cdnWithholding = withdrawals.rrsp * RRSP_WITHHOLDING_RATES.periodic;
+  const effectiveOrdinaryTax = usTaxExRrsp + Math.max(rrspMarginalUsTax, cdnWithholding);
+  const capGainsTax = (withdrawals.nonregCad + withdrawals.taxableUsd) * capGainsRate;
+  return { usTaxOnOrdinary, cdnWithholding, totalTax: effectiveOrdinaryTax + capGainsTax };
+}
+
 // Full year-by-year retirement simulation for one withdrawal-order strategy. `overrides` is a
 // flat {fieldId: value} snapshot (e.g. from readStoredInputs(), plus the ddo* fields) — never
 // reads the DOM directly so it can run for any strategy without a live page.
@@ -839,22 +858,29 @@ function simulateDrawdown(overrides, strategyName) {
     const govBenefit = age >= benefitsStartAge ? annualGovBenefit : 0;
     const netNeed = Math.max(0, futureAnnualExpense - govBenefit);
 
-    const { withdrawals, shortfall } = drawdownYear(bal, netNeed, strategy, grossOrdinaryCeiling);
-
-    const ordinaryGross = withdrawals.k401 + withdrawals.ira + withdrawals.rrsp;
-    const taxableOrdinaryIncome = Math.max(0, ordinaryGross - standardDeduction);
-    const usTaxOnOrdinary = progressiveTax(taxableOrdinaryIncome, brackets);
-    // FTC simplification: the RRSP "slice" of ordinary income is taxed at whichever is
-    // higher of its marginal US rate or the flat Canadian withholding — modeling a foreign
-    // tax credit that fully absorbs the smaller of the two. Real FTC mechanics (basket
-    // limits, carryovers) are out of scope; flagged as a consideration-item on the page.
-    const taxableIncomeExRrsp = Math.max(0, taxableOrdinaryIncome - withdrawals.rrsp);
-    const usTaxExRrsp = progressiveTax(taxableIncomeExRrsp, brackets);
-    const rrspMarginalUsTax = usTaxOnOrdinary - usTaxExRrsp;
-    const cdnWithholding = withdrawals.rrsp * RRSP_WITHHOLDING_RATES.periodic;
-    const effectiveOrdinaryTax = usTaxExRrsp + Math.max(rrspMarginalUsTax, cdnWithholding);
-    const capGainsTax = (withdrawals.nonregCad + withdrawals.taxableUsd) * capGainsRate;
-    const totalTax = effectiveOrdinaryTax + capGainsTax;
+    // The withdrawal itself is taxed, so pulling exactly `netNeed` would leave less than
+    // netNeed in pocket after tax. Solve for the grossed-up withdrawal that nets netNeed
+    // after tax by iterating against a trial copy of the balances — tax depends on which
+    // accounts the money comes from, which depends on the amount, so this converges rather
+    // than being solvable in one step. Real balances are only touched once, after convergence,
+    // which is also why (and how) ending balances end up differing by strategy: strategies
+    // that owe more tax pull more out of the real accounts to cover it.
+    let grossTarget = netNeed;
+    let withdrawals, shortfall, taxResult;
+    for (let iter = 0; iter < 12; iter++) {
+      const trialBal = { ...bal };
+      const trial = drawdownYear(trialBal, grossTarget, strategy, grossOrdinaryCeiling);
+      withdrawals = trial.withdrawals;
+      shortfall = trial.shortfall;
+      taxResult = taxOnWithdrawals(withdrawals, standardDeduction, brackets, capGainsRate);
+      const nextTarget = netNeed + taxResult.totalTax;
+      if (Math.abs(nextTarget - grossTarget) < 0.5) { grossTarget = nextTarget; break; }
+      grossTarget = nextTarget;
+    }
+    // Apply the converged withdrawal to the real balances (single mutation for the year).
+    ({ withdrawals, shortfall } = drawdownYear(bal, grossTarget, strategy, grossOrdinaryCeiling));
+    taxResult = taxOnWithdrawals(withdrawals, standardDeduction, brackets, capGainsRate);
+    const totalTax = taxResult.totalTax;
     totalTaxPaid += totalTax;
 
     const depleted = shortfall > 0.01;
@@ -862,7 +888,7 @@ function simulateDrawdown(overrides, strategyName) {
 
     years.push({
       age, year: currentYear + i, spend: futureAnnualExpense, govBenefit, netNeed,
-      withdrawals: { ...withdrawals }, usTax: usTaxOnOrdinary, cdnWithholding, totalTax,
+      withdrawals: { ...withdrawals }, usTax: taxResult.usTaxOnOrdinary, cdnWithholding: taxResult.cdnWithholding, totalTax,
       endBalances: { ...bal }, depleted
     });
 

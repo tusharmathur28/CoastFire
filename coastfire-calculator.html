@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 
 <body>
@@ -151,6 +151,14 @@
               <option value="monthly" selected>Monthly</option>
               <option value="annual">Annually</option>
             </select>
+          </div>
+        </div>
+        <div class="section-explainer" style="margin-top:16px;">What you expect to spend each month once retired,
+          in today's dollars — we'll automatically adjust this for inflation between now and your retirement date.</div>
+        <div class="grid3" data-step="1">
+          <div class="field">
+            <label for="monthlyExpenses">Monthly expenses in retirement (<span id="expenseCurrencyLabel">USD</span>, today's dollars)</label>
+            <input type="number" id="monthlyExpenses" value="5000" min="0" step="50">
           </div>
         </div>
       </fieldset>
@@ -361,20 +369,8 @@
         <div class="sample-banner warn-banner" id="calcWarnBanner" hidden></div>
       </fieldset>
 
-      <fieldset>
-        <legend class="section-title"><span class="num">04</span> Retirement needs</legend>
-        <div class="section-explainer">What you expect to spend each month once retired, in today's dollars — we'll
-          automatically adjust this for inflation between now and your retirement date.</div>
-        <div class="grid3" data-step="1">
-          <div class="field">
-            <label for="monthlyExpenses">Monthly expenses in retirement (<span id="expenseCurrencyLabel">USD</span>, today's dollars)</label>
-            <input type="number" id="monthlyExpenses" value="5000" min="0" step="50">
-          </div>
-        </div>
-      </fieldset>
-
       <details class="collapsible-section" id="govBenefitsDetails">
-        <summary class="section-title"><span class="num">05</span> Government benefits
+        <summary class="section-title"><span class="num">04</span> Government benefits
           <span class="collapse-teaser">optional — click to expand</span></summary>
         <div class="collapsible-body">
           <div class="section-explainer">Optional, but including CPP, OAS, and Social Security can meaningfully lower
@@ -445,7 +441,7 @@
       </details>
 
       <details class="collapsible-section" id="lifeEventsDetails">
-        <summary class="section-title"><span class="num">06</span> Life events
+        <summary class="section-title"><span class="num">05</span> Life events
           <span class="collapse-teaser">optional — click to expand</span></summary>
         <div class="collapsible-body" data-step="4">
           <div class="section-explainer">One-time lump sums in or out of a specific account at a specific age — a
@@ -486,6 +482,21 @@
 
       <div class="result-headline" id="resultHeadline" role="status" aria-live="polite"></div>
 
+      <div class="results-tools-jump results-page-nav">
+        <span class="rtj-label">On this page:</span>
+        <a href="#statsSection">Key numbers</a>
+        <a href="#insightsSection">What this means</a>
+        <a href="#roadmapSection">Roadmap</a>
+        <a href="#compositionSection">Where money sits</a>
+        <a href="#chartSection">Chart</a>
+        <a href="#incomeStackSection">Income sources</a>
+        <a href="#sensitivityDetails">FX sensitivity</a>
+        <a href="#goalSeekDetails">Goal seek</a>
+        <a href="#considerationsSection">Considerations</a>
+        <a href="#breakdownDetails">Yearly breakdown</a>
+        <a href="#scenariosPanel">My Scenarios</a>
+      </div>
+
       <div class="results-tools-jump">
         <span class="rtj-label">Jump to:</span>
         <a href="/action-items">Action Items</a>
@@ -498,7 +509,7 @@
         <a href="/">All tools ↑</a>
       </div>
 
-      <div class="stamp-row">
+      <div class="stamp-row" id="statsSection">
         <div class="stat-cards">
           <div class="stat">
             <div class="label">Combined portfolio today</div>
@@ -546,19 +557,19 @@
         </svg>
       </div>
 
-      <div class="insights">
+      <div class="insights" id="insightsSection">
         <h3>What this means for you</h3>
         <ul id="insightsList"></ul>
       </div>
 
-      <div class="roadmap-card">
+      <div class="roadmap-card" id="roadmapSection">
         <h3>Your roadmap</h3>
         <div class="roadmap-track" id="roadmapTrack">
           <div class="roadmap-fill" id="roadmapFill"></div>
         </div>
       </div>
 
-      <div class="composition-card">
+      <div class="composition-card" id="compositionSection">
         <div class="composition-head">
           <h3>Where your money sits today</h3>
           <div class="view-tabs" id="donutTabs" role="tablist" aria-label="Portfolio composition view">
@@ -600,7 +611,7 @@
         </div>
       </div>
 
-      <div class="chart-card">
+      <div class="chart-card" id="chartSection">
         <div class="chart-controls">
           <div class="chart-legend" id="chartLegendSingle">
             <span><span class="legend-dot" style="background:var(--harbor);"></span>Combined portfolio</span>
@@ -628,7 +639,7 @@
         <div class="mc-caveat" id="mcCaveat" style="display:none;">Volatility (±<span id="mcStdev">—</span>%/yr) is an illustrative planning range tied to your Conservative/Base/Optimistic preset, not derived from your actual asset mix. Only the portfolio path is randomized — the CoastFIRE target line still uses your fixed return-rate assumption.</div>
       </div>
 
-      <div class="income-stack-card">
+      <div class="income-stack-card" id="incomeStackSection">
         <h3>Retirement income sources</h3>
         <div class="subhead">From retirement to 20 years later — how much of your annual expenses comes from your portfolio versus CPP/OAS/Social Security once claimed.</div>
         <div class="chart-legend">
@@ -960,7 +971,7 @@
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=1"></script>
+  <script src="shared.js?v=2"></script>
   <script>
     (function () {
       initTheme();
@@ -2776,6 +2787,23 @@
       });
 
       fetchExchangeRate(true);
+    })();
+
+    // A few "On this page" / cross-tool links (e.g. Action Items' "See Cross-Border Notes")
+    // point at collapsed <details> sections — jumping there without opening them just lands on
+    // a closed summary, so open the matching section whenever the hash targets one.
+    (function () {
+      function openDetailsForHash(hash) {
+        if (!hash || hash.length < 2) return;
+        const el = document.querySelector(hash);
+        if (el && el.tagName === 'DETAILS') el.open = true;
+      }
+      openDetailsForHash(window.location.hash);
+      window.addEventListener('hashchange', () => openDetailsForHash(window.location.hash));
+      document.addEventListener('click', e => {
+        const link = e.target.closest('a[href^="#"]');
+        if (link) openDetailsForHash(link.getAttribute('href'));
+      });
     })();
   </script>
 </body>

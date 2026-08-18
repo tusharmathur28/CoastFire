@@ -1630,6 +1630,16 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
 }
 .results-tools-jump a { color: var(--harbor); text-decoration: none; }
 .results-tools-jump a:hover { text-decoration: underline; }
+/* "On this page" row sits right above the cross-tool "Jump to" row — tighten the gap between
+   them and dial its links down a notch so the two don't compete for attention. */
+.results-page-nav { margin-bottom: 10px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+.results-page-nav a { font-size: 12.5px; }
+
+/* Sticky wizard-chrome header stays pinned while scrolling the results below it — give
+   in-page anchor targets enough top clearance that it doesn't cover the heading they jump to. */
+#statsSection, #insightsSection, #roadmapSection, #compositionSection, #chartSection,
+#incomeStackSection, #sensitivityDetails, #goalSeekDetails, #considerationsSection,
+#breakdownDetails, #scenariosPanel { scroll-margin-top: 160px; }
 
 .tool-card {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
@@ -1665,6 +1675,7 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
 }
 .result-strip .rs-stat { background: var(--surface); padding: 16px 18px; }
 .result-strip .rs-stat .rs-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 6px; }
+.result-strip .rs-stat .rs-label .rs-label-note { text-transform: none; letter-spacing: normal; opacity: .75; }
 .result-strip .rs-stat .rs-value { font-family: 'IBM Plex Mono', monospace; font-size: 19px; font-weight: 600; }
 
 .deferral-note {

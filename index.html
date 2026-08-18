@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 
 <body>
@@ -97,11 +97,11 @@
           <div class="rs-value" id="snapGovBenefit">—</div>
         </div>
         <div class="rs-stat" id="snapRrspTile" hidden>
-          <div class="rs-label">Est. RRSP withholding</div>
+          <div class="rs-label">Est. RRSP withholding <span class="rs-label-note">(at retirement)</span></div>
           <div class="rs-value" id="snapRrspWithholding">—</div>
         </div>
         <div class="rs-stat" id="snapDtTile" hidden>
-          <div class="rs-label">Est. departure tax</div>
+          <div class="rs-label">Est. departure tax <span class="rs-label-note">(on today's balances)</span></div>
           <div class="rs-value" id="snapDepartureTax">—</div>
         </div>
       </div>
@@ -116,19 +116,19 @@
         <h3>Not sure where to start?</h3>
         <p class="card-sub">Answer one quick question and we'll point you at the right tool.</p>
         <div class="quiz-options">
-          <button type="button" class="quiz-option" data-next="/departure-tax">
+          <button type="button" class="quiz-option" data-persona="leaving">
             <span class="qo-icon">🛫</span>
             <span class="qo-label">Still in Canada, planning a move to the US</span>
           </button>
-          <button type="button" class="quiz-option" data-next="step2">
+          <button type="button" class="quiz-option" data-persona="us-resident">
             <span class="qo-icon">🇺🇸</span>
             <span class="qo-label">Already living in the US</span>
           </button>
-          <button type="button" class="quiz-option" data-next="/moving-back">
+          <button type="button" class="quiz-option" data-persona="moving-back">
             <span class="qo-icon">🍁</span>
             <span class="qo-label">Thinking about moving back to Canada</span>
           </button>
-          <button type="button" class="quiz-option" data-next="/coastfire-calculator">
+          <button type="button" class="quiz-option" data-persona="exploring">
             <span class="qo-icon">🤔</span>
             <span class="qo-label">Just exploring — not sure yet</span>
           </button>
@@ -136,27 +136,10 @@
       </div>
 
       <div class="quiz-step" id="quizStep2" hidden>
-        <h3>What do you want to figure out first?</h3>
+        <h3 id="quizStep2Heading">What do you want to figure out first?</h3>
         <p class="card-sub">You can always visit the other tools later — nothing here requires filling out the
           others first.</p>
-        <div class="quiz-options">
-          <button type="button" class="quiz-option" data-next="/coastfire-calculator">
-            <span class="qo-icon">🧭</span>
-            <span class="qo-label">My overall CoastFIRE / retirement number</span>
-          </button>
-          <button type="button" class="quiz-option" data-next="/benefit-timing">
-            <span class="qo-icon">📅</span>
-            <span class="qo-label">When to claim CPP, OAS &amp; Social Security</span>
-          </button>
-          <button type="button" class="quiz-option" data-next="/rrsp-withholding">
-            <span class="qo-icon">🏦</span>
-            <span class="qo-label">The tax hit on drawing down my RRSP</span>
-          </button>
-          <button type="button" class="quiz-option" data-next="/action-items">
-            <span class="qo-icon">✅</span>
-            <span class="qo-label">Just show me my to-do list</span>
-          </button>
-        </div>
+        <div class="quiz-options" id="quizStep2Options"></div>
         <button type="button" class="quiz-back" id="quizBackBtn">← Back</button>
       </div>
     </section>
@@ -229,7 +212,7 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice</footer>
   </div>
 
-  <script src="shared.js?v=1"></script>
+  <script src="shared.js?v=2"></script>
   <script>
     initTheme();
     initThemeToggle();
@@ -275,17 +258,67 @@
     })();
 
     (function () {
+      // Every first-answer leads to a second, persona-tailored question rather than three of
+      // the four jumping straight to one tool while only "Already living in the US" got a
+      // follow-up — same one extra click for everyone, but each list is still specific to what
+      // that person actually asked.
+      const QUIZ_PERSONAS = {
+        leaving: {
+          heading: 'What do you want to figure out first?',
+          options: [
+            { icon: '🛫', label: 'Estimate my departure tax bill', next: '/departure-tax' },
+            { icon: '🧭', label: 'My overall CoastFIRE / retirement number', next: '/coastfire-calculator' },
+            { icon: '🏦', label: 'What happens to my RRSP once I leave', next: '/rrsp-withholding' },
+            { icon: '✅', label: 'Just show me my to-do list', next: '/action-items' }
+          ]
+        },
+        'us-resident': {
+          heading: 'What do you want to figure out first?',
+          options: [
+            { icon: '🧭', label: 'My overall CoastFIRE / retirement number', next: '/coastfire-calculator' },
+            { icon: '📅', label: 'When to claim CPP, OAS & Social Security', next: '/benefit-timing' },
+            { icon: '🏦', label: 'The tax hit on drawing down my RRSP', next: '/rrsp-withholding' },
+            { icon: '✅', label: 'Just show me my to-do list', next: '/action-items' }
+          ]
+        },
+        'moving-back': {
+          heading: 'What do you want to figure out first?',
+          options: [
+            { icon: '🍁', label: 'What happens to each account when I move back', next: '/moving-back' },
+            { icon: '🧭', label: 'My overall CoastFIRE / retirement number', next: '/coastfire-calculator' },
+            { icon: '🧮', label: 'How to sequence withdrawals before I go', next: '/drawdown-optimizer' },
+            { icon: '✅', label: 'Just show me my to-do list', next: '/action-items' }
+          ]
+        },
+        exploring: {
+          heading: 'What sounds most useful to start with?',
+          options: [
+            { icon: '🧭', label: 'My overall CoastFIRE / retirement number', next: '/coastfire-calculator' },
+            { icon: '🛫', label: 'What departure tax looks like', next: '/departure-tax' },
+            { icon: '🍁', label: 'What moving back to Canada looks like', next: '/moving-back' },
+            { icon: '✅', label: 'Just show me my to-do list', next: '/action-items' }
+          ]
+        }
+      };
+
       const quiz = document.getElementById('routeQuiz');
       if (!quiz) return;
       quiz.addEventListener('click', e => {
         const opt = e.target.closest('.quiz-option');
         if (opt) {
-          const next = opt.getAttribute('data-next');
-          if (next === 'step2') {
+          const persona = opt.getAttribute('data-persona');
+          if (persona) {
+            const config = QUIZ_PERSONAS[persona];
+            document.getElementById('quizStep2Heading').textContent = config.heading;
+            document.getElementById('quizStep2Options').innerHTML = config.options.map(o => `
+              <button type="button" class="quiz-option" data-next="${o.next}">
+                <span class="qo-icon">${o.icon}</span>
+                <span class="qo-label">${o.label}</span>
+              </button>`).join('');
             document.getElementById('quizStep1').hidden = true;
             document.getElementById('quizStep2').hidden = false;
           } else {
-            window.location.href = next;
+            window.location.href = opt.getAttribute('data-next');
           }
           return;
         }
