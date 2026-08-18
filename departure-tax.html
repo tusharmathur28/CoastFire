@@ -86,7 +86,7 @@
     <div class="tool-card">
       <h3>What's actually taxed</h3>
       <div class="card-sub">Non-registered investments, foreign real estate, crypto, and private business shares are
-        generally caught by the deemed disposition. Enter fair market value (what it's worth today) and adjusted
+        generally caught by the <button type="button" class="gterm" data-term="deemedDisposition">deemed disposition</button>. Enter fair market value (what it's worth today) and adjusted
         cost base (what you originally paid) for each.</div>
 
       <div class="prefill-note"><span class="pn-icon">↺</span>Fair market value below defaults to your
@@ -119,6 +119,7 @@
           <div class="typical-range">Not sure? Rough starting points: ~20-25% for modest income, ~35-45% for mid-to-upper income, ~50-54% at the very top bracket depending on province.</div>
         </div>
       </div>
+      <div class="sample-banner warn-banner" id="dtWarnBanner" hidden></div>
     </div>
 
     <div class="tool-card">
@@ -164,6 +165,25 @@
       </div>
     </div>
 
+    <details class="help-section">
+      <summary>❓ Glossary &amp; how this is calculated</summary>
+      <div class="help-body">
+        <dl class="glossary">
+          <dt>Deemed disposition</dt>
+          <dd>Canada's departure-tax rule: when you cease Canadian tax residency, the CRA treats most of your
+            property as sold at fair market value the day before you leave, even though you didn't actually sell it.
+          </dd>
+        </dl>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:16px 0 0;"><strong>Why only 50% is taxable?</strong>
+          Canada's capital gains inclusion rate — the same rate that applies to a normal sale — includes half of a
+          capital gain in taxable income; the other half is untaxed.</p>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:10px 0 0;"><strong>Why does my marginal rate matter
+            here?</strong> The taxable half of your gain is added on top of your other departure-year income and
+          taxed at your marginal rate for that year, not a flat rate — so the number above is only as accurate as
+          the rate you enter.</p>
+      </div>
+    </details>
+
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
       <ul>
@@ -183,7 +203,9 @@
       initTheme();
       initThemeToggle();
       initStaleBanner();
+      initGlossaryTerms();
       restoreInputs();
+      seedLiveFxRateIfNeeded();
 
       const DEFERRAL_TAX_THRESHOLD = 16500; // approx. federal tax owing (~$100k gain) before CRA requires security
 
@@ -194,6 +216,11 @@
         const taxable = totalGain * 0.5;
         const rate = Math.max(0, Math.min(100, num('dtMarginalRate'))) / 100;
         const taxOwing = taxable * rate;
+
+        renderSoftWarning('dtWarnBanner', [
+          { condition: num('dtMarginalRate') > 60, message: `A ${num('dtMarginalRate')}% marginal rate looks too high — even the top provincial bracket tops out around 54%. Double-check for a typo.` },
+          { condition: num('dtMarginalRate') < 0, message: 'Marginal tax rate cannot be negative.' }
+        ]);
 
         $('dtGain').textContent = fmt(totalGain, 'CAD');
         $('dtTaxable').textContent = fmt(taxable, 'CAD');

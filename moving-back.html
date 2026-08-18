@@ -145,6 +145,25 @@
       </div>
     </div>
 
+    <details class="help-section">
+      <summary>❓ Glossary &amp; how this is calculated</summary>
+      <div class="help-body">
+        <dl class="glossary">
+          <dt>Exit tax (US)</dt>
+          <dd>The US's own departure tax (IRC Section 877A) for certain long-term Green Card holders or citizens
+            who expatriate — can deem worldwide assets sold on the way out, separate from Canada's deemed
+            disposition.</dd>
+          <dt>Long-Term Resident</dt>
+          <dd>A Green Card holder who has held it in 8 or more of the last 15 tax years — crossing this threshold
+            can subject you to the US exit tax if you later give up the Green Card.</dd>
+        </dl>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:16px 0 0;"><strong>What makes someone a "covered
+            expatriate"?</strong> A Long-Term Resident who gives up their Green Card is covered if they meet any of
+          three tests: worldwide net worth at or above the threshold shown above, average annual US tax liability
+          above the threshold shown above, or failing to certify 5 years of full US tax compliance on Form 8854.</p>
+      </div>
+    </details>
+
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
       <ul>
@@ -164,7 +183,9 @@
       initTheme();
       initThemeToggle();
       initStaleBanner();
+      initGlossaryTerms();
       restoreInputs();
+      seedLiveFxRateIfNeeded();
 
       const MB_NET_WORTH_THRESHOLD = 2000000;    // 2026, fixed, not inflation-adjusted
       const MB_TAX_LIABILITY_THRESHOLD = 211000; // 2026, indexed annually
@@ -200,8 +221,9 @@
             const taxTest = taxLiability > 0 && taxLiability > MB_TAX_LIABILITY_THRESHOLD;
             if (netWorthTest || taxTest) {
               statusHtml += ciHtml('warning', '⚠️', 'You may be a "covered expatriate"',
-                `You've held Green Card status for ${years} of the last 15 years, crossing the 8-year Long-Term
-                Resident threshold. Based on what you entered, you likely meet at least one covered-expatriate test
+                `You've held Green Card status for ${years} of the last 15 years, crossing the 8-year
+                <button type="button" class="gterm" data-term="longTermResident">Long-Term Resident</button>
+                threshold. Based on what you entered, you likely meet at least one covered-expatriate test
                 (net worth ≥ ${fmt(MB_NET_WORTH_THRESHOLD, 'USD')}, or average tax liability over
                 ${fmt(MB_TAX_LIABILITY_THRESHOLD, 'USD')}/year). If you formally terminate your Green Card, the IRS
                 may treat it as a deemed sale of your worldwide assets at fair market value, with gains above
@@ -218,14 +240,16 @@
           } else {
             statusHtml += ciHtml('good', '✅', 'Long-Term Resident rules don\'t apply yet',
               `You've held Green Card status for ${years} of the last 15 years — under the 8-year threshold, so the
-              exit tax rules for long-term residents don't apply to you, regardless of net worth or tax liability.`,
+              <button type="button" class="gterm" data-term="exitTax">exit tax</button> rules for long-term
+              residents don't apply to you, regardless of net worth or tax liability.`,
               'Under 8 years');
           }
         }
 
         if (!isCitizen && !hasGreenCard) {
           statusHtml += ciHtml('info', 'ℹ️', 'No US exit tax exposure expected',
-            `As a non-citizen without a Green Card (e.g. on a work visa), there's typically no US exit tax when your
+            `As a non-citizen without a Green Card (e.g. on a work visa), there's typically no
+            <button type="button" class="gterm" data-term="exitTax">US exit tax</button> when your
             status ends. You'll still need to file a final US tax return for your departure year — often a
             dual-status return covering the period you were a US tax resident.`);
         }

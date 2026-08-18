@@ -1159,6 +1159,40 @@ button.export:hover {
 .stale-banner button:not(.sb-dismiss):hover { background: #96792a; }
 .stale-banner[hidden] { display: none; }
 
+.sample-banner.warn-banner { background: var(--gold-soft); border-color: var(--gold); margin: 12px 0; padding: 12px 16px; }
+.warn-banner .sb-text { color: var(--gold-text-on-soft); }
+.warn-banner[hidden] { display: none; }
+
+.gterm {
+  display: inline;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--harbor);
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: help;
+}
+.gterm:hover, .gterm:focus-visible { color: var(--ink); }
+
+.gterm-popover {
+  position: absolute;
+  z-index: 200;
+  max-width: 300px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .15);
+}
+.gterm-popover strong { color: var(--harbor); }
+.gterm-popover[hidden] { display: none; }
+
 .scenarios-panel {
   background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
   padding: 16px 18px; margin: 20px 0; display: flex; flex-direction: column; gap: 10px;
@@ -1597,6 +1631,10 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
 
 .goal-seek-card .view-tabs { margin-bottom: 16px; }
 .goal-seek-card .reassurance-box { margin-top: 14px; margin-bottom: 0; }
+
+.snapshot-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
 
 .result-strip {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;

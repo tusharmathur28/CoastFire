@@ -103,8 +103,18 @@
       <div class="card-sub">Both scenarios start from today (year zero) — the x-axis shows years from now, not
         calendar age, since the two scenarios can span different timelines.</div>
       <div class="chart-legend" id="compareChartLegend"></div>
-      <canvas id="compareChart" height="260"></canvas>
+      <canvas id="compareChart" height="260" role="img" aria-label="Line chart comparing the two scenarios' combined portfolio value over time"></canvas>
     </div>
+
+    <details class="help-section">
+      <summary>❓ How this comparison works</summary>
+      <div class="help-body">
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:0;">Each saved scenario is re-run through the same
+          CoastFIRE projection engine as the calculator itself, using exactly the inputs it had when you saved it
+          — including its own exchange rate and reporting currency. Changing your current inputs on the calculator
+          afterward doesn't affect a saved scenario; you'd need to save it again under the same name to update it.</p>
+      </div>
+    </details>
 
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
@@ -125,6 +135,7 @@
       initTheme();
       initThemeToggle();
       initStaleBanner();
+      seedLiveFxRateIfNeeded();
       window.onThemeChange = () => {
         if (!$('compareChartCard').hidden) renderScenarioComparison();
       };
@@ -202,6 +213,9 @@
         $('compareChartLegend').innerHTML =
           `<span><span class="legend-dot" style="background:${colorA};"></span>${nameA} (${resA.reportCurrency})</span>` +
           `<span><span class="legend-dot" style="background:${colorB};"></span>${nameB} (${resB.reportCurrency})</span>`;
+
+        const lastA = resA.rows[resA.rows.length - 1], lastB = resB.rows[resB.rows.length - 1];
+        canvas.setAttribute('aria-label', `Line chart comparing ${nameA} (ending at ${fmt(lastA.combined, resA.reportCurrency)}) and ${nameB} (ending at ${fmt(lastB.combined, resB.reportCurrency)}) over time.`);
       }
 
       function renderScenarioComparison() {

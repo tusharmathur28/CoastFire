@@ -87,7 +87,8 @@
             <option data-rate-key="periodic">RRIF periodic payments — 15% treaty rate</option>
             <option data-rate-key="resident">I'll be a Canadian resident when I withdraw — no withholding</option>
           </select>
-          <div class="label-plain">The 15% rate only applies to true periodic payments from a RRIF, not a single
+          <div class="label-plain">The 15% rate only applies to true periodic payments from a
+            <button type="button" class="gterm" data-term="rrif">RRIF</button>, not a single
             lump-sum RRSP collapse — you generally need to convert your RRSP to a RRIF first.</div>
         </div>
         <div class="field">
@@ -98,6 +99,7 @@
             retirement from the CoastFIRE Calculator — adjust if you expect to draw it down differently.</div>
         </div>
       </div>
+      <div class="sample-banner warn-banner" id="rwWarnBanner" hidden></div>
     </div>
 
     <div class="tool-card">
@@ -136,13 +138,31 @@
           the 15% treaty rate on the entire amount, not just the CRA minimum.</div>
       </div>
       <div class="consideration-item level-action">
-        <div class="ci-title"><span class="ci-icon">📋</span>Section 217 election</div>
+        <div class="ci-title"><span class="ci-icon">📋</span><button type="button" class="gterm" data-term="section217">Section 217 election</button></div>
         <div class="ci-body">Non-residents can elect under Section 217 to be taxed on Canadian-source pension
           income as if they were still a resident, potentially reducing the effective rate below the withholding
           rate if your total income is modest. This is a real option worth reviewing with an accountant closer to
           retirement, not something this estimator models.</div>
       </div>
     </div>
+
+    <details class="help-section">
+      <summary>❓ Glossary &amp; how this is calculated</summary>
+      <div class="help-body">
+        <dl class="glossary">
+          <dt>Withholding tax</dt>
+          <dd>Tax withheld at source by Canada on RRSP/RRIF payments to a non-resident — 25% on a lump sum, 15% on
+            periodic payments under the Canada-US tax treaty — before any additional US tax you may owe.</dd>
+          <dt>RRIF</dt>
+          <dd>Registered Retirement Income Fund — what an RRSP typically converts into to start mandatory minimum
+            withdrawals, usually by the end of the year you turn 71.</dd>
+        </dl>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:16px 0 0;"><strong>Why does the withdrawal method
+            change the rate?</strong> The Canada-US tax treaty sets a lower 15% rate specifically for true periodic
+          RRIF payments, versus 25% for a one-time lump-sum RRSP collapse — the treaty treats a steady pension-like
+          income stream differently from a single large payout.</p>
+      </div>
+    </details>
 
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
@@ -163,6 +183,8 @@
       initTheme();
       initThemeToggle();
       initStaleBanner();
+      initGlossaryTerms();
+      seedLiveFxRateIfNeeded();
 
       // Option values come from the shared RRSP_WITHHOLDING_RATES constant (shared.js) rather
       // than being hardcoded here a second time — must run before restoreInputs() so a saved
@@ -196,6 +218,10 @@
         $('rwRate').textContent = Math.round(rate * 100) + '%';
         $('rwWithheld').textContent = fmt(withheld, 'CAD');
         $('rwNet').textContent = fmt(net, 'CAD');
+
+        renderSoftWarning('rwWarnBanner', [
+          { condition: balance > 10000000, message: `${fmt(balance, 'CAD')} is an unusually large projected RRSP balance — double check for an extra zero or a currency mix-up.` }
+        ]);
 
         const note = $('rwNote');
         if (balance <= 0) {

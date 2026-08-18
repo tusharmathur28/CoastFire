@@ -69,7 +69,8 @@
       <a class="tool-breadcrumb" href="/">&larr; All tools</a>
       <h2>📅 When Should You Claim CPP, OAS &amp; Social Security?</h2>
       <p class="tool-sub">Claiming earlier means smaller checks for longer; delaying means bigger checks for fewer
-        years. This shows the trade-off using your own numbers — and remember, the Totalization Agreement helps you
+        years. This shows the trade-off using your own numbers — and remember, the
+        <button type="button" class="gterm" data-term="totalization">Totalization Agreement</button> helps you
         qualify across both countries but doesn't change these per-country reduction and delay formulas.</p>
     </div>
 
@@ -98,21 +99,21 @@
       <div class="claim-grid">
         <div class="claim-col">
           <h4><span class="chip ca">CA</span> CPP (60-70)</h4>
-          <input type="range" id="claimCppAge" min="60" max="70" step="1" value="65" style="width:100%;accent-color:var(--harbor);">
+          <input type="range" id="claimCppAge" min="60" max="70" step="1" value="65" aria-label="Age to claim CPP" style="width:100%;accent-color:var(--harbor);">
           <div class="slider-val" id="claimCppAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 65</div>
           <div class="claim-amount" id="claimCppAmount">—</div>
           <div class="claim-factor" id="claimCppFactor">—</div>
         </div>
         <div class="claim-col">
           <h4><span class="chip ca">CA</span> OAS (65-70)</h4>
-          <input type="range" id="claimOasAge" min="65" max="70" step="1" value="65" style="width:100%;accent-color:var(--harbor);">
+          <input type="range" id="claimOasAge" min="65" max="70" step="1" value="65" aria-label="Age to claim OAS" style="width:100%;accent-color:var(--harbor);">
           <div class="slider-val" id="claimOasAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 65</div>
           <div class="claim-amount" id="claimOasAmount">—</div>
           <div class="claim-factor" id="claimOasFactor">—</div>
         </div>
         <div class="claim-col">
           <h4><span class="chip us">US</span> Social Security (62-70)</h4>
-          <input type="range" id="claimSsAge" min="62" max="70" step="1" value="67" style="width:100%;accent-color:var(--harbor);">
+          <input type="range" id="claimSsAge" min="62" max="70" step="1" value="67" aria-label="Age to claim Social Security" style="width:100%;accent-color:var(--harbor);">
           <div class="slider-val" id="claimSsAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 67</div>
           <div class="claim-amount" id="claimSsAmount">—</div>
           <div class="claim-factor" id="claimSsFactor">—</div>
@@ -143,6 +144,22 @@
       </div>
     </div>
 
+    <details class="help-section">
+      <summary>❓ Glossary &amp; how this is calculated</summary>
+      <div class="help-body">
+        <dl class="glossary">
+          <dt>Totalization</dt>
+          <dd>The Canada-US Social Security Agreement — lets you combine CPP/QPP and US Social Security credits to
+            qualify for benefits you would not qualify for on either country's work history alone.</dd>
+        </dl>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:16px 0 0;"><strong>How do the early/late adjustments
+            work?</strong> CPP shrinks about 0.6%/month claimed before 65 and grows about 0.7%/month claimed after,
+          OAS grows about 0.6%/month delayed past 65, and Social Security shrinks up to 5/9% per month for the
+          first 36 months before your full retirement age (67) and 5/12% per month beyond that, then grows about
+          2/3%/month delayed past 67 — all standard government formulas, not estimates.</p>
+      </div>
+    </details>
+
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
       <ul>
@@ -162,7 +179,9 @@
       initTheme();
       initThemeToggle();
       initStaleBanner();
+      initGlossaryTerms();
       restoreInputs();
+      seedLiveFxRateIfNeeded();
 
       function strategyTableHtml(label, baseAmount, factorFn, minAge, maxAge, chosenAge, planToAge, currency) {
         const strategies = [

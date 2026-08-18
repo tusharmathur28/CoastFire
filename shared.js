@@ -85,6 +85,129 @@ function initStaleBanner() {
 }
 
 // ==================================================================
+// Glossary tooltips — a shared, accessible popover for cross-border jargon (PFIC, FBAR,
+// deemed disposition, etc.). Any page marks up a term as
+// `<button type="button" class="gterm" data-term="pfic">PFIC</button>` and calls
+// initGlossaryTerms() once; one popover element is created lazily and reused for every term
+// on the page, opened on click/hover/focus and closed on Escape, outside click, or scroll.
+// ==================================================================
+const GLOSSARY = {
+  pfic: { label: 'PFIC', def: 'Passive Foreign Investment Company — how the IRS classifies most non-US mutual funds and ETFs, including most Canadian ones. Owning one as a US person can trigger punitive tax treatment and extra annual filing (Form 8621).' },
+  fbar: { label: 'FBAR', def: 'A FinCEN report (not a tax form) that US persons must file if the combined balance of their non-US financial accounts exceeded $10,000 at any point in the year.' },
+  fatca: { label: 'FATCA', def: 'Foreign Account Tax Compliance Act — requires foreign banks to report US-person account holders to the IRS, and requires those account holders to file Form 8938 above certain thresholds.' },
+  deemedDisposition: { label: 'Deemed disposition', def: "Canada's departure-tax rule: when you cease Canadian tax residency, the CRA treats most of your property as sold at fair market value the day before you leave, even though you didn't actually sell it." },
+  totalization: { label: 'Totalization', def: 'The Canada-US Social Security Agreement — lets you combine CPP/QPP and US Social Security credits to qualify for benefits you would not qualify for on either country\'s work history alone.' },
+  withholdingTax: { label: 'Withholding tax', def: 'Tax withheld at source by Canada on RRSP/RRIF payments to a non-resident — 25% on a lump sum, 15% on periodic payments under the Canada-US tax treaty — before any additional US tax you may owe.' },
+  rrif: { label: 'RRIF', def: 'Registered Retirement Income Fund — what an RRSP typically converts into to start mandatory minimum withdrawals, usually by the end of the year you turn 71.' },
+  exitTax: { label: 'Exit tax (US)', def: "The US's own departure tax (IRC Section 877A) for certain long-term Green Card holders or citizens who expatriate — can deem worldwide assets sold on the way out, separate from Canada's deemed disposition." },
+  longTermResident: { label: 'Long-Term Resident', def: 'A Green Card holder who has held it in 8 or more of the last 15 tax years — crossing this threshold can subject you to the US exit tax if you later give up the Green Card.' },
+  section217: { label: 'Section 217 election', def: 'Lets a non-resident choose to be taxed on certain Canadian-source pension income (including RRSP/RRIF withdrawals) as if still a Canadian resident — can beat the flat withholding rate if total income is modest.' },
+  rrsp: { label: 'RRSP', def: "Registered Retirement Savings Plan — Canada's tax-deferred retirement account, roughly analogous to a US Traditional 401(k)/IRA." },
+  tfsa: { label: 'TFSA', def: "Tax-Free Savings Account — grows and withdraws tax-free in Canada, but the IRS doesn't recognize that status for US persons, so it's often treated as a PFIC-holding taxable account instead." }
+};
+
+let gtermPopoverEl = null;
+let gtermHideTimer = null;
+function closeGtermPopover() {
+  clearTimeout(gtermHideTimer);
+  if (!gtermPopoverEl || gtermPopoverEl.hidden) return;
+  gtermPopoverEl.hidden = true;
+  const openTrigger = document.querySelector('.gterm[aria-expanded="true"]');
+  if (openTrigger) { openTrigger.setAttribute('aria-expanded', 'false'); openTrigger.removeAttribute('aria-describedby'); }
+}
+function scheduleGtermHide() { clearTimeout(gtermHideTimer); gtermHideTimer = setTimeout(closeGtermPopover, 250); }
+function openGtermPopover(trigger) {
+  clearTimeout(gtermHideTimer);
+  const entry = GLOSSARY[trigger.dataset.term];
+  if (!entry) return;
+  if (!gtermPopoverEl) {
+    gtermPopoverEl = document.createElement('div');
+    gtermPopoverEl.className = 'gterm-popover';
+    gtermPopoverEl.id = 'gtermPopover';
+    gtermPopoverEl.setAttribute('role', 'tooltip');
+    gtermPopoverEl.hidden = true;
+    gtermPopoverEl.addEventListener('mouseenter', () => clearTimeout(gtermHideTimer));
+    gtermPopoverEl.addEventListener('mouseleave', scheduleGtermHide);
+    document.body.appendChild(gtermPopoverEl);
+  }
+  gtermPopoverEl.innerHTML = `<strong>${entry.label}</strong><br>${entry.def}`;
+  gtermPopoverEl.hidden = false;
+  const r = trigger.getBoundingClientRect();
+  gtermPopoverEl.style.top = (window.scrollY + r.bottom + 6) + 'px';
+  const maxLeft = window.scrollX + document.documentElement.clientWidth - gtermPopoverEl.offsetWidth - 8;
+  gtermPopoverEl.style.left = Math.max(8, Math.min(window.scrollX + r.left, maxLeft)) + 'px';
+  document.querySelectorAll('.gterm[aria-expanded="true"]').forEach(b => { if (b !== trigger) b.setAttribute('aria-expanded', 'false'); });
+  trigger.setAttribute('aria-expanded', 'true');
+  trigger.setAttribute('aria-describedby', 'gtermPopover');
+}
+function initGlossaryTerms() {
+  const triggers = document.querySelectorAll('.gterm[data-term]');
+  if (!triggers.length) return;
+  triggers.forEach(btn => {
+    btn.setAttribute('aria-expanded', 'false');
+    btn.addEventListener('click', e => { e.stopPropagation(); openGtermPopover(btn); });
+    btn.addEventListener('mouseenter', () => openGtermPopover(btn));
+    btn.addEventListener('mouseleave', scheduleGtermHide);
+    btn.addEventListener('focus', () => openGtermPopover(btn));
+    btn.addEventListener('blur', closeGtermPopover);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeGtermPopover(); });
+  document.addEventListener('click', e => { if (!e.target.closest('.gterm') && !e.target.closest('.gterm-popover')) closeGtermPopover(); });
+  window.addEventListener('scroll', closeGtermPopover, true);
+  window.addEventListener('resize', closeGtermPopover);
+}
+
+// ==================================================================
+// Soft (non-blocking) sanity warnings — distinct from a page's own hard-error validation.
+// Renders into the given container using the same visual language as the stale-data banner,
+// so a typo'd rate or an out-of-range percentage gets flagged without stopping the user.
+// ==================================================================
+function renderSoftWarning(containerId, checks) {
+  const el = $(containerId);
+  if (!el) return;
+  const messages = checks.filter(c => c.condition).map(c => c.message);
+  if (!messages.length) { el.hidden = true; return; }
+  el.innerHTML = `<div class="sb-icon">⚠️</div><div class="sb-text">${messages.join(' ')}</div>`;
+  el.className = 'sample-banner warn-banner';
+  el.hidden = false;
+}
+
+// ==================================================================
+// Live FX rate — network call only; each page owns its own UI state (hint text, button
+// labels, caching) around this, same as before the CoastFIRE Calculator's own fetch flow.
+// ==================================================================
+async function fetchLiveFxRate() {
+  const response = await fetch('https://api.frankfurter.app/latest?from=CAD&to=USD');
+  if (!response.ok) throw new Error('API response not OK');
+  const data = await response.json();
+  const rate = data.rates.USD;
+  if (!rate || typeof rate !== 'number') throw new Error('Invalid rate format');
+  return rate;
+}
+
+// For a genuinely first-ever visitor (nothing saved yet under ccfire:v2) landing on any page
+// other than the calculator — which already runs its own richer live-fetch flow on load — seed
+// a live rate in place of the static 0.73 default. No-ops silently if a rate was ever saved
+// (by the user or a prior seed) or if the fetch fails.
+function seedLiveFxRateIfNeeded(onSeeded) {
+  if (!hasStorage) return;
+  if (readRawStore().exchangeRate !== undefined) return;
+  fetchLiveFxRate().then(rate => {
+    writeStoredInputs({ exchangeRate: rate.toFixed(4) });
+    if (typeof onSeeded === 'function') onSeeded(rate);
+  }).catch(() => { /* stays on DEFAULT_FIELD_VALUES.exchangeRate */ });
+}
+
+// Renders a small read-only "Using 1 CAD = X USD" line for pages that consume exchangeRate
+// but, unlike the CoastFIRE Calculator, don't expose their own field for it.
+function renderFxIndicator(containerId) {
+  const el = $(containerId);
+  if (!el) return;
+  const rate = parseFloat(readStoredInputs().exchangeRate) || 0.73;
+  el.innerHTML = `Using 1 CAD = ${rate.toFixed(4)} USD · <a href="/coastfire-calculator#exchangeRate">edit on the CoastFIRE Calculator</a>`;
+}
+
+// ==================================================================
 // Storage: the single cross-tool source of truth
 // ==================================================================
 const STORAGE_KEY = 'ccfire:v2';

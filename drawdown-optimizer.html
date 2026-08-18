@@ -117,6 +117,7 @@
       </div>
       <div class="card-sub">FHSA, RESP, and HSA aren't included here — they're pre-retirement, beneficiary-owned,
         or medical-conditional accounts that don't fit a standard retirement decumulation sequence.</div>
+      <div class="sample-banner warn-banner" id="ddoWarnBanner" hidden></div>
     </div>
 
     <div class="tool-card">
@@ -146,6 +147,7 @@
       <div class="card-sub">Simulated year by year from your retirement age to your plan-to-age, using your
         CoastFIRE Calculator's retirement age, spending, growth rate, and benefit-timing inputs. All figures below
         are shown in USD equivalent, since US federal tax brackets are the binding constraint on the ordering.</div>
+      <div class="helper-hint" id="ddoFxIndicator"></div>
       <div class="result-strip">
         <div class="rs-stat">
           <div class="rs-label">Total lifetime tax (recommended)</div>
@@ -172,7 +174,7 @@
         <span><span class="legend-dot" style="background:var(--gold);"></span>Taxable brokerage</span>
         <span><span class="legend-dot" style="background:var(--ink-soft);"></span>TFSA / Roth</span>
       </div>
-      <canvas id="ddoWithdrawalChart" height="220"></canvas>
+      <canvas id="ddoWithdrawalChart" height="220" role="img" aria-label="Bar chart of yearly withdrawals by account type over the retirement horizon"></canvas>
 
       <div class="table-scroll">
         <table class="strategy-table">
@@ -228,6 +230,26 @@
       </details>
     </div>
 
+    <details class="help-section">
+      <summary>❓ Glossary &amp; how this is calculated</summary>
+      <div class="help-body">
+        <dl class="glossary">
+          <dt>Withholding tax</dt>
+          <dd>Tax withheld at source by Canada on RRSP/RRIF payments to a non-resident — 15% under the treaty's
+            periodic-payment rate, layered on top of whatever US ordinary tax the withdrawal also owes.</dd>
+        </dl>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:16px 0 0;"><strong>Why does the order matter?</strong>
+          Each dollar withdrawn from a 401(k)/IRA or RRSP is taxed as ordinary income and can push you into a
+          higher US bracket, while TFSA/Roth withdrawals are free and taxable-brokerage gains use a flat rate — so
+          spending down the tax-free accounts last, and filling cheaper brackets first, generally minimizes lifetime
+          tax. This tool simulates all four orderings year by year and recommends whichever comes out cheapest for
+          your actual numbers.</p>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:10px 0 0;"><strong>Why USD?</strong> US federal tax
+          brackets are the binding constraint on the ordering, so every figure here is converted to USD at your
+          saved exchange rate up front, then simulated entirely in USD.</p>
+      </div>
+    </details>
+
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
       <ul>
@@ -249,7 +271,9 @@
       initTheme();
       initThemeToggle();
       initStaleBanner();
+      initGlossaryTerms();
       restoreInputs();
+      seedLiveFxRateIfNeeded(() => renderDrawdown());
 
       // Seed balances from the CoastFIRE Calculator's own retirement-age projection, but only
       // for fields this page doesn't already have a saved value for — same one-time-prefill
@@ -366,9 +390,16 @@
 
       function renderDrawdown() {
         const overrides = buildOverrides();
+        renderFxIndicator('ddoFxIndicator');
         renderLifeEventsNote(overrides);
-        const totalBal = ['ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal']
-          .reduce((s, id) => s + num(id), 0);
+        const balanceIds = ['ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal'];
+        const totalBal = balanceIds.reduce((s, id) => s + num(id), 0);
+        const oversizedId = balanceIds.find(id => num(id) > 50000000);
+
+        renderSoftWarning('ddoWarnBanner', [
+          { condition: !!oversizedId, message: `One of your account balances looks unusually large (over $50M) — double check for an extra zero.` },
+          { condition: num('ddoCapGainsRate') > 50 || num('ddoCapGainsRate') < 0, message: `A ${num('ddoCapGainsRate')}% capital-gains rate looks out of range — double check for a typo.` }
+        ]);
 
         if (totalBal <= 0) {
           $('ddoNote').className = 'deferral-note auto';

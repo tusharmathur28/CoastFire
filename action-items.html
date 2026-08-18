@@ -78,6 +78,27 @@
       <div id="actionItemsList"></div>
     </div>
 
+    <details class="help-section">
+      <summary>❓ Glossary &amp; how this list is built</summary>
+      <div class="help-body">
+        <dl class="glossary">
+          <dt>FBAR</dt>
+          <dd>A FinCEN report (not a tax form) that US persons must file if the combined balance of their non-US
+            financial accounts exceeded $10,000 at any point in the year.</dd>
+          <dt>FATCA</dt>
+          <dd>Foreign Account Tax Compliance Act — requires foreign banks to report US-person account holders to
+            the IRS, and requires those account holders to file Form 8938 above certain thresholds.</dd>
+          <dt>Exit tax (US)</dt>
+          <dd>The US's own departure tax (IRC Section 877A) for certain long-term Green Card holders or citizens
+            who expatriate — can deem worldwide assets sold on the way out.</dd>
+        </dl>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin:16px 0 0;"><strong>How is this list built?</strong>
+          Every item here is triggered by something you've actually entered on another tool page — a non-zero
+          balance, a benefit amount, a citizenship or Green Card answer. Nothing is guessed or assumed; the "See"
+          links jump straight to the tool that produced each item.</p>
+      </div>
+    </details>
+
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
       <ul>
@@ -97,6 +118,7 @@
       initTheme();
       initThemeToggle();
       initStaleBanner();
+      seedLiveFxRateIfNeeded();
 
       function renderActionItems() {
         const stored = readStoredInputs();
@@ -139,7 +161,8 @@
             '/coastfire-calculator#considerationsSection', 'See Cross-Border Notes');
         }
         if (rrsp + tfsa + nonregCad + fhsa + resp > 0) {
-          add('fbar-fatca', 'action', '📋', 'Check your FBAR / FATCA filing requirement',
+          add('fbar-fatca', 'action', '📋',
+            'Check your <button type="button" class="gterm" data-term="fbar">FBAR</button> / <button type="button" class="gterm" data-term="fatca">FATCA</button> filing requirement',
             `If your combined Canadian financial accounts exceed $10,000 USD at any point in the year, you likely
             need to file an FBAR (FinCEN 114), and possibly Form 8938 — separate from your regular tax return.`,
             '/coastfire-calculator#considerationsSection', 'See Cross-Border Notes');
@@ -170,7 +193,8 @@
             '/moving-back', 'Open Moving Back to Canada');
         }
         if (hasGreenCard && gcYears >= 8) {
-          add('green-card-exit-tax', 'warning', '⚠️', 'Review potential exit-tax exposure',
+          add('green-card-exit-tax', 'warning', '⚠️',
+            'Review potential <button type="button" class="gterm" data-term="exitTax">exit-tax</button> exposure',
             `You've held Green Card status for ${gcYears} of the last 15 years — past the threshold where exit-tax
             rules can apply if you formally terminate it. Worth reviewing before you make that decision.`,
             '/moving-back', 'Open Moving Back to Canada');
@@ -214,6 +238,7 @@
             <div class="ci-body" id="ci-body-${it.slug}">${it.body}${it.anchor ? ` <a class="ci-link" href="${it.anchor}">${it.anchorLabel} →</a>` : ''}</div>
           </div>`;
         }).join('');
+        initGlossaryTerms();
       }
 
       function loadCheckedActionItems() {

@@ -76,6 +76,41 @@
         cross-border-specialist accountant or financial planner before acting on this.</div>
     </section>
 
+    <section class="quiz-card" id="snapshotCard" hidden>
+      <h3>Your snapshot</h3>
+      <p class="card-sub">Pulled from what you've entered across the tools on this site.</p>
+      <div class="result-strip">
+        <div class="rs-stat">
+          <div class="rs-label">Combined portfolio today</div>
+          <div class="rs-value" id="snapPortfolio">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">CoastFIRE number</div>
+          <div class="rs-value" id="snapCoastNumber">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">CoastFIRE status</div>
+          <div class="rs-value" id="snapCoastStatus">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Annual gov't benefits</div>
+          <div class="rs-value" id="snapGovBenefit">—</div>
+        </div>
+        <div class="rs-stat" id="snapRrspTile" hidden>
+          <div class="rs-label">Est. RRSP withholding</div>
+          <div class="rs-value" id="snapRrspWithholding">—</div>
+        </div>
+        <div class="rs-stat" id="snapDtTile" hidden>
+          <div class="rs-label">Est. departure tax</div>
+          <div class="rs-value" id="snapDepartureTax">—</div>
+        </div>
+      </div>
+      <div class="snapshot-footer">
+        <span class="save-note" id="snapLastUpdated"></span>
+        <a href="/coastfire-calculator#downloadPdfBtn"><button type="button" class="ghost">📄 Download full plan (PDF)</button></a>
+      </div>
+    </section>
+
     <section class="quiz-card" id="routeQuiz">
       <div class="quiz-step" id="quizStep1">
         <h3>Not sure where to start?</h3>
@@ -199,6 +234,45 @@
     initTheme();
     initThemeToggle();
     initStaleBanner();
+    seedLiveFxRateIfNeeded();
+
+    // Only shown once the user has actually saved something somewhere on the site — otherwise
+    // this would just restate the shipped example scenario as if it were their own numbers.
+    (function renderSnapshot() {
+      if (!hasStorage || !localStorage.getItem(LAST_SAVED_KEY)) return;
+      const stored = readStoredInputs();
+      const res = compute(stored);
+      const first = res.rows[0], last = res.rows[res.rows.length - 1];
+
+      $('snapPortfolio').textContent = fmt(first.combined, res.reportCurrency);
+      $('snapCoastNumber').textContent = fmt(res.coastNumberToday, res.reportCurrency);
+      $('snapCoastStatus').textContent = res.coastYearIndex !== null
+        ? (res.coastYearIndex === 0 ? 'Already there' : `In ~${res.coastYearIndex} yrs (age ${res.currentAge + res.coastYearIndex})`)
+        : 'Not yet on track';
+      $('snapGovBenefit').textContent = fmt(res.annualGovBenefit, res.reportCurrency) + '/yr';
+
+      // Same small inline formulas as the CoastFIRE Calculator's PDF export and the RRSP
+      // Withholding tool — kept local rather than centralized, matching how those two already
+      // each compute this independently rather than sharing one function.
+      const dtGain = Math.max(0, parseFloat(stored.dtNonregFmv) - parseFloat(stored.dtNonregAcb) || 0) + Math.max(0, parseFloat(stored.dtOtherFmv) - parseFloat(stored.dtOtherAcb) || 0);
+      if (dtGain > 0) {
+        const dtOwing = dtGain * 0.5 * (Math.max(0, Math.min(100, parseFloat(stored.dtMarginalRate) || 0)) / 100);
+        $('snapDepartureTax').textContent = fmt(dtOwing, 'CAD');
+        $('snapDtTile').hidden = false;
+      }
+
+      const rrspAtRetirement = last.rrsp;
+      if (rrspAtRetirement > 0) {
+        const rwRate = parseFloat(stored.rwWithdrawalType);
+        $('snapRrspWithholding').textContent = fmt(rrspAtRetirement * (Number.isFinite(rwRate) ? rwRate : 0.25), 'CAD');
+        $('snapRrspTile').hidden = false;
+      }
+
+      const daysAgo = Math.floor((Date.now() - parseInt(localStorage.getItem(LAST_SAVED_KEY), 10)) / 86400000);
+      $('snapLastUpdated').textContent = daysAgo <= 0 ? 'Updated today' : `Updated ${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
+
+      $('snapshotCard').hidden = false;
+    })();
 
     (function () {
       const quiz = document.getElementById('routeQuiz');
