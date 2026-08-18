@@ -177,7 +177,7 @@ function renderSoftWarning(containerId, checks) {
 // labels, caching) around this, same as before the CoastFIRE Calculator's own fetch flow.
 // ==================================================================
 async function fetchLiveFxRate() {
-  const response = await fetch('https://api.frankfurter.app/latest?from=CAD&to=USD');
+  const response = await fetch('https://api.frankfurter.dev/v1/latest?from=CAD&to=USD');
   if (!response.ok) throw new Error('API response not OK');
   const data = await response.json();
   const rate = data.rates.USD;
