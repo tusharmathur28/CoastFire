@@ -188,21 +188,6 @@ header p.sub {
   margin: 0;
 }
 
-/* ---- Hero equation: makes "Two Currencies, One Number" literal at a glance, homepage only. ---- */
-.hero-equation { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 26px; }
-.he-term { display: flex; flex-direction: column; gap: 3px; }
-.he-value { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; }
-.he-term.ca .he-value { color: var(--maple); }
-.he-term.us .he-value { color: var(--harbor); }
-.he-term.result .he-value { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 600; color: var(--ink); }
-.he-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
-.he-op { font-size: 20px; color: var(--ink-soft); flex: none; }
-.hero-equation-note { font-size: 12px; color: var(--ink-soft); margin: 10px 0 0; font-style: italic; }
-@media(max-width: 480px) {
-  .he-value { font-size: 18px; }
-  .he-term.result .he-value { font-size: 24px; }
-}
-
 header.compact {
   padding: 26px 0 18px;
 }
