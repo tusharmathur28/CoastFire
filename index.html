@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=9e6e9fd2">
+  <link rel="stylesheet" href="styles.css?v=63dda00f">
 </head>
 
 <body>
@@ -47,13 +47,31 @@
           <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
             retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
             accounts in their native currencies.</p>
+          <div class="hero-equation">
+            <div class="he-term ca">
+              <span class="he-value">CA$400K</span>
+              <span class="he-label">Canadian accounts</span>
+            </div>
+            <span class="he-op">+</span>
+            <div class="he-term us">
+              <span class="he-value">$250K</span>
+              <span class="he-label">US accounts</span>
+            </div>
+            <span class="he-op">→</span>
+            <div class="he-term result">
+              <span class="he-value">$542K</span>
+              <span class="he-label">your number</span>
+            </div>
+          </div>
+          <p class="hero-equation-note">Illustrative example — track each account in its own currency, combine only the total.</p>
         </div>
         <div class="header-actions">
           <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
           <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰ Menu</button>
         </div>
       </div>
-      <nav class="page-nav">
+      <nav class="page-nav" id="pageNav">
         <a href="/" aria-current="page">All Tools</a>
         <a href="/coastfire-calculator">CoastFIRE Calculator</a>
         <a href="/action-items">Action Items</a>
@@ -78,40 +96,46 @@
         taxation — treat every dollar figure as a <em>pre-tax</em> planning target. Cross-border tax rules (RRSP/TFSA
         treatment, PFIC, FBAR/FATCA, departure tax, totalization) are genuinely complex and change; work with a
         cross-border-specialist accountant or financial planner before acting on this.</div>
+      <div class="reassurance-box"><strong>🔒 Private by default.</strong> Every number you type stays in your
+        browser's local storage — there's no account, no sign-up, and nothing is ever sent to a server.</div>
     </section>
 
-    <section class="quiz-card" id="snapshotCard" hidden>
+    <section class="quiz-card" id="snapshotCard">
       <h3>Your snapshot</h3>
-      <p class="card-sub">Pulled from what you've entered across the tools on this site.</p>
-      <div class="result-strip">
-        <div class="rs-stat">
-          <div class="rs-label">Combined portfolio today</div>
-          <div class="rs-value" id="snapPortfolio">—</div>
+      <p class="card-sub" id="snapshotTeaserText">Fill in any tool below and your combined portfolio, CoastFIRE
+        number, and progress will show up here automatically.</p>
+      <div id="snapshotRealContent" hidden>
+        <p class="card-sub">Pulled from what you've entered across the tools on this site.</p>
+        <div class="result-strip">
+          <div class="rs-stat">
+            <div class="rs-label">Combined portfolio today</div>
+            <div class="rs-value" id="snapPortfolio">—</div>
+          </div>
+          <div class="rs-stat">
+            <div class="rs-label">CoastFIRE number</div>
+            <div class="rs-value" id="snapCoastNumber">—</div>
+          </div>
+          <div class="rs-stat">
+            <div class="rs-label">CoastFIRE status</div>
+            <div class="rs-value" id="snapCoastStatus">—</div>
+          </div>
+          <div class="rs-stat">
+            <div class="rs-label">Annual gov't benefits</div>
+            <div class="rs-value" id="snapGovBenefit">—</div>
+          </div>
+          <div class="rs-stat" id="snapRrspTile" hidden>
+            <div class="rs-label">Est. RRSP withholding <span class="rs-label-note">(at retirement)</span></div>
+            <div class="rs-value" id="snapRrspWithholding">—</div>
+          </div>
+          <div class="rs-stat" id="snapDtTile" hidden>
+            <div class="rs-label">Est. departure tax <span class="rs-label-note">(on today's balances)</span></div>
+            <div class="rs-value" id="snapDepartureTax">—</div>
+          </div>
         </div>
-        <div class="rs-stat">
-          <div class="rs-label">CoastFIRE number</div>
-          <div class="rs-value" id="snapCoastNumber">—</div>
+        <div class="snapshot-footer">
+          <span class="save-note" id="snapLastUpdated"></span>
+          <a href="/coastfire-calculator#downloadPdfBtn"><button type="button" class="ghost">📄 Download full plan (PDF)</button></a>
         </div>
-        <div class="rs-stat">
-          <div class="rs-label">CoastFIRE status</div>
-          <div class="rs-value" id="snapCoastStatus">—</div>
-        </div>
-        <div class="rs-stat">
-          <div class="rs-label">Annual gov't benefits</div>
-          <div class="rs-value" id="snapGovBenefit">—</div>
-        </div>
-        <div class="rs-stat" id="snapRrspTile" hidden>
-          <div class="rs-label">Est. RRSP withholding <span class="rs-label-note">(at retirement)</span></div>
-          <div class="rs-value" id="snapRrspWithholding">—</div>
-        </div>
-        <div class="rs-stat" id="snapDtTile" hidden>
-          <div class="rs-label">Est. departure tax <span class="rs-label-note">(on today's balances)</span></div>
-          <div class="rs-value" id="snapDepartureTax">—</div>
-        </div>
-      </div>
-      <div class="snapshot-footer">
-        <span class="save-note" id="snapLastUpdated"></span>
-        <a href="/coastfire-calculator#downloadPdfBtn"><button type="button" class="ghost">📄 Download full plan (PDF)</button></a>
       </div>
     </section>
 
@@ -154,49 +178,49 @@
       <p class="tools-hub-progress" id="toolsHubProgress" hidden></p>
       <div class="tool-directory-grid">
         <a class="tool-directory-card" href="/coastfire-calculator">
-          <div class="tdc-icon">🧭</div>
+          <div class="tdc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="12,7 13.5,12 12,17 10.5,12" fill="currentColor" stroke="none"/></svg></div>
           <div class="tdc-title">CoastFIRE Calculator</div>
           <div class="tdc-sub">The core cross-border retirement calculator — see when your portfolio can coast.</div>
           <span class="tdc-arrow">Start here →</span>
         </a>
         <a class="tool-directory-card" href="/action-items">
-          <div class="tdc-icon">✅</div>
+          <div class="tdc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,12.5 10.5,16 17,8"/></svg></div>
           <div class="tdc-title">Your Action Items</div>
           <div class="tdc-sub">A prioritized checklist of deadlines and to-dos based on what you've entered.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
         <a class="tool-directory-card" href="/departure-tax">
-          <div class="tdc-icon">🛫</div>
+          <div class="tdc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"/><path d="M20 12H10"/><path d="M15 7l5 5-5 5"/></svg></div>
           <div class="tdc-title">Departure Tax Estimator</div>
           <div class="tdc-sub">Leaving Canada? Estimate the one-time deemed-disposition tax bill.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
         <a class="tool-directory-card" href="/rrsp-withholding">
-          <div class="tdc-icon">🏦</div>
+          <div class="tdc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6"/><path d="M4 10v9"/><path d="M9 10v9"/><path d="M15 10v9"/><path d="M20 10v9"/><path d="M2 21h20"/></svg></div>
           <div class="tdc-title">RRSP Withholding Tax</div>
           <div class="tdc-sub">See how much Canada withholds when you draw down your RRSP as a US resident.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
         <a class="tool-directory-card" href="/benefit-timing">
-          <div class="tdc-icon">📅</div>
+          <div class="tdc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg></div>
           <div class="tdc-title">Benefit Claiming-Age Optimizer</div>
           <div class="tdc-sub">Compare claiming CPP, OAS &amp; Social Security early vs. late.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
         <a class="tool-directory-card" href="/drawdown-optimizer">
-          <div class="tdc-icon">🧮</div>
+          <div class="tdc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/><path d="M2 20h20"/></svg></div>
           <div class="tdc-title">Drawdown-Order Optimizer</div>
           <div class="tdc-sub">Sequence RRSP, TFSA, 401(k)/IRA, Roth &amp; taxable withdrawals to minimize tax in retirement.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
         <a class="tool-directory-card" href="/moving-back">
-          <div class="tdc-icon">🍁</div>
+          <div class="tdc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20C6 11 12 4 20 4c0 8-7 14-16 16z"/><path d="M6 20l6-6"/></svg></div>
           <div class="tdc-title">Moving Back to Canada</div>
           <div class="tdc-sub">Re-entering Canada? See what happens to each account and whether exit-tax rules apply.</div>
           <span class="tdc-arrow">Try it →</span>
         </a>
         <a class="tool-directory-card" href="/compare-scenarios">
-          <div class="tdc-icon">⚖️</div>
+          <div class="tdc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/></svg></div>
           <div class="tdc-title">Compare Scenarios</div>
           <div class="tdc-sub">Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.</div>
           <span class="tdc-arrow">Try it →</span>
@@ -216,23 +240,26 @@
 
     </main>
 
-    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Nothing you enter is uploaded — it all stays in your browser
       <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
     </footer>
   </div>
 
-  <script src="shared.js?v=1925605c"></script>
+  <script src="shared.js?v=551a06bb"></script>
   <script>
     initTheme();
     initThemeToggle();
+    initMobileNav();
     initToolSearch();
     initStaleBanner();
     seedLiveFxRateIfNeeded();
 
-    // Only shown once the user has actually saved something somewhere on the site — otherwise
-    // this would just restate the shipped example scenario as if it were their own numbers.
+    // The real stat grid only renders once the user has actually saved something somewhere on
+    // the site — otherwise this would just restate the shipped example scenario as if it were
+    // their own numbers. Until then, the card stays visible with just the teaser sentence, so
+    // first-time visitors know this payoff exists before they've earned it.
     (function renderSnapshot() {
-      if (!hasStorage || !localStorage.getItem(LAST_SAVED_KEY)) return;
+      if (!hasUserData()) return;
       const stored = readStoredInputs();
       const res = compute(stored);
       const first = res.rows[0], last = res.rows[res.rows.length - 1];
@@ -264,13 +291,16 @@
       const daysAgo = Math.floor((Date.now() - parseInt(localStorage.getItem(LAST_SAVED_KEY), 10)) / 86400000);
       $('snapLastUpdated').textContent = daysAgo <= 0 ? 'Updated today' : `Updated ${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
 
-      $('snapshotCard').hidden = false;
+      $('snapshotTeaserText').hidden = true;
+      $('snapshotRealContent').hidden = false;
     })();
 
     // Completion tracker — only the 6 tools that take their own inputs count (Action Items and
-    // Compare Scenarios are derived views with nothing of their own to "complete").
+    // Compare Scenarios are derived views with nothing of their own to "complete"). Always
+    // rendered, even at 0 of 6, so the "fill in a tool, watch this move" mechanic is visible
+    // from a visitor's very first look rather than only appearing after their first save.
     (function renderCompletionTracker() {
-      if (!hasStorage || !localStorage.getItem(LAST_SAVED_KEY)) return;
+      if (!hasStorage) return;
       const TOOL_FIELD_GROUPS = [
         { href: '/coastfire-calculator', fieldIds: ['currentAge', 'retireAge', 'contribFreq', 'rrspBal', 'rrspContrib', 'rrspMatch', 'tfsaBal', 'tfsaContrib', 'nonregCadBal', 'nonregCadContrib', 'fhsaBal', 'fhsaContrib', 'respBal', 'respContrib', 'k401Bal', 'k401Contrib', 'k401Match', 'iraBal', 'iraContrib', 'rothBal', 'rothContrib', 'taxableUsdBal', 'taxableUsdContrib', 'hsaBal', 'hsaContrib', 'returnRate', 'inflationRate', 'withdrawalRate', 'monthlyExpenses', 'cppMonthly', 'oasYears', 'oasMonthly', 'ssMonthly', 'benefitsStartAge', 'lifeEvents'] },
         { href: '/departure-tax', fieldIds: ['dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'dtMarginalRate'] },
@@ -289,7 +319,9 @@
         if (card) card.insertAdjacentHTML('beforeend', ' <span class="tdc-check" title="You\'ve entered numbers here">✓</span>');
       });
       const progressEl = $('toolsHubProgress');
-      progressEl.textContent = `${completedCount} of ${TOOL_FIELD_GROUPS.length} tools completed`;
+      progressEl.textContent = completedCount === 0
+        ? `0 of ${TOOL_FIELD_GROUPS.length} tools completed — fill in any tool below to get started`
+        : `${completedCount} of ${TOOL_FIELD_GROUPS.length} tools completed`;
       progressEl.hidden = false;
     })();
 

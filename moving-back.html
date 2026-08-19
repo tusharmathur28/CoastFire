@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=9e6e9fd2">
+  <link rel="stylesheet" href="styles.css?v=63dda00f">
 </head>
 
 <body>
@@ -51,9 +51,10 @@
         <div class="header-actions">
           <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
           <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰ Menu</button>
         </div>
       </div>
-      <nav class="page-nav">
+      <nav class="page-nav" id="pageNav">
         <a href="/">All Tools</a>
         <a href="/coastfire-calculator">CoastFIRE Calculator</a>
         <a href="/action-items">Action Items</a>
@@ -71,7 +72,7 @@
 
     <div class="tool-header">
       <a class="tool-breadcrumb" href="/">&larr; All tools</a>
-      <h2>🍁 Moving Back to Canada</h2>
+      <h2><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20C6 11 12 4 20 4c0 8-7 14-16 16z"/><path d="M6 20l6-6"/></svg></span>Moving Back to Canada</h2>
       <p class="tool-sub">The mirror image of leaving — re-establishing Canadian residency has its own rules,
         deadlines, and a couple of genuinely good surprises. General information only, not tax or immigration
         advice; confirm your specific situation with a cross-border specialist before you file anything.</p>
@@ -179,6 +180,11 @@
       </div>
     </details>
 
+    <div class="next-step-nudge">
+      <span class="nsn-label">Next:</span>
+      <span><a href="/action-items">Your Action Items</a> — see the specific forms and elections this triggers.</span>
+    </div>
+
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
       <ul>
@@ -191,16 +197,17 @@
 
     </main>
 
-    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Nothing you enter is uploaded — it all stays in your browser
       <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
     </footer>
   </div>
 
-  <script src="shared.js?v=1925605c"></script>
+  <script src="shared.js?v=551a06bb"></script>
   <script>
     (function () {
       initTheme();
       initThemeToggle();
+      initMobileNav();
       initToolSearch();
       initStaleBanner();
       initGlossaryTerms();
@@ -210,7 +217,7 @@
       const BANNER_DISMISS_KEY = 'ccfire:bannerDismissed';
       function hideBanner() { $('sampleBanner').style.display = 'none'; }
       function showBanner() { $('sampleBanner').style.display = 'flex'; }
-      const hadSavedDataBeforeLoad = hasStorage && !!localStorage.getItem(STORAGE_KEY);
+      const hadSavedDataBeforeLoad = hasUserData();
       let bannerDismissedBefore = false;
       try { bannerDismissedBefore = hasStorage && localStorage.getItem(BANNER_DISMISS_KEY) === '1'; } catch (e) { }
       if (hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }

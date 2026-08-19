@@ -52,6 +52,25 @@ function initThemeToggle() {
   });
 }
 
+// Wires the header's mobile-only hamburger button — the full page-nav link list stays visible
+// (and this button stays hidden) at desktop widths via CSS; this only toggles the collapsed
+// dropdown state used below the 760px breakpoint.
+function initMobileNav() {
+  const btn = $('navToggleBtn');
+  const nav = $('pageNav');
+  if (!btn || !nav) return;
+  function setOpen(open) {
+    nav.classList.toggle('nav-open', open);
+    btn.setAttribute('aria-expanded', String(open));
+    btn.textContent = open ? '✕ Close' : '☰ Menu';
+  }
+  btn.addEventListener('click', () => setOpen(!nav.classList.contains('nav-open')));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+  document.addEventListener('click', e => {
+    if (nav.classList.contains('nav-open') && !nav.contains(e.target) && e.target !== btn) setOpen(false);
+  });
+}
+
 // ---- Stale-data nudge ----
 // Shows a dismissible banner (in a page's #staleBanner container, if present) when it's been a
 // while since any tool page last wrote to ccfire:v2 — a reminder to refresh assumptions rather
@@ -162,16 +181,32 @@ function initGlossaryTerms() {
 // substring match on name + description. Lazily built the first time it's opened, same
 // pattern as the glossary popover above. Tools-only in this first version — no glossary terms.
 // ==================================================================
+// Same small line-icon set used by the homepage tool-directory cards and each tool page's own
+// <h2> — kept as raw SVG strings here (rather than emoji) so the search modal stays visually
+// consistent with those other two surfaces.
+const SVG_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+const ICONS = {
+  compass: `<svg ${SVG_ATTRS}><circle cx="12" cy="12" r="9"/><polygon points="12,7 13.5,12 12,17 10.5,12" fill="currentColor" stroke="none"/></svg>`,
+  checkSquare: `<svg ${SVG_ATTRS}><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,12.5 10.5,16 17,8"/></svg>`,
+  departure: `<svg ${SVG_ATTRS}><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"/><path d="M20 12H10"/><path d="M15 7l5 5-5 5"/></svg>`,
+  landmark: `<svg ${SVG_ATTRS}><path d="M3 10l9-6 9 6"/><path d="M4 10v9"/><path d="M9 10v9"/><path d="M15 10v9"/><path d="M20 10v9"/><path d="M2 21h20"/></svg>`,
+  calendar: `<svg ${SVG_ATTRS}><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>`,
+  barChart: `<svg ${SVG_ATTRS}><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/><path d="M2 20h20"/></svg>`,
+  leaf: `<svg ${SVG_ATTRS}><path d="M6 20C6 11 12 4 20 4c0 8-7 14-16 16z"/><path d="M6 20l6-6"/></svg>`,
+  columns: `<svg ${SVG_ATTRS}><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/></svg>`,
+  home: `<svg ${SVG_ATTRS}><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>`
+};
+
 const SEARCH_TOOLS = [
-  { icon: '🧭', title: 'CoastFIRE Calculator', desc: 'The core cross-border retirement calculator — see when your portfolio can coast.', href: '/coastfire-calculator' },
-  { icon: '✅', title: 'Your Action Items', desc: "A prioritized checklist of deadlines and to-dos based on what you've entered.", href: '/action-items' },
-  { icon: '🛫', title: 'Departure Tax Estimator', desc: 'Leaving Canada? Estimate the one-time deemed-disposition tax bill.', href: '/departure-tax' },
-  { icon: '🏦', title: 'RRSP Withholding Tax', desc: 'See how much Canada withholds when you draw down your RRSP as a US resident.', href: '/rrsp-withholding' },
-  { icon: '📅', title: 'Benefit Claiming-Age Optimizer', desc: 'Compare claiming CPP, OAS & Social Security early vs. late.', href: '/benefit-timing' },
-  { icon: '🧮', title: 'Drawdown-Order Optimizer', desc: 'Sequence RRSP, TFSA, 401(k)/IRA, Roth & taxable withdrawals to minimize tax in retirement.', href: '/drawdown-optimizer' },
-  { icon: '🍁', title: 'Moving Back to Canada', desc: 'Re-entering Canada? See what happens to each account and whether exit-tax rules apply.', href: '/moving-back' },
-  { icon: '⚖️', title: 'Compare Scenarios', desc: 'Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.', href: '/compare-scenarios' },
-  { icon: '🏠', title: 'All Tools (Home)', desc: 'Your snapshot, the "where do I start" quiz, and the full tool directory.', href: '/' }
+  { icon: ICONS.compass, title: 'CoastFIRE Calculator', desc: 'The core cross-border retirement calculator — see when your portfolio can coast.', href: '/coastfire-calculator' },
+  { icon: ICONS.checkSquare, title: 'Your Action Items', desc: "A prioritized checklist of deadlines and to-dos based on what you've entered.", href: '/action-items' },
+  { icon: ICONS.departure, title: 'Departure Tax Estimator', desc: 'Leaving Canada? Estimate the one-time deemed-disposition tax bill.', href: '/departure-tax' },
+  { icon: ICONS.landmark, title: 'RRSP Withholding Tax', desc: 'See how much Canada withholds when you draw down your RRSP as a US resident.', href: '/rrsp-withholding' },
+  { icon: ICONS.calendar, title: 'Benefit Claiming-Age Optimizer', desc: 'Compare claiming CPP, OAS & Social Security early vs. late.', href: '/benefit-timing' },
+  { icon: ICONS.barChart, title: 'Drawdown-Order Optimizer', desc: 'Sequence RRSP, TFSA, 401(k)/IRA, Roth & taxable withdrawals to minimize tax in retirement.', href: '/drawdown-optimizer' },
+  { icon: ICONS.leaf, title: 'Moving Back to Canada', desc: 'Re-entering Canada? See what happens to each account and whether exit-tax rules apply.', href: '/moving-back' },
+  { icon: ICONS.columns, title: 'Compare Scenarios', desc: 'Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.', href: '/compare-scenarios' },
+  { icon: ICONS.home, title: 'All Tools (Home)', desc: 'Your snapshot, the "where do I start" quiz, and the full tool directory.', href: '/' }
 ];
 
 let toolSearchEl = null, toolSearchInputEl = null, toolSearchResultsEl = null,
@@ -398,6 +433,18 @@ function readStoredInputs() {
   const out = {};
   FIELD_IDS.forEach(id => { out[id] = stored[id] !== undefined ? stored[id] : DEFAULT_FIELD_VALUES[id]; });
   return out;
+}
+
+// True once the user has actually changed at least one tracked field from its shipped-example
+// default — distinct from "has ccfire:v2 been written at all" (LAST_SAVED_KEY), since
+// seedLiveFxRateIfNeeded() silently writes an exchangeRate for every first-time visitor to any
+// page, regardless of whether they've touched anything else. Pages that need to tell "a real
+// visitor with their own numbers" apart from "someone who just landed here" should use this,
+// not LAST_SAVED_KEY.
+function hasUserData() {
+  if (!hasStorage) return false;
+  const stored = readStoredInputs();
+  return FIELD_IDS.some(id => id !== 'exchangeRate' && stored[id] !== DEFAULT_FIELD_VALUES[id]);
 }
 
 // Read-modify-write a specific set of fields into ccfire:v2 without touching the DOM — for

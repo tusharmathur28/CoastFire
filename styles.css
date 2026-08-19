@@ -55,7 +55,11 @@
   --line: #DCD2B8;
   --good: #3E6B4F;
   --good-soft: #DCEFE3;
-  --warn: #A9362A;
+  /* A distinct crimson, not an alias of --maple — --maple is the CA chip's brand color (and
+     doubles as a general chart accent throughout the site), so reusing it for "warning" risked
+     a warning callout reading as if it were specifically about the Canadian side of things. */
+  --warn: #B0264A;
+  --warn-soft: #F6DCE3;
   --radius: 10px;
 }
 
@@ -75,7 +79,8 @@
   --line: #333A43;
   --good: #6FAE85;
   --good-soft: #1E2E24;
-  --warn: #E07A67;
+  --warn: #E86B90;
+  --warn-soft: #33202A;
 }
 
 * {
@@ -181,6 +186,21 @@ header p.sub {
   color: var(--ink-soft);
   font-size: 17px;
   margin: 0;
+}
+
+/* ---- Hero equation: makes "Two Currencies, One Number" literal at a glance, homepage only. ---- */
+.hero-equation { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 26px; }
+.he-term { display: flex; flex-direction: column; gap: 3px; }
+.he-value { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; }
+.he-term.ca .he-value { color: var(--maple); }
+.he-term.us .he-value { color: var(--harbor); }
+.he-term.result .he-value { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 600; color: var(--ink); }
+.he-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
+.he-op { font-size: 20px; color: var(--ink-soft); flex: none; }
+.hero-equation-note { font-size: 12px; color: var(--ink-soft); margin: 10px 0 0; font-style: italic; }
+@media(max-width: 480px) {
+  .he-value { font-size: 18px; }
+  .he-term.result .he-value { font-size: 24px; }
 }
 
 header.compact {
@@ -497,8 +517,8 @@ details.collapsible-section .collapsible-body { padding-top: 4px; }
 }
 
 .tag.watch {
-  background: var(--maple-soft);
-  color: var(--maple);
+  background: var(--warn-soft);
+  color: var(--warn);
 }
 
 .tag.uncertain {
@@ -697,7 +717,8 @@ h2.results-title {
   padding: 16px; text-decoration: none; color: var(--ink); transition: border-color .15s ease;
 }
 .tool-directory-card:hover { border-color: var(--harbor); }
-.tool-directory-card .tdc-icon { font-size: 22px; margin-bottom: 8px; }
+.tool-directory-card .tdc-icon { color: var(--harbor); margin-bottom: 10px; }
+.tool-directory-card .tdc-icon svg { width: 24px; height: 24px; display: block; }
 .tool-directory-card .tdc-title { font-weight: 700; font-size: 13.5px; margin-bottom: 4px; }
 .tool-directory-card .tdc-sub { font-size: 12px; color: var(--ink-soft); line-height: 1.4; }
 .tool-directory-card .tdc-arrow { color: var(--harbor); font-size: 12px; font-weight: 700; margin-top: 8px; display: block; }
@@ -866,6 +887,16 @@ h2.results-title {
 .action-items-empty {
   background: var(--good-soft); border-radius: 8px; padding: 16px 18px; color: var(--good); font-size: 13.5px;
 }
+
+/* ---- Empty state: no data entered yet — distinct from the "nothing urgent" state above.
+   Shared by Action Items (before any tool has been filled in) and Compare Scenarios
+   (fewer than two saved scenarios). ---- */
+.empty-state {
+  text-align: center; padding: 40px 24px; color: var(--ink-soft);
+}
+.empty-state .es-icon { font-size: 30px; margin-bottom: 12px; }
+.empty-state .es-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+.empty-state .es-body { font-size: 13.5px; line-height: 1.55; max-width: 440px; margin: 0 auto 20px; }
 .ci-body .ci-link { color: var(--harbor); font-weight: 600; text-decoration: none; }
 .ci-body .ci-link:hover { text-decoration: underline; }
 .consideration-item.level-good { border-left-color: var(--good); }
@@ -901,7 +932,7 @@ h2.results-title {
   padding: 2px 8px; border-radius: 10px; flex: none;
 }
 .level-good .ci-badge { background: var(--good-soft); color: var(--good); }
-.level-warning .ci-badge { background: var(--maple-soft); color: var(--maple); }
+.level-warning .ci-badge { background: var(--warn-soft); color: var(--warn); }
 .level-action .ci-badge { background: var(--gold-soft); color: var(--gold-text-on-soft); }
 .level-info .ci-badge { background: var(--harbor-soft); color: var(--harbor); }
 
@@ -1004,7 +1035,7 @@ tbody tr.coast-row {
 }
 
 tbody tr.warn-row {
-  background: var(--maple-soft) !important;
+  background: var(--warn-soft) !important;
 }
 
 td.notes {
@@ -1015,9 +1046,9 @@ td.notes {
 }
 
 .error-banner {
-  background: var(--maple-soft);
-  border: 1px solid var(--maple);
-  color: var(--maple);
+  background: var(--warn-soft);
+  border: 1px solid var(--warn);
+  color: var(--warn);
   border-radius: 8px;
   padding: 14px 18px;
   margin-bottom: 24px;
@@ -1242,7 +1273,8 @@ button.export:hover {
   padding: 9px 10px; border-radius: 6px; cursor: pointer;
 }
 .tsr-item.active, .tsr-item:hover { background: var(--harbor-soft); }
-.tsr-icon { font-size: 18px; flex: none; }
+.tsr-icon { flex: none; color: var(--harbor); display: flex; }
+.tsr-icon svg { width: 18px; height: 18px; display: block; }
 .tsr-text { display: flex; flex-direction: column; min-width: 0; }
 .tsr-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .tsr-desc { font-size: 12px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1451,6 +1483,17 @@ footer a { color: var(--harbor); text-decoration: none; }
 footer a:hover { text-decoration: underline; }
 footer .footer-feedback { display: block; margin-top: 4px; }
 
+/* ---- Next-step nudge: one curated suggestion at the end of a tool's results, so there's
+   somewhere to go from here besides scrolling back up to the header nav. ---- */
+.next-step-nudge {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  background: var(--paper-2); border-radius: var(--radius);
+  padding: 14px 18px; margin: 8px 0 24px; font-size: 13.5px; color: var(--ink-soft);
+}
+.next-step-nudge .nsn-label { font-weight: 600; color: var(--ink); flex: none; }
+.next-step-nudge a { color: var(--harbor); font-weight: 600; text-decoration: none; }
+.next-step-nudge a:hover { text-decoration: underline; }
+
 .freshness-note { margin: 24px 0 0; font-size: 12px; color: var(--ink-soft); }
 .freshness-note summary { cursor: pointer; list-style: none; font-weight: 600; }
 .freshness-note summary::-webkit-details-marker { display: none; }
@@ -1484,8 +1527,20 @@ nav.page-nav a[aria-current="page"] {
   padding-bottom: 2px;
 }
 
+.nav-toggle { display: none; }
 @media(max-width: 760px) {
-  .page-nav, nav.page-nav { justify-content: center; }
+  .nav-toggle { display: inline-flex; }
+  nav.page-nav {
+    display: none; flex-direction: column; align-items: stretch; gap: 2px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 8px; margin-top: 4px;
+  }
+  nav.page-nav.nav-open { display: flex; }
+  nav.page-nav a { padding: 10px 12px; border-radius: 6px; }
+  nav.page-nav a:hover { background: var(--paper-2); }
+  nav.page-nav a[aria-current="page"] {
+    border-bottom: none; background: var(--harbor-soft); color: var(--harbor);
+  }
 }
 
 .preset-row { display: flex; align-items: center; gap: 10px; margin: -8px 0 20px; flex-wrap: wrap; }
@@ -1647,6 +1702,8 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
 /* ---- Standalone tool header (used once per tool page, above its content) ---- */
 .tool-header { border-top: 1px solid var(--line); padding-top: 48px; margin-bottom: 6px; }
 .tool-header h2 { font-size: 26px; margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
+.tool-header h2 .tool-icon { color: var(--harbor); flex: none; display: flex; }
+.tool-header h2 .tool-icon svg { width: 26px; height: 26px; display: block; }
 .tool-header .tool-sub { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 28px; }
 .tool-breadcrumb {
   display: inline-flex; align-items: center; gap: 6px;
@@ -1697,8 +1754,8 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
   padding: 14px 16px; font-size: 13.5px; color: var(--ink); margin-bottom: 20px;
 }
 .reassurance-box strong { color: var(--good); }
-.reassurance-box.warn { background: var(--maple-soft); border-left-color: var(--maple); }
-.reassurance-box.warn strong { color: var(--maple); }
+.reassurance-box.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+.reassurance-box.warn strong { color: var(--warn); }
 
 .goal-seek-card .view-tabs { margin-bottom: 16px; }
 .goal-seek-card .reassurance-box { margin-top: 14px; margin-bottom: 0; }
@@ -1774,7 +1831,11 @@ table.compare-table th.col-b { color: var(--maple); }
   border-radius: 4px; transition: width .35s ease;
 }
 
-.wizard-steps-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+/* Steps row + meta text share one line on desktop (meta trails right-aligned) instead of
+   stacking as two separate rows — same information, one less band of chrome before the
+   step's own heading. Wraps to its own line on narrow viewports since flex-wrap allows it. */
+.wizard-steps-meta-row { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.wizard-steps-row { display: flex; gap: 8px; flex: 1; min-width: 200px; flex-wrap: wrap; }
 .wizard-step-pill {
   flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px;
   background: var(--paper-2); border: 1.5px solid transparent; color: var(--ink-soft);
@@ -1793,7 +1854,8 @@ table.compare-table th.col-b { color: var(--maple); }
 .wizard-chrome.checklist-mode .wizard-progress-fill { background: var(--good); }
 
 .wizard-meta {
-  font-size: 12px; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-bottom: 14px;
+  font-size: 12px; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace;
+  flex: none; white-space: nowrap; margin-left: auto;
 }
 .wizard-step-header h3 {
   font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; margin: 0 0 4px;
@@ -1833,7 +1895,8 @@ table.compare-table th.col-b { color: var(--maple); }
   .wizard-step-pill { flex: none; width: 44px; height: 40px; padding: 0; }
   .wizard-chrome { padding: 14px 14px 12px; }
   .wizard-progress-track { margin-bottom: 12px; }
-  .wizard-meta { margin-bottom: 10px; font-size: 11px; }
+  .wizard-steps-meta-row { margin-bottom: 10px; }
+  .wizard-meta { font-size: 11px; margin-left: 0; }
   .wizard-step-header h3 { font-size: 17px; }
   .wizard-step-header p { font-size: 12.5px; }
 }

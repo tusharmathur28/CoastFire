@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=9e6e9fd2">
+  <link rel="stylesheet" href="styles.css?v=63dda00f">
 </head>
 
 <body>
@@ -51,9 +51,10 @@
         <div class="header-actions">
           <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
           <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰ Menu</button>
         </div>
       </div>
-      <nav class="page-nav">
+      <nav class="page-nav" id="pageNav">
         <a href="/">All Tools</a>
         <a href="/coastfire-calculator" aria-current="page">CoastFIRE Calculator</a>
         <a href="/action-items">Action Items</a>
@@ -71,7 +72,7 @@
 
     <div class="tool-header" id="calcFormHeader">
       <a class="tool-breadcrumb" href="/">&larr; All tools</a>
-      <h2>🧭 CoastFIRE Calculator</h2>
+      <h2><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="12,7 13.5,12 12,17 10.5,12" fill="currentColor" stroke="none"/></svg></span>CoastFIRE Calculator</h2>
       <p class="tool-sub"><strong>CoastFIRE</strong> is the point where your portfolio is projected to grow, on its own,
         into everything you'll need for retirement — no further contributions required. Once you're there, you can
         "coast": cover today's expenses while your accounts do the rest. This calculator walks through your Canadian
@@ -96,21 +97,23 @@
           aria-valuenow="25" id="wizardProgressBar">
           <div class="wizard-progress-fill" id="wizardProgressFill"></div>
         </div>
-        <div class="wizard-steps-row" id="wizardStepsRow">
-          <button type="button" class="wizard-step-pill" data-goto="1" aria-current="step">
-            <span class="wsp-num">1</span><span class="wsp-label">You</span>
-          </button>
-          <button type="button" class="wizard-step-pill" data-goto="2">
-            <span class="wsp-num">2</span><span class="wsp-label">Accounts</span>
-          </button>
-          <button type="button" class="wizard-step-pill" data-goto="3">
-            <span class="wsp-num">3</span><span class="wsp-label">Assumptions</span>
-          </button>
-          <button type="button" class="wizard-step-pill" data-goto="4">
-            <span class="wsp-num">4</span><span class="wsp-label">Benefits</span>
-          </button>
+        <div class="wizard-steps-meta-row">
+          <div class="wizard-steps-row" id="wizardStepsRow">
+            <button type="button" class="wizard-step-pill" data-goto="1" aria-current="step">
+              <span class="wsp-num">1</span><span class="wsp-label">You</span>
+            </button>
+            <button type="button" class="wizard-step-pill" data-goto="2">
+              <span class="wsp-num">2</span><span class="wsp-label">Accounts</span>
+            </button>
+            <button type="button" class="wizard-step-pill" data-goto="3">
+              <span class="wsp-num">3</span><span class="wsp-label">Assumptions</span>
+            </button>
+            <button type="button" class="wizard-step-pill" data-goto="4">
+              <span class="wsp-num">4</span><span class="wsp-label">Benefits</span>
+            </button>
+          </div>
+          <div class="wizard-meta" id="wizardMeta" aria-live="polite">Step 1 of 4 · ~2 min</div>
         </div>
-        <div class="wizard-meta" id="wizardMeta" aria-live="polite">Step 1 of 4 · ~2 min</div>
         <div class="wizard-step-header" aria-live="polite">
           <h3 id="wizardStepTitle">Tell us about you</h3>
           <p id="wizardStepSub">The basics that set your timeline and what you're saving toward.</p>
@@ -966,6 +969,11 @@
       </div>
     </details>
 
+    <div class="next-step-nudge">
+      <span class="nsn-label">Next:</span>
+      <span><a href="/action-items">Your Action Items</a> — see what deadlines and forms these numbers trigger.</span>
+    </div>
+
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
       <ul>
@@ -978,18 +986,19 @@
 
     </main>
 
-    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Nothing you enter is uploaded — it all stays in your browser
       <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
     </footer>
   </div>
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=1925605c"></script>
+  <script src="shared.js?v=551a06bb"></script>
   <script>
     (function () {
       initTheme();
       initThemeToggle();
+      initMobileNav();
       initToolSearch();
       initStaleBanner();
 
@@ -2580,7 +2589,7 @@
       }
       $('downloadPdfBtn').addEventListener('click', handleDownloadPdfClick);
 
-      const hadSavedDataBeforeLoad = hasStorage && !!localStorage.getItem(STORAGE_KEY);
+      const hadSavedDataBeforeLoad = hasUserData();
       let bannerDismissedBefore = false;
       try { bannerDismissedBefore = hasStorage && localStorage.getItem(BANNER_DISMISS_KEY) === '1'; } catch (e) { }
 

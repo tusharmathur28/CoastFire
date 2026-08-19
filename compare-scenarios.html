@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=9e6e9fd2">
+  <link rel="stylesheet" href="styles.css?v=63dda00f">
 </head>
 
 <body>
@@ -51,9 +51,10 @@
         <div class="header-actions">
           <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
           <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰ Menu</button>
         </div>
       </div>
-      <nav class="page-nav">
+      <nav class="page-nav" id="pageNav">
         <a href="/">All Tools</a>
         <a href="/coastfire-calculator">CoastFIRE Calculator</a>
         <a href="/action-items">Action Items</a>
@@ -71,13 +72,13 @@
 
     <div class="tool-header">
       <a class="tool-breadcrumb" href="/">&larr; All tools</a>
-      <h2>⚖️ Compare Scenarios</h2>
+      <h2><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/></svg></span>Compare Scenarios</h2>
       <p class="tool-sub">Put two of your saved scenarios side by side — key numbers and portfolio path together,
         without touching whatever's currently in the CoastFIRE Calculator. Save at least two scenarios in
         "My Scenarios" on the calculator page to use this.</p>
     </div>
 
-    <div class="tool-card">
+    <div class="tool-card" id="comparePickCard" hidden>
       <h3>Pick two scenarios</h3>
       <div class="grid2">
         <div class="field">
@@ -89,9 +90,17 @@
           <select id="compareScenarioB"><option value="">— Select a saved scenario —</option></select>
         </div>
       </div>
-      <div class="card-sub" id="compareEmptyNote">You need at least two saved scenarios to compare. Save your
-        current inputs as a scenario on the CoastFIRE Calculator page, change a few things, and save again under a
-        different name.</div>
+    </div>
+
+    <div class="tool-card" id="compareEmptyNote">
+      <div class="empty-state">
+        <div class="es-icon">⚖️</div>
+        <div class="es-title">Nothing to compare yet</div>
+        <div class="es-body">Save at least two scenarios in "My Scenarios" on the CoastFIRE Calculator — try
+          different retirement ages, contribution amounts, or claiming ages — then come back here to see them
+          side by side.</div>
+        <a href="/coastfire-calculator#scenariosPanel"><button type="button" class="primary">Save a scenario →</button></a>
+      </div>
     </div>
 
     <div class="tool-card" id="compareResultsCard" hidden>
@@ -120,6 +129,11 @@
       </div>
     </details>
 
+    <div class="next-step-nudge">
+      <span class="nsn-label">Next:</span>
+      <span><a href="/coastfire-calculator">CoastFIRE Calculator</a> — head back and try another tweak.</span>
+    </div>
+
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
       <ul>
@@ -132,16 +146,17 @@
 
     </main>
 
-    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Nothing you enter is uploaded — it all stays in your browser
       <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
     </footer>
   </div>
 
-  <script src="shared.js?v=1925605c"></script>
+  <script src="shared.js?v=551a06bb"></script>
   <script>
     (function () {
       initTheme();
       initThemeToggle();
+      initMobileNav();
       initStaleBanner();
       seedLiveFxRateIfNeeded();
       window.onThemeChange = () => {
@@ -163,7 +178,8 @@
           $('compareScenarioA').value = names[0];
           $('compareScenarioB').value = names[1];
         }
-        $('compareEmptyNote').style.display = names.length >= 2 ? 'none' : 'block';
+        $('comparePickCard').hidden = names.length < 2;
+        $('compareEmptyNote').hidden = names.length >= 2;
         // Programmatic .value assignment above doesn't fire 'change', so re-render explicitly.
         renderScenarioComparison();
       }

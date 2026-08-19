@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=9e6e9fd2">
+  <link rel="stylesheet" href="styles.css?v=63dda00f">
 </head>
 
 <body>
@@ -51,9 +51,10 @@
         <div class="header-actions">
           <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
           <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰ Menu</button>
         </div>
       </div>
-      <nav class="page-nav">
+      <nav class="page-nav" id="pageNav">
         <a href="/">All Tools</a>
         <a href="/coastfire-calculator">CoastFIRE Calculator</a>
         <a href="/action-items" aria-current="page">Action Items</a>
@@ -71,7 +72,7 @@
 
     <div class="tool-header">
       <a class="tool-breadcrumb" href="/">&larr; All tools</a>
-      <h2>✅ Your Action Items</h2>
+      <h2><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,12.5 10.5,16 17,8"/></svg></span>Your Action Items</h2>
       <p class="tool-sub">A prioritized checklist built from what you've actually entered across every tool on
         this site — deadlines, elections, and forms worth putting on your radar. Not a substitute for professional
         advice, just a way to keep track of what to bring up. If you've just changed something on another page,
@@ -103,6 +104,11 @@
       </div>
     </details>
 
+    <div class="next-step-nudge">
+      <span class="nsn-label">Next:</span>
+      <span><a href="/compare-scenarios">Compare Scenarios</a> — tweak a number and see the side-by-side impact on your plan.</span>
+    </div>
+
     <details class="freshness-note">
       <summary>📅 Figures current as of 2026</summary>
       <ul>
@@ -115,21 +121,34 @@
 
     </main>
 
-    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Nothing you enter is uploaded — it all stays in your browser
       <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
     </footer>
   </div>
 
-  <script src="shared.js?v=1925605c"></script>
+  <script src="shared.js?v=551a06bb"></script>
   <script>
     (function () {
       initTheme();
       initThemeToggle();
+      initMobileNav();
       initToolSearch();
       initStaleBanner();
       seedLiveFxRateIfNeeded();
 
       function renderActionItems() {
+        if (!hasUserData()) {
+          $('actionItemsSummary').textContent = '';
+          $('actionItemsList').innerHTML = `<div class="empty-state">
+            <div class="es-icon">📋</div>
+            <div class="es-title">Nothing to show yet</div>
+            <div class="es-body">This checklist builds itself from what you enter across the site's tools —
+              account balances, benefit amounts, citizenship status. Start with the CoastFIRE Calculator, then
+              come back here.</div>
+            <a href="/coastfire-calculator"><button type="button" class="primary">Start with CoastFIRE Calculator →</button></a>
+          </div>`;
+          return;
+        }
         const stored = readStoredInputs();
         const num = id => parseFloat(stored[id]) || 0;
         const items = []; // { slug, level, icon, title, body, anchor, anchorLabel }
