@@ -188,6 +188,22 @@ header p.sub {
   margin: 0;
 }
 
+/* ---- Hero "how it works" steps: explains the product flow, homepage only. ---- */
+.hero-steps { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+.hs-step { display: flex; align-items: center; gap: 8px; }
+.hs-num {
+  width: 22px; height: 22px; border-radius: 50%; flex: none;
+  background: var(--paper-2); color: var(--ink); border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;
+}
+.hs-text { font-size: 14px; color: var(--ink); font-weight: 500; }
+.hs-arrow { color: var(--ink-soft); font-size: 15px; flex: none; }
+@media(max-width: 640px) {
+  .hero-steps { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .hs-arrow { display: none; }
+}
+
 header.compact {
   padding: 26px 0 18px;
 }
