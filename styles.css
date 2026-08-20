@@ -61,6 +61,7 @@
   --warn: #B0264A;
   --warn-soft: #F6DCE3;
   --radius: 10px;
+  --shadow-card: 0 1px 3px rgba(23,33,43,.06), 0 4px 12px rgba(23,33,43,.05);
 }
 
 [data-theme="dark"] {
@@ -81,10 +82,20 @@
   --good-soft: #1E2E24;
   --warn: #E86B90;
   --warn-soft: #33202A;
+  --shadow-card: 0 1px 3px rgba(0,0,0,.25), 0 4px 14px rgba(0,0,0,.28);
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* ---- Card elevation: a shared subtle shadow for content-card surfaces that were previously
+   flat 1px-border boxes. Applied to outer grid containers only (.stat-cards, .result-strip),
+   never their inner hairline cells, so it can't interact with the gap:1px hairline-grid trick. */
+.tool-card, .chart-card, .quiz-card, .insights, .considerations, .sensitivity-card,
+.composition-card, .roadmap-card, .income-stack-card, .scenarios-panel,
+.stat-cards, .result-strip, .year-card, .tool-directory-card {
+  box-shadow: var(--shadow-card);
 }
 
 html {
@@ -666,7 +677,7 @@ button.ghost:hover {
 }
 
 .stat .stat-value {
-  font-size: 24px;
+  font-size: 30px;
   font-weight: 600;
   color: var(--ink);
 }
@@ -1182,6 +1193,13 @@ button.export:hover {
   margin-top: 10px;
 }
 
+.save-indicator {
+  font-size: 12px; color: var(--good); font-weight: 600;
+  opacity: 0; transition: opacity .3s ease; margin-left: 8px;
+}
+.save-indicator.show { opacity: 1; }
+.save-indicator.show::before { content: '✓ '; }
+
 .sample-banner {
   display: flex; align-items: flex-start; gap: 14px;
   background: var(--harbor-soft); border: 1px solid var(--harbor);
@@ -1248,6 +1266,12 @@ button.export:hover {
 
 .header-actions { display: flex; gap: 8px; flex: none; margin-left: auto; }
 @media(max-width: 640px) { .header-actions { flex-wrap: wrap; justify-content: flex-end; } }
+/* Icon-only header buttons below 560px so Search/Dark mode/Menu fit on one row instead of
+   wrapping awkwardly under the eyebrow chip row. */
+@media(max-width: 560px) {
+  .header-actions .theme-toggle { padding: 8px 10px; }
+  .header-actions .theme-toggle .btn-label { display: none; }
+}
 
 .tool-search-overlay {
   position: fixed; inset: 0; z-index: 300;
@@ -1643,7 +1667,9 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
 @media(max-width: 560px) {
   .not-sure-hint button.use-avg,
   button.preset-btn,
-  .view-tabs button {
+  .view-tabs button,
+  .year-card-detail summary,
+  .freshness-note summary {
     padding-top: 10px;
     padding-bottom: 10px;
     min-height: 40px;
@@ -1755,6 +1781,8 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
   padding: 14px 16px; font-size: 13.5px; color: var(--ink); margin-bottom: 20px;
 }
 .reassurance-box strong { color: var(--good); }
+.reassurance-icon { display: inline-flex; vertical-align: -3px; margin-right: 2px; }
+.reassurance-icon svg { width: 15px; height: 15px; display: block; }
 .reassurance-box.warn { background: var(--warn-soft); border-left-color: var(--warn); }
 .reassurance-box.warn strong { color: var(--warn); }
 
@@ -1773,7 +1801,7 @@ button.preset-btn.active { background: var(--harbor); border-color: var(--harbor
 .result-strip .rs-stat { background: var(--surface); padding: 16px 18px; }
 .result-strip .rs-stat .rs-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 6px; }
 .result-strip .rs-stat .rs-label .rs-label-note { text-transform: none; letter-spacing: normal; opacity: .75; }
-.result-strip .rs-stat .rs-value { font-family: 'IBM Plex Mono', monospace; font-size: 19px; font-weight: 600; }
+.result-strip .rs-stat .rs-value { font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600; }
 
 .deferral-note {
   font-size: 13px; padding: 12px 14px; border-radius: 8px; margin-bottom: 16px;

@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=7dd94de2">
+  <link rel="stylesheet" href="styles.css?v=1446311b">
 </head>
 
 <body>
@@ -49,9 +49,9 @@
             accounts in their native currencies.</p>
         </div>
         <div class="header-actions">
-          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
-          <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
-          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰ Menu</button>
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍<span class="btn-label"> Search</span></button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙<span class="btn-label"> Dark mode</span></button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰<span class="btn-label"> Menu</span></button>
         </div>
       </div>
       <nav class="page-nav" id="pageNav">
@@ -76,6 +76,18 @@
       <p class="tool-sub">The mirror image of leaving — re-establishing Canadian residency has its own rules,
         deadlines, and a couple of genuinely good surprises. General information only, not tax or immigration
         advice; confirm your specific situation with a cross-border specialist before you file anything.</p>
+    </div>
+    <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.<span class="save-indicator" id="saveIndicator" role="status" aria-live="polite">Saved</span></div>
+
+    <div class="result-strip" id="planSnapshot" hidden>
+      <div class="rs-stat">
+        <div class="rs-label">Combined portfolio today</div>
+        <div class="rs-value" id="planSnapPortfolio">—</div>
+      </div>
+      <div class="rs-stat">
+        <div class="rs-label">CoastFIRE status</div>
+        <div class="rs-value" id="planSnapStatus">—</div>
+      </div>
     </div>
 
     <div class="sample-banner" id="sampleBanner">
@@ -112,17 +124,17 @@
         </div>
         <div class="field">
           <label for="mbGreenCardYears">Years held, out of the last 15</label>
-          <input type="number" id="mbGreenCardYears" value="0" min="0" max="15" step="1">
+          <input type="number" inputmode="numeric" id="mbGreenCardYears" value="0" min="0" max="15" step="1">
         </div>
         <div class="field">
           <label for="mbNetWorth">Approx. worldwide net worth ($ USD) <span class="info"
               title="All assets minus debts, worldwide — not just US assets. This only matters if you hold a Green Card for 8+ of the last 15 years.">?</span></label>
-          <input type="number" id="mbNetWorth" value="0" min="0" step="10000">
+          <input type="text" inputmode="decimal" id="mbNetWorth" value="0" min="0" step="10000">
         </div>
         <div class="field">
           <label for="mbTaxLiability">Avg. annual US federal tax paid, last 5 years ($ USD) <span class="info"
               title="Your average net US income tax liability, not your income. Only relevant for long-term Green Card holders.">?</span></label>
-          <input type="number" id="mbTaxLiability" value="0" min="0" step="1000">
+          <input type="text" inputmode="decimal" id="mbTaxLiability" value="0" min="0" step="1000">
         </div>
       </div>
     </div>
@@ -130,6 +142,10 @@
     <div class="tool-card">
       <h3>What this means for you</h3>
       <div id="mbStatusResult"></div>
+      <div class="share-row" style="margin-top:12px;">
+        <button type="button" class="ghost" id="shareLinkBtn">🔗 Copy shareable link</button>
+        <span class="share-feedback" id="shareFeedback" role="status" aria-live="polite"></span>
+      </div>
     </div>
 
     <div class="tool-card">
@@ -202,7 +218,7 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=551a06bb"></script>
+  <script src="shared.js?v=1672ad80"></script>
   <script>
     (function () {
       initTheme();
@@ -211,7 +227,13 @@
       initToolSearch();
       initStaleBanner();
       initGlossaryTerms();
-      restoreInputs();
+      // A shared link (query params) takes priority over local autosave, same as CoastFIRE Calculator.
+      const loadedFromLink = applyQueryParams();
+      if (loadedFromLink) { saveInputs(); history.replaceState(null, '', window.location.pathname); }
+      else { restoreInputs(); }
+      initCurrencyInputFormatting();
+      initShareLinkButton('shareLinkBtn', 'shareFeedback');
+      renderCompactSnapshot('planSnapshot', { portfolio: 'planSnapPortfolio', status: 'planSnapStatus' });
       seedLiveFxRateIfNeeded();
 
       const BANNER_DISMISS_KEY = 'ccfire:bannerDismissed';
@@ -220,13 +242,13 @@
       const hadSavedDataBeforeLoad = hasUserData();
       let bannerDismissedBefore = false;
       try { bannerDismissedBefore = hasStorage && localStorage.getItem(BANNER_DISMISS_KEY) === '1'; } catch (e) { }
-      if (hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
+      if (loadedFromLink || hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
       $('dismissSampleBtn').addEventListener('click', () => {
         hideBanner();
         try { if (hasStorage) localStorage.setItem(BANNER_DISMISS_KEY, '1'); } catch (e) { }
       });
       $('loadExampleBtn').addEventListener('click', () => {
-        FIELD_IDS.forEach(id => { const el = $(id); if (el && DEFAULT_FIELD_VALUES[id] !== undefined) el.value = DEFAULT_FIELD_VALUES[id]; });
+        FIELD_IDS.forEach(id => { const el = $(id); if (el && DEFAULT_FIELD_VALUES[id] !== undefined) { el.value = DEFAULT_FIELD_VALUES[id]; if (COMMA_FIELDS.has(id)) formatCommaFieldValue(el); } });
         showBanner();
         saveInputs();
         renderMovingBack();
@@ -304,7 +326,7 @@
         // TFSA/RRSP live on the CoastFIRE Calculator page now — read the last-saved values from
         // storage instead of the DOM, which doesn't have those fields on this page.
         const stored = readStoredInputs();
-        const tfsa = parseFloat(stored.tfsaBal) || 0, rrsp = parseFloat(stored.rrspBal) || 0;
+        const tfsa = parseNum(stored.tfsaBal), rrsp = parseNum(stored.rrspBal);
         let acctHtml = '';
         acctHtml += ciHtml('warning', '⚠️', 'TFSA — room does not accrue while non-resident',
           `This one catches people off guard: you do <strong>not</strong> earn new TFSA contribution room for any

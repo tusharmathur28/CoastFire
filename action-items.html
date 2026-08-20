@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=7dd94de2">
+  <link rel="stylesheet" href="styles.css?v=1446311b">
 </head>
 
 <body>
@@ -49,9 +49,9 @@
             accounts in their native currencies.</p>
         </div>
         <div class="header-actions">
-          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
-          <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
-          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰ Menu</button>
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍<span class="btn-label"> Search</span></button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙<span class="btn-label"> Dark mode</span></button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰<span class="btn-label"> Menu</span></button>
         </div>
       </div>
       <nav class="page-nav" id="pageNav">
@@ -126,7 +126,7 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=551a06bb"></script>
+  <script src="shared.js?v=1672ad80"></script>
   <script>
     (function () {
       initTheme();
@@ -150,7 +150,7 @@
           return;
         }
         const stored = readStoredInputs();
-        const num = id => parseFloat(stored[id]) || 0;
+        const num = id => parseNum(stored[id]);
         const items = []; // { slug, level, icon, title, body, anchor, anchorLabel }
         const add = (slug, level, icon, title, body, anchor, anchorLabel) => items.push({ slug, level, icon, title, body, anchor, anchorLabel });
 

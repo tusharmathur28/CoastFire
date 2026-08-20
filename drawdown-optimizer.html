@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=7dd94de2">
+  <link rel="stylesheet" href="styles.css?v=1446311b">
 </head>
 
 <body>
@@ -49,9 +49,9 @@
             accounts in their native currencies.</p>
         </div>
         <div class="header-actions">
-          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
-          <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
-          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰ Menu</button>
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍<span class="btn-label"> Search</span></button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙<span class="btn-label"> Dark mode</span></button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰<span class="btn-label"> Menu</span></button>
         </div>
       </div>
       <nav class="page-nav" id="pageNav">
@@ -78,6 +78,18 @@
         brokerage gains stack differently than ordinary income, and TFSA/Roth withdrawals are free. This simulates
         your full retirement year by year and compares withdrawal orders. General information only, not tax advice.</p>
     </div>
+    <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.<span class="save-indicator" id="saveIndicator" role="status" aria-live="polite">Saved</span></div>
+
+    <div class="result-strip" id="planSnapshot" hidden>
+      <div class="rs-stat">
+        <div class="rs-label">Combined portfolio today</div>
+        <div class="rs-value" id="planSnapPortfolio">—</div>
+      </div>
+      <div class="rs-stat">
+        <div class="rs-label">CoastFIRE status</div>
+        <div class="rs-value" id="planSnapStatus">—</div>
+      </div>
+    </div>
 
     <div class="sample-banner" id="sampleBanner">
       <div class="sb-icon">👋</div>
@@ -101,34 +113,34 @@
           <div class="country-head"><span class="chip ca">CA</span> Canadian accounts</div>
           <div class="field">
             <label for="ddoRrspBal">RRSP balance ($ CAD)</label>
-            <input type="number" id="ddoRrspBal" value="0" min="0" step="1000">
+            <input type="text" inputmode="decimal" id="ddoRrspBal" value="0" min="0" step="1000">
           </div>
           <div class="field">
             <label for="ddoTfsaBal">TFSA balance ($ CAD)</label>
-            <input type="number" id="ddoTfsaBal" value="0" min="0" step="1000">
+            <input type="text" inputmode="decimal" id="ddoTfsaBal" value="0" min="0" step="1000">
           </div>
           <div class="field">
             <label for="ddoNonregCadBal">Non-registered CAD balance ($ CAD)</label>
-            <input type="number" id="ddoNonregCadBal" value="0" min="0" step="1000">
+            <input type="text" inputmode="decimal" id="ddoNonregCadBal" value="0" min="0" step="1000">
           </div>
         </div>
         <div class="country-col">
           <div class="country-head"><span class="chip us">US</span> US accounts</div>
           <div class="field">
             <label for="ddoK401Bal">401(k) balance ($ USD)</label>
-            <input type="number" id="ddoK401Bal" value="0" min="0" step="1000">
+            <input type="text" inputmode="decimal" id="ddoK401Bal" value="0" min="0" step="1000">
           </div>
           <div class="field">
             <label for="ddoIraBal">Traditional IRA balance ($ USD)</label>
-            <input type="number" id="ddoIraBal" value="0" min="0" step="1000">
+            <input type="text" inputmode="decimal" id="ddoIraBal" value="0" min="0" step="1000">
           </div>
           <div class="field">
             <label for="ddoRothBal">Roth IRA balance ($ USD)</label>
-            <input type="number" id="ddoRothBal" value="0" min="0" step="1000">
+            <input type="text" inputmode="decimal" id="ddoRothBal" value="0" min="0" step="1000">
           </div>
           <div class="field">
             <label for="ddoTaxableUsdBal">Taxable brokerage balance ($ USD)</label>
-            <input type="number" id="ddoTaxableUsdBal" value="0" min="0" step="1000">
+            <input type="text" inputmode="decimal" id="ddoTaxableUsdBal" value="0" min="0" step="1000">
           </div>
         </div>
       </div>
@@ -142,7 +154,7 @@
       <div class="grid3">
         <div class="field">
           <label for="ddoPlanToAge">Plan to age (life expectancy assumption)</label>
-          <input type="number" id="ddoPlanToAge" value="90" min="70" max="105" step="1">
+          <input type="number" inputmode="numeric" id="ddoPlanToAge" value="90" min="70" max="105" step="1">
         </div>
         <div class="field">
           <label for="ddoFilingStatus">US tax filing status</label>
@@ -154,7 +166,15 @@
         <div class="field">
           <label for="ddoCapGainsRate">Capital-gains rate on taxable withdrawals (%) <span class="info"
               title="Applied to the full withdrawal amount, not just the gain portion — this site doesn't track cost basis, so this is a simplified, deliberately conservative stand-in.">?</span></label>
-          <input type="number" id="ddoCapGainsRate" value="15" min="0" max="50" step="1">
+          <input type="number" inputmode="decimal" id="ddoCapGainsRate" value="15" min="0" max="50" step="1">
+        </div>
+      </div>
+      <div class="slider-panel">
+        <h4>Quick adjust — drag to see the projection update live</h4>
+        <div class="slider-row">
+          <label for="ddoCapGainsRateSlider">Capital-gains rate (%)</label>
+          <input type="range" id="ddoCapGainsRateSlider" min="0" max="50" step="1" value="15">
+          <span class="slider-val" id="ddoCapGainsRateSliderVal">15%</span>
         </div>
       </div>
     </div>
@@ -184,6 +204,10 @@
         </div>
       </div>
       <div class="deferral-note" id="ddoNote">—</div>
+      <div class="share-row">
+        <button type="button" class="ghost" id="shareLinkBtn">🔗 Copy shareable link</button>
+        <span class="share-feedback" id="shareFeedback" role="status" aria-live="polite"></span>
+      </div>
 
       <div class="chart-legend">
         <span><span class="legend-dot" style="background:var(--harbor);"></span>401(k) / IRA</span>
@@ -291,7 +315,7 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=551a06bb"></script>
+  <script src="shared.js?v=1672ad80"></script>
   <script>
     (function () {
       initTheme();
@@ -300,7 +324,13 @@
       initToolSearch();
       initStaleBanner();
       initGlossaryTerms();
-      restoreInputs();
+      // A shared link (query params) takes priority over local autosave, same as CoastFIRE Calculator.
+      const loadedFromLink = applyQueryParams();
+      if (loadedFromLink) { saveInputs(); history.replaceState(null, '', window.location.pathname); }
+      else { restoreInputs(); }
+      initCurrencyInputFormatting();
+      initShareLinkButton('shareLinkBtn', 'shareFeedback');
+      renderCompactSnapshot('planSnapshot', { portfolio: 'planSnapPortfolio', status: 'planSnapStatus' });
       seedLiveFxRateIfNeeded(() => renderDrawdown());
 
       // Seed balances from the CoastFIRE Calculator's own retirement-age projection, but only
@@ -320,6 +350,8 @@
         $('ddoIraBal').value = Math.round(last.ira);
         $('ddoRothBal').value = Math.round(last.roth);
         $('ddoTaxableUsdBal').value = Math.round(last.taxableUsd);
+        ['ddoRrspBal', 'ddoTfsaBal', 'ddoNonregCadBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoTaxableUsdBal']
+          .forEach(id => formatCommaFieldValue($(id)));
       })();
 
       const BANNER_DISMISS_KEY = 'ccfire:bannerDismissed';
@@ -328,13 +360,13 @@
       const hadSavedDataBeforeLoad = hasUserData();
       let bannerDismissedBefore = false;
       try { bannerDismissedBefore = hasStorage && localStorage.getItem(BANNER_DISMISS_KEY) === '1'; } catch (e) { }
-      if (hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
+      if (loadedFromLink || hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
       $('dismissSampleBtn').addEventListener('click', () => {
         hideBanner();
         try { if (hasStorage) localStorage.setItem(BANNER_DISMISS_KEY, '1'); } catch (e) { }
       });
       $('loadExampleBtn').addEventListener('click', () => {
-        FIELD_IDS.forEach(id => { const el = $(id); if (el && DEFAULT_FIELD_VALUES[id] !== undefined) el.value = DEFAULT_FIELD_VALUES[id]; });
+        FIELD_IDS.forEach(id => { const el = $(id); if (el && DEFAULT_FIELD_VALUES[id] !== undefined) { el.value = DEFAULT_FIELD_VALUES[id]; if (COMMA_FIELDS.has(id)) formatCommaFieldValue(el); } });
         showBanner();
         saveInputs();
         renderDrawdown();
@@ -357,6 +389,7 @@
       function fmtUsd(n) { return fmt(n, 'USD'); }
 
       let lastRecommended = null;
+      let lastDdoStats = {}; // previous headline numbers, for animateValue()'s tween-from
 
       function drawWithdrawalStack(sim) {
         const canvas = $('ddoWithdrawalChart');
@@ -453,6 +486,7 @@
           $('ddoStrategyTable').innerHTML = '';
           $('ddoYearsBody').innerHTML = '';
           ['ddoTotalTax', 'ddoEndingBalance', 'ddoDepletion', 'ddoTaxSaved'].forEach(id => $(id).textContent = '—');
+          lastDdoStats = {};
           return;
         }
 
@@ -466,8 +500,9 @@
         lastRecommended = recommended;
 
         const planToAge = num('ddoPlanToAge') || 90;
-        $('ddoTotalTax').textContent = fmtUsd(recommended.totalTaxPaid);
-        $('ddoEndingBalance').textContent = fmtUsd(recommended.endingBalance);
+        animateValue($('ddoTotalTax'), lastDdoStats.totalTax, recommended.totalTaxPaid, fmtUsd, 400);
+        animateValue($('ddoEndingBalance'), lastDdoStats.endingBalance, recommended.endingBalance, fmtUsd, 400);
+        lastDdoStats = { totalTax: recommended.totalTaxPaid, endingBalance: recommended.endingBalance };
         $('ddoDepletion').textContent = recommended.depletionAge === null ? `Age ${planToAge}+` : `Age ${recommended.depletionAge}`;
 
         const worst = sims.reduce((a, b) => (b.sim.totalTaxPaid > a.sim.totalTaxPaid ? b : a));
@@ -510,6 +545,20 @@
         $(id).addEventListener('input', () => { saveInputs(); renderDrawdown(); });
         $(id).addEventListener('change', () => { saveInputs(); renderDrawdown(); });
       });
+
+      // ---- Live slider (quick-adjust) for capital-gains rate, synced both ways with the number field ----
+      function syncDdoSliderFromField() {
+        $('ddoCapGainsRateSlider').value = num('ddoCapGainsRate');
+        $('ddoCapGainsRateSliderVal').textContent = num('ddoCapGainsRate') + '%';
+      }
+      $('ddoCapGainsRateSlider').addEventListener('input', () => {
+        $('ddoCapGainsRate').value = $('ddoCapGainsRateSlider').value;
+        $('ddoCapGainsRateSliderVal').textContent = $('ddoCapGainsRateSlider').value + '%';
+        renderDrawdown();
+      });
+      $('ddoCapGainsRateSlider').addEventListener('change', () => { saveInputs(); });
+      $('ddoCapGainsRate').addEventListener('input', syncDdoSliderFromField);
+      syncDdoSliderFromField();
 
       renderDrawdown();
     })();

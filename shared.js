@@ -14,12 +14,63 @@
 })();
 
 const $ = id => document.getElementById(id);
-const num = id => parseFloat($(id).value) || 0;
+// Strips thousands-separator commas (and a stray currency symbol) before parsing, so a
+// comma-formatted field like "60,000" reads as 60000, not 60 — see COMMA_FIELDS below.
+// Safe to call on a value that never had commas; behaves exactly like parseFloat(...) || 0 then.
+function parseNum(str) {
+  if (typeof str === 'number') return str;
+  if (str === undefined || str === null) return 0;
+  const n = parseFloat(String(str).replace(/[,$]/g, '').trim());
+  return Number.isFinite(n) ? n : 0;
+}
+const num = id => parseNum($(id).value);
 const fmt = (n, cur) => {
   const sign = n < 0 ? '-' : '';
   n = Math.abs(Math.round(n));
   return sign + (cur === 'CAD' ? 'CA$' : '$') + n.toLocaleString('en-US');
 };
+
+// ==================================================================
+// Formatted currency inputs — dollar-amount fields (balances, contributions, benefit amounts)
+// get thousands-separator commas for readability; age/year/rate/percentage fields don't (short
+// values, commas add nothing there) and stay plain <input type="number">. A comma field is
+// type="text" with inputmode="decimal" in its markup, since native <input type="number"> rejects
+// commas outright.
+//
+// Mechanism is format-on-blur, not live-format-while-typing: cursor-position math for inserting
+// commas as someone types is genuinely fiddly (each inserted/removed comma shifts every digit
+// after it) with zero precedent elsewhere in this codebase, so building that untested across
+// every comma field at once is a bigger risk than the polish is worth. Instead: focus strips
+// back to plain digits (editing is always against a raw number), blur reformats with commas, and
+// restoreInputs()/applyScenario()/applyQueryParams() run the same blur-formatter once after
+// setting a value so a returning visitor sees "60,000" immediately, not after their first blur.
+// ==================================================================
+const COMMA_FIELDS = new Set([
+  'monthlyExpenses', 'rrspBal', 'rrspContrib', 'rrspMatch', 'tfsaBal', 'tfsaContrib',
+  'nonregCadBal', 'nonregCadContrib', 'k401Bal', 'k401Contrib', 'k401Match', 'iraBal', 'iraContrib',
+  'rothBal', 'rothContrib', 'taxableUsdBal', 'taxableUsdContrib', 'fhsaBal', 'fhsaContrib',
+  'respBal', 'respContrib', 'hsaBal', 'hsaContrib', 'cppMonthly', 'oasMonthly', 'ssMonthly',
+  'dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'rwRrspAtRetirement',
+  'claimCppBase', 'claimOasBase', 'claimSsBase',
+  'ddoRrspBal', 'ddoTfsaBal', 'ddoNonregCadBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoTaxableUsdBal',
+  'mbNetWorth', 'mbTaxLiability'
+]);
+function formatCommaFieldValue(el) {
+  const n = parseNum(el.value);
+  el.value = n === 0 && el.value.trim() === '' ? '' : String(n.toLocaleString('en-US', { maximumFractionDigits: 2 }));
+}
+// Wires focus/blur formatting on every COMMA_FIELDS element present in the current page's DOM.
+// Safe to call once per page on load — a page only has its own fields, so this naturally no-ops
+// for every id not present here.
+function initCurrencyInputFormatting() {
+  COMMA_FIELDS.forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    formatCommaFieldValue(el); // format whatever value is already in the DOM (page defaults)
+    el.addEventListener('focus', () => { el.value = parseNum(el.value) === 0 && el.value.trim() === '' ? '' : String(parseNum(el.value)); });
+    el.addEventListener('blur', () => formatCommaFieldValue(el));
+  });
+}
 
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -30,7 +81,8 @@ const THEME_KEY = 'ccfire:theme';
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   const btn = $('themeToggle');
-  if (btn) btn.textContent = theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode';
+  // innerHTML (not textContent) so the icon-only mobile layout's nested .btn-label survives a toggle.
+  if (btn) btn.innerHTML = theme === 'dark' ? '☀️<span class="btn-label"> Light mode</span>' : '🌙<span class="btn-label"> Dark mode</span>';
 }
 function initTheme() {
   let theme = null;
@@ -62,7 +114,7 @@ function initMobileNav() {
   function setOpen(open) {
     nav.classList.toggle('nav-open', open);
     btn.setAttribute('aria-expanded', String(open));
-    btn.textContent = open ? '✕ Close' : '☰ Menu';
+    btn.innerHTML = open ? '✕<span class="btn-label"> Close</span>' : '☰<span class="btn-label"> Menu</span>';
   }
   btn.addEventListener('click', () => setOpen(!nav.classList.contains('nav-open')));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
@@ -194,7 +246,8 @@ const ICONS = {
   barChart: `<svg ${SVG_ATTRS}><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/><path d="M2 20h20"/></svg>`,
   leaf: `<svg ${SVG_ATTRS}><path d="M6 20C6 11 12 4 20 4c0 8-7 14-16 16z"/><path d="M6 20l6-6"/></svg>`,
   columns: `<svg ${SVG_ATTRS}><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/></svg>`,
-  home: `<svg ${SVG_ATTRS}><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>`
+  home: `<svg ${SVG_ATTRS}><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>`,
+  lock: `<svg ${SVG_ATTRS}><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`
 };
 
 const SEARCH_TOOLS = [
@@ -400,6 +453,23 @@ const DEFAULT_FIELD_VALUES = {
   lifeEvents: '[]'
 };
 
+// Compact 2-stat "your plan so far" strip for the non-CoastFIRE tool pages — a smaller sibling
+// of the homepage snapshot (#snapshotCard), reusing the same hasUserData()/compute() pipeline.
+// Stays hidden for a first-time visitor, exactly like the homepage version.
+function renderCompactSnapshot(containerId, statIds) {
+  const container = $(containerId);
+  if (!container || !hasUserData()) return;
+  const res = compute(readStoredInputs());
+  const first = res.rows[0];
+  if (statIds.portfolio) $(statIds.portfolio).textContent = fmt(first.combined, res.reportCurrency);
+  if (statIds.status) {
+    $(statIds.status).textContent = res.coastYearIndex !== null
+      ? (res.coastYearIndex === 0 ? 'Already there' : `In ~${res.coastYearIndex} yrs (age ${res.currentAge + res.coastYearIndex})`)
+      : 'Not yet on track';
+  }
+  container.hidden = false;
+}
+
 // Timestamp of the last time any tool page actually wrote to ccfire:v2 — used to nudge users
 // whose numbers have gone stale, separately from SNOOZE_KEY which mutes that nudge for a while.
 const LAST_SAVED_KEY = 'ccfire:lastSaved';
@@ -459,6 +529,20 @@ function writeStoredInputs(patch) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stored)); markSaved(); } catch (e) { /* ignore quota/availability errors */ }
 }
 
+// Live "Saved" pulse for the #saveIndicator element (if a page has one), debounced so a burst
+// of keystrokes doesn't flash it repeatedly — one 600ms-delayed show, held for 1.5s, per pause.
+let saveIndicatorTimer = null, saveIndicatorHideTimer = null;
+function showSaveIndicator() {
+  const el = $('saveIndicator');
+  if (!el) return;
+  clearTimeout(saveIndicatorTimer);
+  saveIndicatorTimer = setTimeout(() => {
+    clearTimeout(saveIndicatorHideTimer);
+    el.classList.add('show');
+    saveIndicatorHideTimer = setTimeout(() => el.classList.remove('show'), 1500);
+  }, 600);
+}
+
 // Saves this page's own fields into ccfire:v2. Merges with whatever's already stored rather
 // than replacing it outright — each tool page only has its own fields in the DOM, so a plain
 // "build data fresh from FIELD_IDS" would silently drop every other tool's saved values.
@@ -466,9 +550,12 @@ function saveInputs() {
   if (!hasStorage) return;
   try {
     const data = readRawStore();
-    FIELD_IDS.forEach(id => { const el = $(id); if (el) data[id] = el.value; });
+    // Comma-formatted fields persist their clean numeric string, never the display string with
+    // commas in it — fail-safe rather than fail-silent if some future read site forgets parseNum().
+    FIELD_IDS.forEach(id => { const el = $(id); if (el) data[id] = COMMA_FIELDS.has(id) ? String(parseNum(el.value)) : el.value; });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     markSaved();
+    showSaveIndicator();
   } catch (e) { /* ignore quota/availability errors */ }
 }
 // Restores whichever of this page's own fields have a saved value. Safe as-is post-split:
@@ -479,9 +566,108 @@ function restoreInputs() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
     const data = JSON.parse(raw);
-    FIELD_IDS.forEach(id => { const el = $(id); if (el && data[id] !== undefined) el.value = data[id]; });
+    FIELD_IDS.forEach(id => {
+      const el = $(id);
+      if (!el || data[id] === undefined) return;
+      el.value = data[id];
+      if (COMMA_FIELDS.has(id)) formatCommaFieldValue(el);
+    });
     return true;
   } catch (e) { return false; }
+}
+
+// ==================================================================
+// Animated count-up/down for headline numbers — cancel-safe per element via a WeakMap, so a
+// rapid re-render (e.g. the user dragging a slider) cancels any in-flight tween for that element
+// instead of stacking requestAnimationFrame loops. Pass fromNumber = undefined/NaN on a page's
+// very first render so it sets the value directly with no tween ("slot machine" effect avoided).
+//
+// requestAnimationFrame is throttled to near-zero in a background/non-visible tab (e.g. a page
+// opened in a background tab, or this project's own automated test tooling) — a pure-rAF tween
+// would leave the element frozen mid-animation indefinitely in that case, silently showing a
+// stale number even though the underlying calculation is correct. A generation counter plus a
+// setTimeout fallback guarantees the element reaches the correct final text either way: the
+// rAF path animates smoothly when frames are actually being delivered, and the timeout forces
+// the exact final value once `durationMs` has passed regardless of whether any frame ran.
+// ==================================================================
+const animateValueState = new WeakMap(); // el -> { generation, rafId, timeoutId }
+function animateValue(el, fromNumber, toNumber, formatFn, durationMs) {
+  if (!el) return;
+  const existing = animateValueState.get(el);
+  if (existing) { cancelAnimationFrame(existing.rafId); clearTimeout(existing.timeoutId); }
+  if (!Number.isFinite(fromNumber) || fromNumber === toNumber) {
+    el.textContent = formatFn(toNumber);
+    animateValueState.delete(el);
+    return;
+  }
+  const generation = (existing ? existing.generation : 0) + 1;
+  const start = performance.now();
+  const duration = durationMs || 500;
+  const state = { generation, rafId: null, timeoutId: null };
+  function tick(now) {
+    if (animateValueState.get(el) !== state) return; // superseded by a newer call
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+    el.textContent = formatFn(fromNumber + (toNumber - fromNumber) * eased);
+    if (t < 1) { state.rafId = requestAnimationFrame(tick); }
+    else { clearTimeout(state.timeoutId); animateValueState.delete(el); }
+  }
+  state.rafId = requestAnimationFrame(tick);
+  state.timeoutId = setTimeout(() => {
+    if (animateValueState.get(el) !== state) return; // already finished/superseded
+    cancelAnimationFrame(state.rafId);
+    el.textContent = formatFn(toNumber);
+    animateValueState.delete(el);
+  }, duration + 50);
+  animateValueState.set(el, state);
+}
+
+// ==================================================================
+// Shareable scenario link — encodes every FIELD_IDS value present in the current page's DOM
+// into a query string, and reads it back the same way. Generic over whatever subset of fields
+// a given page actually has, so every tool page can use the same two functions.
+// ==================================================================
+function buildShareUrl() {
+  const params = new URLSearchParams();
+  FIELD_IDS.forEach(id => { const el = $(id); if (el) params.set(id, COMMA_FIELDS.has(id) ? String(parseNum(el.value)) : el.value); });
+  return window.location.origin + window.location.pathname + '?' + params.toString();
+}
+function applyQueryParams() {
+  const params = new URLSearchParams(window.location.search);
+  let applied = false;
+  FIELD_IDS.forEach(id => {
+    if (params.has(id)) {
+      const el = $(id);
+      if (el) {
+        el.value = params.get(id);
+        if (COMMA_FIELDS.has(id)) formatCommaFieldValue(el);
+        applied = true;
+      }
+    }
+  });
+  return applied;
+}
+// Shared opacity-fade feedback element, used by both the share-link button and (elsewhere)
+// named-scenario saves — each caller owns its own element id/message.
+function showTransientFeedback(elId, msg, durationMs) {
+  const el = $(elId);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = 1;
+  setTimeout(() => { el.style.opacity = 0; }, durationMs || 2500);
+}
+function initShareLinkButton(btnId, feedbackId) {
+  const btn = $(btnId);
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    const url = buildShareUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      showTransientFeedback(feedbackId, 'Link copied — paste it anywhere to share this exact scenario.');
+    } catch (e) {
+      window.prompt('Copy this link to share your scenario:', url);
+    }
+  });
 }
 
 // ==================================================================
@@ -555,7 +741,7 @@ function applyLifeEventsForAge(bal, events, age, exchangeRate, usdConverted) {
 function compute(overrides) {
   overrides = overrides || {};
   const raw = id => (overrides[id] !== undefined ? overrides[id] : $(id).value);
-  const val = id => parseFloat(raw(id)) || 0;
+  const val = id => parseNum(raw(id));
 
   const currentAge = val('currentAge');
   const retireAge = val('retireAge');
@@ -685,7 +871,7 @@ function randNormal() {
 function simulateMonteCarlo(overrides, trials, stdevReturn) {
   overrides = overrides || {};
   const raw = id => (overrides[id] !== undefined ? overrides[id] : $(id).value);
-  const val = id => parseFloat(raw(id)) || 0;
+  const val = id => parseNum(raw(id));
 
   const currentAge = val('currentAge');
   const retireAge = val('retireAge');
@@ -974,7 +1160,7 @@ function taxOnWithdrawals(withdrawals, standardDeduction, brackets, capGainsRate
 function simulateDrawdown(overrides, strategyName) {
   overrides = overrides || {};
   const raw = id => overrides[id];
-  const val = id => parseFloat(raw(id)) || 0;
+  const val = id => parseNum(raw(id));
 
   const currentAge = val('currentAge');
   const retireAge = val('retireAge');

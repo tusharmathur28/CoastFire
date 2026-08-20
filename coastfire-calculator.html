@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=7dd94de2">
+  <link rel="stylesheet" href="styles.css?v=1446311b">
 </head>
 
 <body>
@@ -49,9 +49,9 @@
             accounts in their native currencies.</p>
         </div>
         <div class="header-actions">
-          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
-          <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
-          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰ Menu</button>
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍<span class="btn-label"> Search</span></button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙<span class="btn-label"> Dark mode</span></button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰<span class="btn-label"> Menu</span></button>
         </div>
       </div>
       <nav class="page-nav" id="pageNav">
@@ -145,12 +145,12 @@
         <div class="grid3" data-step="1">
           <div class="field">
             <label for="currentAge">Current age <span class="info" title="Your current age in years.">?</span></label>
-            <input type="number" id="currentAge" value="34" min="16" max="80" step="1" required>
+            <input type="number" inputmode="numeric" id="currentAge" value="34" min="16" max="80" step="1" required>
           </div>
           <div class="field">
             <label for="retireAge">Retirement age <span class="info"
                 title="The age you plan to fully retire and begin drawing on your investments.">?</span></label>
-            <input type="number" id="retireAge" value="60" min="17" max="90" step="1" required>
+            <input type="number" inputmode="numeric" id="retireAge" value="60" min="17" max="90" step="1" required>
           </div>
           <div class="field">
             <label for="contribFreq">Contribution frequency <span class="info"
@@ -166,7 +166,7 @@
         <div class="grid3" data-step="1">
           <div class="field">
             <label for="monthlyExpenses">Monthly expenses in retirement (<span id="expenseCurrencyLabel">USD</span>, today's dollars)</label>
-            <input type="number" id="monthlyExpenses" value="5000" min="0" step="50">
+            <input type="text" inputmode="decimal" id="monthlyExpenses" value="5000" min="0" step="50">
           </div>
         </div>
         </div>
@@ -187,35 +187,35 @@
             <div class="field">
               <label for="rrspBal">RRSP balance ($ CAD) <span class="tag treaty">Treaty-protected</span></label>
               <div class="label-plain">Canada's employer-style retirement account — similar to a 401(k)</div>
-              <input type="number" id="rrspBal" value="60000" min="0" step="100">
+              <input type="text" inputmode="decimal" id="rrspBal" value="60000" min="0" step="100">
             </div>
             <div class="field">
               <label for="rrspContrib">RRSP contribution ($ CAD)</label>
-              <input type="number" id="rrspContrib" value="400" min="0" step="10">
+              <input type="text" inputmode="decimal" id="rrspContrib" value="400" min="0" step="10">
             </div>
             <div class="field employer-match-field">
               <label for="rrspMatch">+ Employer match ($ CAD, if any)</label>
-              <input type="number" id="rrspMatch" value="0" min="0" step="10">
+              <input type="text" inputmode="decimal" id="rrspMatch" value="0" min="0" step="10">
             </div>
 
             <div class="field">
               <label for="tfsaBal">TFSA balance ($ CAD) <span class="tag watch">Not tax-free to IRS</span></label>
               <div class="label-plain">Canada's flexible tax-free savings account — just not tax-free to the IRS</div>
-              <input type="number" id="tfsaBal" value="25000" min="0" step="100">
+              <input type="text" inputmode="decimal" id="tfsaBal" value="25000" min="0" step="100">
             </div>
             <div class="field">
               <label for="tfsaContrib">TFSA contribution ($ CAD)</label>
-              <input type="number" id="tfsaContrib" value="200" min="0" step="10">
+              <input type="text" inputmode="decimal" id="tfsaContrib" value="200" min="0" step="10">
             </div>
 
             <div class="field">
               <label for="nonregCadBal">Non-registered (CAD) balance ($)</label>
               <div class="label-plain">A regular taxable investment account — no special tax treatment</div>
-              <input type="number" id="nonregCadBal" value="10000" min="0" step="100">
+              <input type="text" inputmode="decimal" id="nonregCadBal" value="10000" min="0" step="100">
             </div>
             <div class="field">
               <label for="nonregCadContrib">Non-registered (CAD) contribution ($)</label>
-              <input type="number" id="nonregCadContrib" value="100" min="0" step="10">
+              <input type="text" inputmode="decimal" id="nonregCadContrib" value="100" min="0" step="10">
             </div>
           </div>
 
@@ -227,45 +227,45 @@
             <div class="field">
               <label for="k401Bal">401(k) / 403(b) balance ($ USD)</label>
               <div class="label-plain">Your US employer-sponsored retirement plan</div>
-              <input type="number" id="k401Bal" value="45000" min="0" step="100">
+              <input type="text" inputmode="decimal" id="k401Bal" value="45000" min="0" step="100">
             </div>
             <div class="field">
               <label for="k401Contrib">401(k) / 403(b) contribution ($ USD)</label>
-              <input type="number" id="k401Contrib" value="500" min="0" step="10">
+              <input type="text" inputmode="decimal" id="k401Contrib" value="500" min="0" step="10">
             </div>
             <div class="field employer-match-field">
               <label for="k401Match">+ Employer match ($ USD, if any)</label>
-              <input type="number" id="k401Match" value="0" min="0" step="10">
+              <input type="text" inputmode="decimal" id="k401Match" value="0" min="0" step="10">
             </div>
 
             <div class="field">
               <label for="iraBal">Traditional / Rollover IRA balance ($ USD)</label>
               <div class="label-plain">A US tax-deferred retirement account you contribute to yourself</div>
-              <input type="number" id="iraBal" value="8000" min="0" step="100">
+              <input type="text" inputmode="decimal" id="iraBal" value="8000" min="0" step="100">
             </div>
             <div class="field">
               <label for="iraContrib">Traditional IRA contribution ($ USD)</label>
-              <input type="number" id="iraContrib" value="50" min="0" step="10">
+              <input type="text" inputmode="decimal" id="iraContrib" value="50" min="0" step="10">
             </div>
 
             <div class="field">
               <label for="rothBal">Roth IRA balance ($ USD)</label>
               <div class="label-plain">Funded with after-tax dollars — growth and withdrawals are generally tax-free</div>
-              <input type="number" id="rothBal" value="12000" min="0" step="100">
+              <input type="text" inputmode="decimal" id="rothBal" value="12000" min="0" step="100">
             </div>
             <div class="field">
               <label for="rothContrib">Roth IRA contribution ($ USD)</label>
-              <input type="number" id="rothContrib" value="150" min="0" step="10">
+              <input type="text" inputmode="decimal" id="rothContrib" value="150" min="0" step="10">
             </div>
 
             <div class="field">
               <label for="taxableUsdBal">Taxable brokerage balance ($ USD)</label>
               <div class="label-plain">A regular taxable investment account — no special tax treatment</div>
-              <input type="number" id="taxableUsdBal" value="15000" min="0" step="100">
+              <input type="text" inputmode="decimal" id="taxableUsdBal" value="15000" min="0" step="100">
             </div>
             <div class="field">
               <label for="taxableUsdContrib">Taxable brokerage contribution ($ USD)</label>
-              <input type="number" id="taxableUsdContrib" value="200" min="0" step="10">
+              <input type="text" inputmode="decimal" id="taxableUsdContrib" value="200" min="0" step="10">
             </div>
           </div>
         </div>
@@ -280,22 +280,22 @@
               <label for="fhsaBal">FHSA balance ($ CAD) <span class="tag uncertain">Uncertain US treatment</span></label>
               <div class="label-plain">Canada's First Home Savings Account — the IRS has issued no guidance yet; many
                 cross-border preparers treat it cautiously, similar to (or more uncertain than) a TFSA.</div>
-              <input type="number" id="fhsaBal" value="0" min="0" step="100">
+              <input type="text" inputmode="decimal" id="fhsaBal" value="0" min="0" step="100">
             </div>
             <div class="field">
               <label for="fhsaContrib">FHSA contribution ($ CAD)</label>
-              <input type="number" id="fhsaContrib" value="0" min="0" step="10">
+              <input type="text" inputmode="decimal" id="fhsaContrib" value="0" min="0" step="10">
             </div>
 
             <div class="field">
               <label for="respBal">RESP balance ($ CAD) <span class="tag watch">Not tax-free to IRS</span></label>
               <div class="label-plain">Education savings account with government matching (CESG) — like the TFSA,
                 not recognized as tax-deferred by the IRS and can carry foreign trust reporting exposure.</div>
-              <input type="number" id="respBal" value="0" min="0" step="100">
+              <input type="text" inputmode="decimal" id="respBal" value="0" min="0" step="100">
             </div>
             <div class="field">
               <label for="respContrib">RESP contribution ($ CAD)</label>
-              <input type="number" id="respContrib" value="0" min="0" step="10">
+              <input type="text" inputmode="decimal" id="respContrib" value="0" min="0" step="10">
             </div>
           </div>
 
@@ -304,12 +304,12 @@
               <label for="hsaBal">HSA balance ($ USD) <span class="tag good-tag">No cross-border issue</span></label>
               <div class="label-plain">US-only triple-tax-advantaged medical savings account — no treaty or reporting
                 complication, since it isn't a foreign account.</div>
-              <input type="number" id="hsaBal" value="0" min="0" step="100">
+              <input type="text" inputmode="decimal" id="hsaBal" value="0" min="0" step="100">
             </div>
             <div class="field">
               <label for="hsaContrib">HSA contribution ($ USD) <span class="info"
                   title="2026 IRS limits: $4,400/year self-only coverage, $8,750/year family coverage, plus a $1,000 catch-up at age 55+.">?</span></label>
-              <input type="number" id="hsaContrib" value="0" min="0" step="10">
+              <input type="text" inputmode="decimal" id="hsaContrib" value="0" min="0" step="10">
             </div>
           </div>
         </div>
@@ -333,7 +333,7 @@
             <label for="exchangeRate">Exchange rate <span class="info"
                 title="Used only to convert your combined totals — each account keeps growing in its own currency underneath.">?</span></label>
             <div class="label-plain">How many US dollars one Canadian dollar buys right now</div>
-            <input type="number" id="exchangeRate" value="0.73" min="0.01" step="0.01">
+            <input type="number" inputmode="decimal" id="exchangeRate" value="0.73" min="0.01" step="0.01">
             <div class="field-note" style="font-size:12px;color:var(--ink-soft);margin-top:4px;">1 CAD = this many USD
             </div>
             <div class="fx-hint-row">
@@ -360,18 +360,18 @@
           </div>
           <div class="field" data-step="3">
             <label for="returnRate">Expected annual investment return (%)</label>
-            <input type="number" id="returnRate" value="7" min="0" step="0.1">
+            <input type="number" inputmode="decimal" id="returnRate" value="7" min="0" step="0.1">
             <div class="typical-range">Not sure? A diversified stock/bond portfolio has historically averaged
               roughly 5–8% — the presets above pick reasonable low/mid/high values for you.</div>
           </div>
           <div class="field" data-step="3">
             <label for="inflationRate">Expected annual inflation (%)</label>
-            <input type="number" id="inflationRate" value="2.5" min="0" step="0.1">
+            <input type="number" inputmode="decimal" id="inflationRate" value="2.5" min="0" step="0.1">
             <div class="typical-range">Not sure? 2–3% matches the long-run average for both Canada and the US.</div>
           </div>
           <div class="field" data-step="3">
             <label for="withdrawalRate">Annual withdrawal rate (%)</label>
-            <input type="number" id="withdrawalRate" value="4" min="0.5" step="0.1">
+            <input type="number" inputmode="decimal" id="withdrawalRate" value="4" min="0.5" step="0.1">
             <div class="typical-range">Not sure? 4% is the classic "safe withdrawal rate" rule of thumb — how much
               of your portfolio you draw down each year in retirement.</div>
           </div>
@@ -399,7 +399,7 @@
               <div class="field">
                 <label for="cppMonthly">Expected monthly CPP ($ CAD) <span class="info"
                     title="2026 max at age 65 is about $1,507.65/mo; the average new beneficiary gets about $925/mo. Based on your actual contribution history.">?</span></label>
-                <input type="number" id="cppMonthly" value="900" min="0" step="10">
+                <input type="text" inputmode="decimal" id="cppMonthly" value="900" min="0" step="10">
                 <div class="not-sure-hint">Not sure? The average new CPP recipient gets about $925/mo — check your real
                   estimate free at <a href="https://www.canada.ca/en/services/benefits/publicpensions/cpp.html" target="_blank" rel="noopener">canada.ca</a>.
                   <button type="button" class="use-avg" data-target="cppMonthly" data-value="925">Use average ($925)</button>
@@ -410,7 +410,7 @@
                 <div class="field">
                   <label for="oasYears">Years of Canadian residency since age 18 <span class="info"
                       title="OAS pays a full pension after 40 years of Canadian residency since 18. Fewer years means a prorated (1/40 per year) amount. Living in the US, you generally need at least 20 years to receive OAS abroad — the Canada-US Totalization Agreement lets US residency count toward that 20-year threshold, though it doesn't increase the payment itself.">?</span></label>
-                  <input type="number" id="oasYears" value="18" min="0" max="40" step="1">
+                  <input type="number" inputmode="numeric" id="oasYears" value="18" min="0" max="40" step="1">
                 </div>
                 <button type="button" class="small" id="estimateOasBtn">Estimate my OAS</button>
               </div>
@@ -419,7 +419,7 @@
 
               <div class="field">
                 <label for="oasMonthly">Expected monthly OAS ($ CAD) <span class="tag watch">Income-tested</span></label>
-                <input type="number" id="oasMonthly" value="334" min="0" step="1">
+                <input type="text" inputmode="decimal" id="oasMonthly" value="334" min="0" step="1">
               </div>
             </div>
 
@@ -431,7 +431,7 @@
               <div class="field">
                 <label for="ssMonthly">Expected monthly Social Security ($ USD) <span class="info"
                     title="2026 average retirement benefit is about $2,071-2,083/mo. Max at full retirement age (67) is about $4,152/mo, or $5,181/mo if you delay to 70. Since Jan 2025, WEP/GPO no longer reduce this for people also receiving a foreign pension like CPP.">?</span></label>
-                <input type="number" id="ssMonthly" value="2000" min="0" step="10">
+                <input type="text" inputmode="decimal" id="ssMonthly" value="2000" min="0" step="10">
                 <div class="not-sure-hint">Not sure? The average retirement benefit is about $2,071/mo — check your real
                   estimate free at <a href="https://www.ssa.gov/myaccount/" target="_blank" rel="noopener">ssa.gov/myaccount</a>.
                   <button type="button" class="use-avg" data-target="ssMonthly" data-value="2071">Use average ($2,071)</button>
@@ -442,7 +442,7 @@
                 <label for="benefitsStartAge">Government benefits start age <span class="info"
                     title="Applied uniformly to CPP, OAS, and Social Security for simplicity — in reality you can start each independently between roughly 60-70 (CPP/OAS) or 62-70 (Social Security).">?</span></label>
                 <div class="label-plain">The age you'll start collecting CPP, OAS, and Social Security</div>
-                <input type="number" id="benefitsStartAge" value="65" min="55" max="70" step="1">
+                <input type="number" inputmode="numeric" id="benefitsStartAge" value="65" min="55" max="70" step="1">
               </div>
             </div>
           </div>
@@ -485,7 +485,7 @@
         <button type="button" class="ghost" id="downloadPdfBtn">📄 Download full plan (PDF)</button>
         <span class="share-feedback" id="shareFeedback" role="status" aria-live="polite">Link copied!</span>
       </div>
-      <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.
+      <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.<span class="save-indicator" id="saveIndicator" role="status" aria-live="polite">Saved</span>
       </div>
     </form>
     <div id="results" hidden>
@@ -622,6 +622,16 @@
           <input type="range" id="retireAgeSlider" min="45" max="75" step="1" value="60">
           <span class="slider-val" id="retireAgeSliderVal">60</span>
         </div>
+        <div class="slider-row">
+          <label for="inflationRateSlider">Inflation (%)</label>
+          <input type="range" id="inflationRateSlider" min="0" max="8" step="0.1" value="2.5">
+          <span class="slider-val" id="inflationRateSliderVal">2.5%</span>
+        </div>
+        <div class="slider-row">
+          <label for="withdrawalRateSlider">Withdrawal rate (%)</label>
+          <input type="range" id="withdrawalRateSlider" min="0.5" max="10" step="0.1" value="4">
+          <span class="slider-val" id="withdrawalRateSliderVal">4%</span>
+        </div>
       </div>
 
       <div class="chart-card" id="chartSection">
@@ -704,7 +714,7 @@
             <div class="helper-row">
               <div class="field">
                 <label for="gsTargetAge">Target retirement age</label>
-                <input type="number" id="gsTargetAge" min="20" max="90" step="1" value="55">
+                <input type="number" inputmode="numeric" id="gsTargetAge" min="20" max="90" step="1" value="55">
               </div>
               <button type="button" class="small" id="gsSolveContribBtn">Solve</button>
             </div>
@@ -993,7 +1003,7 @@
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=551a06bb"></script>
+  <script src="shared.js?v=1672ad80"></script>
   <script>
     (function () {
       initTheme();
@@ -1072,6 +1082,10 @@
         $('returnRateSliderVal').textContent = num('returnRate') + '%';
         $('retireAgeSlider').value = num('retireAge');
         $('retireAgeSliderVal').textContent = num('retireAge');
+        $('inflationRateSlider').value = num('inflationRate');
+        $('inflationRateSliderVal').textContent = num('inflationRate') + '%';
+        $('withdrawalRateSlider').value = num('withdrawalRate');
+        $('withdrawalRateSliderVal').textContent = num('withdrawalRate') + '%';
       }
       $('returnRateSlider').addEventListener('input', () => {
         $('returnRate').value = $('returnRateSlider').value;
@@ -1087,6 +1101,18 @@
         quickUpdate();
       });
       $('retireAgeSlider').addEventListener('change', () => { saveInputs(); validateAndRender(); });
+      $('inflationRateSlider').addEventListener('input', () => {
+        $('inflationRate').value = $('inflationRateSlider').value;
+        $('inflationRateSliderVal').textContent = $('inflationRateSlider').value + '%';
+        quickUpdate();
+      });
+      $('inflationRateSlider').addEventListener('change', () => { saveInputs(); validateAndRender(); });
+      $('withdrawalRateSlider').addEventListener('input', () => {
+        $('withdrawalRate').value = $('withdrawalRateSlider').value;
+        $('withdrawalRateSliderVal').textContent = $('withdrawalRateSlider').value + '%';
+        quickUpdate();
+      });
+      $('withdrawalRateSlider').addEventListener('change', () => { saveInputs(); validateAndRender(); });
       // Typing directly into the number fields keeps the sliders in sync too
       $('returnRate').addEventListener('input', () => {
         $('returnRateSlider').value = num('returnRate');
@@ -1095,6 +1121,14 @@
       $('retireAge').addEventListener('input', () => {
         $('retireAgeSlider').value = num('retireAge');
         $('retireAgeSliderVal').textContent = num('retireAge');
+      });
+      $('inflationRate').addEventListener('input', () => {
+        $('inflationRateSlider').value = num('inflationRate');
+        $('inflationRateSliderVal').textContent = num('inflationRate') + '%';
+      });
+      $('withdrawalRate').addEventListener('input', () => {
+        $('withdrawalRateSlider').value = num('withdrawalRate');
+        $('withdrawalRateSliderVal').textContent = num('withdrawalRate') + '%';
       });
 
       function updateOasHint() {
@@ -1106,6 +1140,7 @@
       $('oasYears').addEventListener('input', updateOasHint);
       $('estimateOasBtn').addEventListener('click', () => {
         $('oasMonthly').value = updateOasHint();
+        formatCommaFieldValue($('oasMonthly'));
       });
       updateOasHint();
 
@@ -1214,10 +1249,10 @@
         const currentAge = num('currentAge'), retireAge = num('retireAge'), benefitsStartAge = num('benefitsStartAge');
         if (currentAge <= 0) allErrors.push({ step: 1, message: 'Current age must be greater than 0.' });
         if (retireAge <= currentAge) allErrors.push({ step: 1, message: 'Retirement age must be after your current age.' });
-        if (parseFloat($('monthlyExpenses').value) < 0) allErrors.push({ step: 1, message: 'Monthly expenses cannot be negative.' });
+        if (num('monthlyExpenses') < 0) allErrors.push({ step: 1, message: 'Monthly expenses cannot be negative.' });
 
         ['rrspBal', 'tfsaBal', 'nonregCadBal', 'fhsaBal', 'respBal', 'k401Bal', 'iraBal', 'rothBal', 'taxableUsdBal', 'hsaBal'].forEach(id => {
-          if (parseFloat($(id).value) < 0) allErrors.push({ step: 2, message: 'Balances cannot be negative (' + id + ').' });
+          if (num(id) < 0) allErrors.push({ step: 2, message: 'Balances cannot be negative (' + id + ').' });
         });
 
         if (num('exchangeRate') <= 0) allErrors.push({ step: 3, message: 'Exchange rate must be greater than 0.' });
@@ -1281,11 +1316,19 @@
       }
       function captureCurrentScenario() {
         const snap = {};
-        FIELD_IDS.forEach(id => { const el = $(id); if (el) snap[id] = el.value; });
+        // Same clean-value convention as saveInputs(): a comma-formatted field's display string
+        // never leaks into a saved scenario or exported file, even though applyScenario()/
+        // formatCommaFieldValue() would tolerate it fine on the way back in.
+        FIELD_IDS.forEach(id => { const el = $(id); if (el) snap[id] = COMMA_FIELDS.has(id) ? String(parseNum(el.value)) : el.value; });
         return snap;
       }
       function applyScenario(snap) {
-        FIELD_IDS.forEach(id => { const el = $(id); if (el && snap[id] !== undefined) el.value = snap[id]; });
+        FIELD_IDS.forEach(id => {
+          const el = $(id);
+          if (!el || snap[id] === undefined) return;
+          el.value = snap[id];
+          if (COMMA_FIELDS.has(id)) formatCommaFieldValue(el);
+        });
       }
 
       function showScenarioFeedback(msg) {
@@ -1423,6 +1466,10 @@
 
       let chartRows = [], chartReportCurrency = 'USD', chartGeom = null, chartSeries = null, chartFan = null;
       let lastRes = null, lastMc = null, donutMode = 'account', chartMode = 'single';
+      // Previously-rendered raw numeric values for the headline stats, so animateValue() knows
+      // where to tween *from* on a recalculation — undefined until the first render, which keeps
+      // that very first paint a direct set (no "slot machine" effect on page load).
+      let lastStatValues = {};
 
       // Simplified from the single-page version: it used to show the top flagged Action Item
       // live (via an in-memory variable Action Items populated), but that tool is a separate
@@ -1856,15 +1903,15 @@
       // everything else fixed — match isn't the user's to increase, so it stays as entered.
       function contribOverrides(k) {
         const o = {};
-        ALL_CONTRIB_IDS.forEach(id => { o[id] = (parseFloat($(id).value) || 0) * k; });
+        ALL_CONTRIB_IDS.forEach(id => { o[id] = num(id) * k; });
         return o;
       }
       // CAD and USD contributions are different currencies until this conversion, same as
       // everywhere else in this calculator — never sum them as raw dollars.
       function totalMonthlyContrib(scale, reportCurrency, exchangeRate) {
         const freqMult = $('contribFreq').value === 'monthly' ? 1 : (1 / 12);
-        const cadSum = CAD_CONTRIB_IDS.reduce((s, id) => s + (parseFloat($(id).value) || 0), 0) * scale;
-        const usdSum = USD_CONTRIB_IDS.reduce((s, id) => s + (parseFloat($(id).value) || 0), 0) * scale;
+        const cadSum = CAD_CONTRIB_IDS.reduce((s, id) => s + num(id), 0) * scale;
+        const usdSum = USD_CONTRIB_IDS.reduce((s, id) => s + num(id), 0) * scale;
         return convertToReport(cadSum, usdSum, reportCurrency, exchangeRate) * freqMult;
       }
 
@@ -1889,7 +1936,7 @@
           resultEl.innerHTML = `<div class="reassurance-box warn"><strong>Target age must be after your current age (${currentAge}).</strong></div>`;
           return;
         }
-        const totalCurrentRaw = ALL_CONTRIB_IDS.reduce((s, id) => s + (parseFloat($(id).value) || 0), 0);
+        const totalCurrentRaw = ALL_CONTRIB_IDS.reduce((s, id) => s + num(id), 0);
         if (totalCurrentRaw <= 0) {
           resultEl.innerHTML = `<div class="reassurance-box warn"><strong>Enter at least one contribution amount above first</strong> — this solves by scaling your current contributions, so it needs a starting point above zero.</div>`;
           return;
@@ -2027,9 +2074,11 @@
         const res = compute();
         lastRes = res;
         const first = res.rows[0];
-        $('statCurrent').textContent = fmt(first.combined, res.reportCurrency);
-        $('statRequired').textContent = fmt(res.requiredAtRetirement, res.reportCurrency);
-        $('statCoastNumber').textContent = fmt(res.coastNumberToday, res.reportCurrency);
+        const fmtStat = n => fmt(n, res.reportCurrency);
+        animateValue($('statCurrent'), lastStatValues.current, first.combined, fmtStat, 400);
+        animateValue($('statRequired'), lastStatValues.required, res.requiredAtRetirement, fmtStat, 400);
+        animateValue($('statCoastNumber'), lastStatValues.coastNumber, res.coastNumberToday, fmtStat, 400);
+        lastStatValues = { current: first.combined, required: res.requiredAtRetirement, coastNumber: res.coastNumberToday };
         $('statYearsUntil').textContent = res.coastYearIndex !== null ? res.coastYearIndex : '—';
         buildResultHeadline(res);
 
@@ -2053,10 +2102,12 @@
         $('results').hidden = false;
 
         const first = res.rows[0];
-        $('statCurrent').textContent = fmt(first.combined, res.reportCurrency);
+        const fmtStat = n => fmt(n, res.reportCurrency);
+        animateValue($('statCurrent'), lastStatValues.current, first.combined, fmtStat, 400);
         $('statCurrencyNote').textContent = 'CAD converted at 1 CAD = ' + res.exchangeRate + ' USD';
-        $('statRequired').textContent = fmt(res.requiredAtRetirement, res.reportCurrency);
-        $('statCoastNumber').textContent = fmt(res.coastNumberToday, res.reportCurrency);
+        animateValue($('statRequired'), lastStatValues.required, res.requiredAtRetirement, fmtStat, 400);
+        animateValue($('statCoastNumber'), lastStatValues.coastNumber, res.coastNumberToday, fmtStat, 400);
+        lastStatValues = { current: first.combined, required: res.requiredAtRetirement, coastNumber: res.coastNumberToday };
         buildResultHeadline(res);
 
         const pct = res.coastNumberToday > 0 ? Math.max(0, Math.min(100, Math.round((first.combined / res.coastNumberToday) * 100))) : 0;
@@ -2263,38 +2314,8 @@
         URL.revokeObjectURL(url);
       });
 
-      // ---- Shareable permalink ----
-      function buildShareUrl() {
-        const params = new URLSearchParams();
-        FIELD_IDS.forEach(id => { const el = $(id); if (el) params.set(id, el.value); });
-        return window.location.origin + window.location.pathname + '?' + params.toString();
-      }
-      function showShareFeedback(msg) {
-        const el = $('shareFeedback');
-        el.textContent = msg;
-        el.style.opacity = 1;
-        setTimeout(() => { el.style.opacity = 0; }, 2500);
-      }
-      $('shareLinkBtn').addEventListener('click', async () => {
-        const url = buildShareUrl();
-        try {
-          await navigator.clipboard.writeText(url);
-          showShareFeedback('Link copied — paste it anywhere to share this exact scenario.');
-        } catch (e) {
-          window.prompt('Copy this link to share your scenario:', url);
-        }
-      });
-      function applyQueryParams() {
-        const params = new URLSearchParams(window.location.search);
-        let applied = false;
-        FIELD_IDS.forEach(id => {
-          if (params.has(id)) {
-            const el = $(id);
-            if (el) { el.value = params.get(id); applied = true; }
-          }
-        });
-        return applied;
-      }
+      // ---- Shareable permalink (buildShareUrl/applyQueryParams/initShareLinkButton are shared.js utilities) ----
+      initShareLinkButton('shareLinkBtn', 'shareFeedback');
 
       // ---- Sample-scenario banner ----
       const BANNER_DISMISS_KEY = 'ccfire:bannerDismissed';
@@ -2323,6 +2344,7 @@
           const value = btn.dataset.value;
           if (targetId && $(targetId)) {
             $(targetId).value = value;
+            if (COMMA_FIELDS.has(targetId)) formatCommaFieldValue($(targetId));
             saveInputs();
             validateAndRender();
           }
@@ -2515,7 +2537,7 @@
         // Departure Tax / Benefit Timing / Moving Back all live on their own pages now — read
         // their last-saved values from storage instead of the DOM, which no longer has them.
         const stored = readStoredInputs();
-        const storedNum = id => parseFloat(stored[id]) || 0;
+        const storedNum = id => parseNum(stored[id]);
 
         // ---- Departure Tax (only if there's a meaningful gain on the books) ----
         const dtGain = Math.max(0, storedNum('dtNonregFmv') - storedNum('dtNonregAcb')) + Math.max(0, storedNum('dtOtherFmv') - storedNum('dtOtherAcb'));
@@ -2723,9 +2745,7 @@
       $('wizardBackBtn').addEventListener('click', () => showWizardStep(wizardStep - 1));
       $('wizardSkipAllBtn').addEventListener('click', finishWizard);
       $('wizardSkipBenefitsBtn').addEventListener('click', () => {
-        $('cppMonthly').value = 0;
-        $('oasMonthly').value = 0;
-        $('ssMonthly').value = 0;
+        ['cppMonthly', 'oasMonthly', 'ssMonthly'].forEach(id => { $(id).value = 0; formatCommaFieldValue($(id)); });
         completedSteps.add(4);
         finishWizard();
       });
@@ -2749,6 +2769,7 @@
         saveInputs();
         history.replaceState(null, '', window.location.pathname);
       } else { restoreInputs(); }
+      initCurrencyInputFormatting();
       $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
       updateOasHint();
       syncSlidersFromFields();

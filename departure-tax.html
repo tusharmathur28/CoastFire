@@ -29,7 +29,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=7dd94de2">
+  <link rel="stylesheet" href="styles.css?v=1446311b">
 </head>
 
 <body>
@@ -49,9 +49,9 @@
             accounts in their native currencies.</p>
         </div>
         <div class="header-actions">
-          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍 Search</button>
-          <button type="button" class="theme-toggle" id="themeToggle">🌙 Dark mode</button>
-          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰ Menu</button>
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍<span class="btn-label"> Search</span></button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙<span class="btn-label"> Dark mode</span></button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰<span class="btn-label"> Menu</span></button>
         </div>
       </div>
       <nav class="page-nav" id="pageNav">
@@ -77,6 +77,18 @@
         at fair market value on your departure date — even though you haven't actually sold anything. This estimates
         that one-time bill. General information only, not tax advice; confirm your numbers with a cross-border
         accountant before you file.</p>
+    </div>
+    <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.<span class="save-indicator" id="saveIndicator" role="status" aria-live="polite">Saved</span></div>
+
+    <div class="result-strip" id="planSnapshot" hidden>
+      <div class="rs-stat">
+        <div class="rs-label">Combined portfolio today</div>
+        <div class="rs-value" id="planSnapPortfolio">—</div>
+      </div>
+      <div class="rs-stat">
+        <div class="rs-label">CoastFIRE status</div>
+        <div class="rs-value" id="planSnapStatus">—</div>
+      </div>
     </div>
 
     <div class="sample-banner" id="sampleBanner">
@@ -113,28 +125,36 @@
       <div class="grid3">
         <div class="field">
           <label for="dtNonregFmv">Non-registered CAD investments — fair market value</label>
-          <input type="number" id="dtNonregFmv" value="10000" min="0" step="100">
+          <input type="text" inputmode="decimal" id="dtNonregFmv" value="10000" min="0" step="100">
         </div>
         <div class="field">
           <label for="dtNonregAcb">Non-registered CAD investments — adjusted cost base <span class="info"
               title="What you originally paid for these investments, including reinvested distributions. Your gain is FMV minus this.">?</span></label>
-          <input type="number" id="dtNonregAcb" value="7000" min="0" step="100">
+          <input type="text" inputmode="decimal" id="dtNonregAcb" value="7000" min="0" step="100">
         </div>
         <div class="field"></div>
         <div class="field">
           <label for="dtOtherFmv">Other property (foreign real estate, crypto, private shares) — fair market value</label>
-          <input type="number" id="dtOtherFmv" value="0" min="0" step="100">
+          <input type="text" inputmode="decimal" id="dtOtherFmv" value="0" min="0" step="100">
         </div>
         <div class="field">
           <label for="dtOtherAcb">Other property — adjusted cost base</label>
-          <input type="number" id="dtOtherAcb" value="0" min="0" step="100">
+          <input type="text" inputmode="decimal" id="dtOtherAcb" value="0" min="0" step="100">
         </div>
         <div class="field"></div>
         <div class="field">
           <label for="dtMarginalRate">Your expected marginal tax rate in your departure year (%) <span class="info"
               title="Your combined federal + provincial marginal tax rate for the year you leave. This varies widely by province and income — Ontario's top combined rate is roughly 53.5%; someone mid-career might be closer to 30-40%.">?</span></label>
-          <input type="number" id="dtMarginalRate" value="35" min="0" max="60" step="1">
+          <input type="number" inputmode="decimal" id="dtMarginalRate" value="35" min="0" max="60" step="1">
           <div class="typical-range">Not sure? Rough starting points: ~20-25% for modest income, ~35-45% for mid-to-upper income, ~50-54% at the very top bracket depending on province.</div>
+        </div>
+      </div>
+      <div class="slider-panel">
+        <h4>Quick adjust — drag to see the estimate update live</h4>
+        <div class="slider-row">
+          <label for="dtMarginalRateSlider">Marginal tax rate (%)</label>
+          <input type="range" id="dtMarginalRateSlider" min="0" max="60" step="1" value="35">
+          <span class="slider-val" id="dtMarginalRateSliderVal">35%</span>
         </div>
       </div>
       <div class="sample-banner warn-banner" id="dtWarnBanner" hidden></div>
@@ -159,6 +179,10 @@
         </div>
       </div>
       <div class="deferral-note" id="dtDeferralNote">—</div>
+      <div class="share-row">
+        <button type="button" class="ghost" id="shareLinkBtn">🔗 Copy shareable link</button>
+        <span class="share-feedback" id="shareFeedback" role="status" aria-live="polite"></span>
+      </div>
 
       <div class="considerations-legend" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">
         <span>Also worth knowing:</span>
@@ -224,7 +248,7 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=551a06bb"></script>
+  <script src="shared.js?v=1672ad80"></script>
   <script>
     (function () {
       initTheme();
@@ -233,7 +257,13 @@
       initToolSearch();
       initStaleBanner();
       initGlossaryTerms();
-      restoreInputs();
+      // A shared link (query params) takes priority over local autosave, same as CoastFIRE Calculator.
+      const loadedFromLink = applyQueryParams();
+      if (loadedFromLink) { saveInputs(); history.replaceState(null, '', window.location.pathname); }
+      else { restoreInputs(); }
+      initCurrencyInputFormatting();
+      initShareLinkButton('shareLinkBtn', 'shareFeedback');
+      renderCompactSnapshot('planSnapshot', { portfolio: 'planSnapPortfolio', status: 'planSnapStatus' });
       seedLiveFxRateIfNeeded();
 
       const BANNER_DISMISS_KEY = 'ccfire:bannerDismissed';
@@ -242,13 +272,13 @@
       const hadSavedDataBeforeLoad = hasUserData();
       let bannerDismissedBefore = false;
       try { bannerDismissedBefore = hasStorage && localStorage.getItem(BANNER_DISMISS_KEY) === '1'; } catch (e) { }
-      if (hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
+      if (loadedFromLink || hadSavedDataBeforeLoad || bannerDismissedBefore) { hideBanner(); }
       $('dismissSampleBtn').addEventListener('click', () => {
         hideBanner();
         try { if (hasStorage) localStorage.setItem(BANNER_DISMISS_KEY, '1'); } catch (e) { }
       });
       $('loadExampleBtn').addEventListener('click', () => {
-        FIELD_IDS.forEach(id => { const el = $(id); if (el && DEFAULT_FIELD_VALUES[id] !== undefined) el.value = DEFAULT_FIELD_VALUES[id]; });
+        FIELD_IDS.forEach(id => { const el = $(id); if (el && DEFAULT_FIELD_VALUES[id] !== undefined) { el.value = DEFAULT_FIELD_VALUES[id]; if (COMMA_FIELDS.has(id)) formatCommaFieldValue(el); } });
         showBanner();
         saveInputs();
         renderDepartureTax();
@@ -288,8 +318,8 @@
         // RRSP/TFSA/FHSA/RESP live on the CoastFIRE Calculator page now — read the last-saved
         // values from storage instead of a live DOM listener, since those fields aren't here.
         const stored = readStoredInputs();
-        const rrsp = parseFloat(stored.rrspBal) || 0, tfsa = parseFloat(stored.tfsaBal) || 0,
-          fhsa = parseFloat(stored.fhsaBal) || 0, resp = parseFloat(stored.respBal) || 0;
+        const rrsp = parseNum(stored.rrspBal), tfsa = parseNum(stored.tfsaBal),
+          fhsa = parseNum(stored.fhsaBal), resp = parseNum(stored.respBal);
         let excludedList = `your RRSP (${fmt(rrsp, 'CAD')}) and TFSA (${fmt(tfsa, 'CAD')})`;
         if (fhsa > 0) excludedList += `, FHSA (${fmt(fhsa, 'CAD')})`;
         if (resp > 0) excludedList += `, RESP (${fmt(resp, 'CAD')})`;
@@ -301,6 +331,20 @@
       ['dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'dtMarginalRate'].forEach(id => {
         $(id).addEventListener('input', () => { saveInputs(); renderDepartureTax(); });
       });
+
+      // ---- Live slider (quick-adjust) for marginal rate, synced both ways with the number field ----
+      function syncDtSliderFromField() {
+        $('dtMarginalRateSlider').value = num('dtMarginalRate');
+        $('dtMarginalRateSliderVal').textContent = num('dtMarginalRate') + '%';
+      }
+      $('dtMarginalRateSlider').addEventListener('input', () => {
+        $('dtMarginalRate').value = $('dtMarginalRateSlider').value;
+        $('dtMarginalRateSliderVal').textContent = $('dtMarginalRateSlider').value + '%';
+        renderDepartureTax();
+      });
+      $('dtMarginalRateSlider').addEventListener('change', () => { saveInputs(); });
+      $('dtMarginalRate').addEventListener('input', syncDtSliderFromField);
+      syncDtSliderFromField();
 
       renderDepartureTax();
     })();
