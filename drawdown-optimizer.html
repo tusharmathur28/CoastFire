@@ -335,7 +335,7 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=1711708e"></script>
+  <script src="shared.js?v=7a9e47da"></script>
   <script>
     (function () {
       initTheme();
@@ -484,7 +484,7 @@
         note.hidden = false;
         $('ddoLifeEventsBody').innerHTML = 'Managed on the CoastFIRE Calculator: ' + inRange.map(ev => {
           const usdAmount = Math.abs(ev.amount) * (CAD_ACCOUNT_KEYS.includes(ev.account) ? exchangeRate : 1);
-          return `<strong>${ev.amount < 0 ? '−' : '+'}${fmtUsd(usdAmount)}</strong> to ${ACCOUNT_LABELS[ev.account]} at age ${ev.age}${ev.label ? ` (${ev.label})` : ''}`;
+          return `<strong>${ev.amount < 0 ? '−' : '+'}${fmtUsd(usdAmount)}</strong> to ${ACCOUNT_LABELS[ev.account]} at age ${ev.age}${ev.label ? ` (${escapeHtml(ev.label)})` : ''}`;
         }).join(', ') + '.';
       }
 

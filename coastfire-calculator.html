@@ -1029,7 +1029,7 @@
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=1711708e"></script>
+  <script src="shared.js?v=7a9e47da"></script>
   <script>
     (function () {
       initTheme();
@@ -1220,7 +1220,7 @@
             </div>
             <div class="field"><label for="leAmt${i}">Amount</label><input type="number" id="leAmt${i}" min="0" step="500" value="${magnitude}" data-field="amount"></div>
             <div class="field"><label for="leAcc${i}">Account</label><select id="leAcc${i}" data-field="account">${accountOptionsHtml(ev.account)}</select></div>
-            <div class="field life-event-label"><label for="leLbl${i}">Label (optional)</label><input type="text" id="leLbl${i}" maxlength="60" value="${(ev.label || '').replace(/"/g, '&quot;')}" placeholder="e.g. House down payment" data-field="label"></div>
+            <div class="field life-event-label"><label for="leLbl${i}">Label (optional)</label><input type="text" id="leLbl${i}" maxlength="60" value="${escapeHtml(ev.label || '')}" placeholder="e.g. House down payment" data-field="label"></div>
             <button type="button" class="small ghost-small remove-event-btn" data-action="remove" title="Remove this event" aria-label="Remove this event">×</button>
           </div>`;
         }).join('');
@@ -1337,8 +1337,17 @@
         const select = $('scenariosSelect');
         const names = Object.keys(store).sort((a, b) => a.localeCompare(b));
         const prevValue = select.value;
-        select.innerHTML = '<option value="">— Select a saved scenario —</option>' +
-          names.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n}</option>`).join('');
+        select.textContent = '';
+        const emptyOpt = document.createElement('option');
+        emptyOpt.value = '';
+        emptyOpt.textContent = '— Select a saved scenario —';
+        select.appendChild(emptyOpt);
+        for (const name of names) {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          select.appendChild(opt);
+        }
         if (names.includes(prevValue)) select.value = prevValue;
       }
       function captureCurrentScenario() {
@@ -1464,7 +1473,7 @@
             // Only accept plain-object scenario snapshots; ignore anything malformed rather than trusting it blindly.
             Object.entries(data.scenarios).forEach(([name, snap]) => {
               if (snap && typeof snap === 'object' && typeof name === 'string' && name.trim()) {
-                store[name] = snap;
+                store[sanitizeImportedName(name)] = snap;
               }
             });
             saveScenariosStore(store);

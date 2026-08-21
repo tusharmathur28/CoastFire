@@ -171,7 +171,7 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=1711708e"></script>
+  <script src="shared.js?v=7a9e47da"></script>
   <script>
     (function () {
       initTheme();
@@ -184,16 +184,26 @@
         if (!$('compareChartCard').hidden) renderScenarioComparison();
       };
 
+      function fillScenarioSelect(selectEl, names) {
+        const prevValue = selectEl.value;
+        selectEl.textContent = '';
+        const emptyOpt = document.createElement('option');
+        emptyOpt.value = '';
+        emptyOpt.textContent = '— Select a saved scenario —';
+        selectEl.appendChild(emptyOpt);
+        for (const name of names) {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          selectEl.appendChild(opt);
+        }
+        if (names.includes(prevValue)) selectEl.value = prevValue;
+      }
+
       function refreshCompareSelects() {
         const store = loadScenariosStore();
         const names = Object.keys(store).sort((a, b) => a.localeCompare(b));
-        ['compareScenarioA', 'compareScenarioB'].forEach(id => {
-          const select = $(id);
-          const prevValue = select.value;
-          select.innerHTML = '<option value="">— Select a saved scenario —</option>' +
-            names.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n}</option>`).join('');
-          if (names.includes(prevValue)) select.value = prevValue;
-        });
+        ['compareScenarioA', 'compareScenarioB'].forEach(id => fillScenarioSelect($(id), names));
         // Auto-select the first two distinct scenarios the first time there are enough to compare
         if (names.length >= 2 && !$('compareScenarioA').value && !$('compareScenarioB').value) {
           $('compareScenarioA').value = names[0];
@@ -255,9 +265,19 @@
           ctx.fillText('+' + yrs + 'y', xFor(yrs) - 12, cssH - 6);
         }
 
-        $('compareChartLegend').innerHTML =
-          `<span><span class="legend-dot" style="background:${colorA};"></span>${nameA} (${resA.reportCurrency})</span>` +
-          `<span><span class="legend-dot" style="background:${colorB};"></span>${nameB} (${resB.reportCurrency})</span>`;
+        const legendSpan = (color, label) => {
+          const span = document.createElement('span');
+          const dot = document.createElement('span');
+          dot.className = 'legend-dot';
+          dot.style.background = color;
+          span.appendChild(dot);
+          span.appendChild(document.createTextNode(label));
+          return span;
+        };
+        $('compareChartLegend').replaceChildren(
+          legendSpan(colorA, `${nameA} (${resA.reportCurrency})`),
+          legendSpan(colorB, `${nameB} (${resB.reportCurrency})`)
+        );
 
         const lastA = resA.rows[resA.rows.length - 1], lastB = resB.rows[resB.rows.length - 1];
         canvas.setAttribute('aria-label', `Line chart comparing ${nameA} (ending at ${fmt(lastA.combined, resA.reportCurrency)}) and ${nameB} (ending at ${fmt(lastB.combined, resB.reportCurrency)}) over time.`);
@@ -292,9 +312,22 @@
           ['Years until CoastFIRE', resA.coastYearIndex !== null ? resA.coastYearIndex : 'Not yet on track', resB.coastYearIndex !== null ? resB.coastYearIndex : 'Not yet on track'],
           ['CoastFIRE age', resA.coastYearIndex !== null ? (resA.currentAge + resA.coastYearIndex) : '—', resB.coastYearIndex !== null ? (resB.currentAge + resB.coastYearIndex) : '—']
         ];
-        $('compareTable').innerHTML =
-          `<thead><tr><th>Metric</th><th class="col-a">${nameA}</th><th class="col-b">${nameB}</th></tr></thead>` +
-          `<tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody>`;
+        const th = (text, className) => { const el = document.createElement('th'); el.textContent = text; if (className) el.className = className; return el; };
+        const td = text => { const el = document.createElement('td'); el.textContent = text; return el; };
+
+        const thead = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        headRow.append(th('Metric'), th(nameA, 'col-a'), th(nameB, 'col-b'));
+        thead.appendChild(headRow);
+
+        const tbody = document.createElement('tbody');
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.append(td(r[0]), td(r[1]), td(r[2]));
+          tbody.appendChild(tr);
+        });
+
+        $('compareTable').replaceChildren(thead, tbody);
 
         const currencyNote = $('compareCurrencyNote');
         if (resA.reportCurrency !== resB.reportCurrency) {

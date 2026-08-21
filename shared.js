@@ -18,6 +18,23 @@ if (typeof document !== 'undefined') {
 
 const $ = id => document.getElementById(id);
 
+const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+// Escape a value for safe interpolation into HTML text content and double-quoted attributes.
+// Use for any string that did not originate from our own source code (user input, localStorage,
+// imported JSON) before it goes into a template literal that's assigned to innerHTML.
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => HTML_ESCAPES[ch]);
+}
+
+// Hardens a name field arriving from imported JSON (untrusted, unlike a same-origin form field
+// that's already length-capped by the browser via maxlength). Strips control characters and caps
+// length so a hostile export file can't smuggle either into localStorage.
+function sanitizeImportedName(raw) {
+  if (typeof raw !== 'string') return 'Untitled scenario';
+  const cleaned = raw.replace(/[\x00-\x1F\x7F]/g, '').trim();
+  return cleaned.slice(0, 80) || 'Untitled scenario';
+}
+
 // Strips thousands-separator commas (and a stray currency symbol) before parsing, so a
 // comma-formatted field like "60,000" reads as 60000, not 60 — see COMMA_FIELDS below.
 // Safe to call on a value that never had commas; behaves exactly like parseFloat(...) || 0 then.
@@ -336,11 +353,11 @@ function renderToolSearchResults() {
   toolSearchActiveIndex = 0;
   toolSearchResultsEl.innerHTML = toolSearchFiltered.length
     ? toolSearchFiltered.map((t, i) => `
-        <li class="tsr-item${i === 0 ? ' active' : ''}" data-href="${t.href}">
+        <li class="tsr-item${i === 0 ? ' active' : ''}" data-href="${escapeHtml(t.href)}">
           <span class="tsr-icon">${t.icon}</span>
-          <span class="tsr-text"><span class="tsr-title">${t.title}</span><span class="tsr-desc">${t.desc}</span></span>
+          <span class="tsr-text"><span class="tsr-title">${escapeHtml(t.title)}</span><span class="tsr-desc">${escapeHtml(t.desc)}</span></span>
         </li>`).join('')
-    : `<li class="tsr-empty">No tools match "${toolSearchInputEl.value}".</li>`;
+    : `<li class="tsr-empty">No tools match "${escapeHtml(toolSearchInputEl.value)}".</li>`;
 }
 
 function moveToolSearchSelection(delta) {
@@ -1286,7 +1303,7 @@ function simulateDrawdown(overrides, strategyName) {
 // a complete `overrides` object). Browser behavior is unaffected — `module` is undefined there.
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    parseNum, parseLifeEvents,
+    escapeHtml, sanitizeImportedName, parseNum, parseLifeEvents,
     compute, stepAccounts, convertToReport, simulateDrawdown,
   };
 }
