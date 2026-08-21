@@ -1029,7 +1029,7 @@
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=7a9e47da"></script>
+  <script src="shared.js?v=e05dc50e"></script>
   <script>
     (function () {
       initTheme();
@@ -1186,7 +1186,7 @@
       });
 
       // ---- Life events (one-time lump sums) ----
-      // lifeEventsState is populated later, once restoreInputs()/applyQueryParams() has settled
+      // lifeEventsState is populated later, once restoreInputs()/initSharedParamsConsentFlow() has settled
       // the hidden #lifeEvents field's value (see refreshLifeEventsFromField() below) — wiring
       // here is safe to set up early since nothing reads lifeEventsState until then.
       let lifeEventsState = [];
@@ -2420,7 +2420,7 @@
         URL.revokeObjectURL(url);
       });
 
-      // ---- Shareable permalink (buildShareUrl/applyQueryParams/initShareLinkButton are shared.js utilities) ----
+      // ---- Shareable permalink (buildShareUrl/initSharedParamsConsentFlow/initShareLinkButton are shared.js utilities) ----
       initShareLinkButton('shareLinkBtn', 'shareFeedback');
 
       // ---- Sample-scenario banner ----
@@ -2869,12 +2869,10 @@
         });
       });
 
-      // Restore inputs: a shared link (query params) takes priority over local autosave
-      const loadedFromLink = applyQueryParams();
-      if (loadedFromLink) {
-        saveInputs();
-        history.replaceState(null, '', window.location.pathname);
-      } else { restoreInputs(); }
+      // Restore inputs: a shared link (fragment, or legacy query params) takes priority over
+      // local autosave, but only after the user explicitly consents — see initSharedParamsConsentFlow().
+      const loadedFromLink = initSharedParamsConsentFlow();
+      if (!loadedFromLink) restoreInputs();
       initCurrencyInputFormatting();
       $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
       updateOasHint();

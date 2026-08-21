@@ -239,7 +239,7 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=7a9e47da"></script>
+  <script src="shared.js?v=e05dc50e"></script>
   <script>
     (function () {
       initTheme();
@@ -257,10 +257,10 @@
       document.querySelectorAll('#rwWithdrawalType option[data-rate-key]').forEach(opt => {
         opt.value = RRSP_WITHHOLDING_RATES[opt.dataset.rateKey];
       });
-      // A shared link (query params) takes priority over local autosave, same as CoastFIRE Calculator.
-      const loadedFromLink = applyQueryParams();
-      if (loadedFromLink) { saveInputs(); history.replaceState(null, '', window.location.pathname); }
-      else { restoreInputs(); }
+      // A shared link (fragment, or legacy query params) takes priority over local autosave, but
+      // only after explicit consent — same as CoastFIRE Calculator, see initSharedParamsConsentFlow().
+      const loadedFromLink = initSharedParamsConsentFlow();
+      if (!loadedFromLink) restoreInputs();
       initCurrencyInputFormatting();
       initShareLinkButton('shareLinkBtn', 'shareFeedback');
       renderCompactSnapshot('planSnapshot', { portfolio: 'planSnapPortfolio', status: 'planSnapStatus' });

@@ -63,7 +63,7 @@ const fmt = (n, cur) => {
 // after it) with zero precedent elsewhere in this codebase, so building that untested across
 // every comma field at once is a bigger risk than the polish is worth. Instead: focus strips
 // back to plain digits (editing is always against a raw number), blur reformats with commas, and
-// restoreInputs()/applyScenario()/applyQueryParams() run the same blur-formatter once after
+// restoreInputs()/applyScenario()/applySharedParamsToDom() run the same blur-formatter once after
 // setting a value so a returning visitor sees "60,000" immediately, not after their first blur.
 // ==================================================================
 const COMMA_FIELDS = new Set([
@@ -675,22 +675,49 @@ function animateValue(el, fromNumber, toNumber, formatFn, durationMs) {
 
 // ==================================================================
 // Shareable scenario link — encodes every FIELD_IDS value present in the current page's DOM
-// into a query string, and reads it back the same way. Generic over whatever subset of fields
-// a given page actually has, so every tool page can use the same two functions.
+// into a URL fragment (never a query string: fragments never reach a server, proxy, or access
+// log), excluding a fixed set of sensitive identity/financial fields by default. Generic over
+// whatever subset of fields a given page actually has, so every tool page can use the same
+// functions.
 // ==================================================================
-function buildShareUrl() {
-  const params = new URLSearchParams();
-  FIELD_IDS.forEach(id => { const el = $(id); if (el) params.set(id, COMMA_FIELDS.has(id) ? String(parseNum(el.value)) : el.value); });
-  return window.location.origin + window.location.pathname + '?' + params.toString();
+
+// Never leaves the device via a share link, regardless of which page is sharing.
+const SENSITIVE_SHARE_FIELDS = new Set([
+  'mbIsCitizen', 'mbHasGreenCard', 'mbGreenCardYears', 'mbNetWorth', 'mbTaxLiability',
+]);
+
+function collectShareableInputs() {
+  const payload = {};
+  FIELD_IDS.forEach(id => { const el = $(id); if (el) payload[id] = COMMA_FIELDS.has(id) ? String(parseNum(el.value)) : el.value; });
+  return payload;
 }
-function applyQueryParams() {
-  const params = new URLSearchParams(window.location.search);
+// Pure — drops every SENSITIVE_SHARE_FIELDS key, keeps everything else as-is.
+function buildSharePayload(allInputs) {
+  return Object.fromEntries(Object.entries(allInputs).filter(([k]) => !SENSITIVE_SHARE_FIELDS.has(k)));
+}
+function buildShareUrl() {
+  const params = new URLSearchParams(buildSharePayload(collectShareableInputs()));
+  return window.location.origin + window.location.pathname + '#' + params.toString();
+}
+
+// Pure — parses a raw fragment/query string (without the leading # or ?) into a plain object.
+function parseShareParamsString(str) {
+  return Object.fromEntries(new URLSearchParams(str));
+}
+// Reads shared data from the fragment (current format) or, failing that, a legacy query string
+// (back-compat for links generated before this moved off the query string). Null if neither.
+function readSharedParamsFromLocation() {
+  if (window.location.hash.length > 1) return parseShareParamsString(window.location.hash.slice(1));
+  if (window.location.search.length > 1) return parseShareParamsString(window.location.search.slice(1));
+  return null;
+}
+function applySharedParamsToDom(params) {
   let applied = false;
   FIELD_IDS.forEach(id => {
-    if (params.has(id)) {
+    if (params[id] !== undefined) {
       const el = $(id);
       if (el) {
-        el.value = params.get(id);
+        el.value = params[id];
         if (COMMA_FIELDS.has(id)) formatCommaFieldValue(el);
         applied = true;
       }
@@ -698,6 +725,7 @@ function applyQueryParams() {
   });
   return applied;
 }
+
 // Shared opacity-fade feedback element, used by both the share-link button and (elsewhere)
 // named-scenario saves — each caller owns its own element id/message.
 function showTransientFeedback(elId, msg, durationMs) {
@@ -712,6 +740,11 @@ function initShareLinkButton(btnId, feedbackId) {
   if (!btn) return;
   btn.addEventListener('click', async () => {
     const url = buildShareUrl();
+    const confirmMsg = 'This link contains your ages, account balances, savings rate, benefit ' +
+      'estimates, and projected retirement numbers.\n\nIt does NOT contain your citizenship status, ' +
+      'Green Card details, net worth, or tax figures — those never leave this device via a share link.\n\n' +
+      'Anyone with this link can view the numbers it does contain. Copy link?';
+    if (!window.confirm(confirmMsg)) return;
     try {
       await navigator.clipboard.writeText(url);
       showTransientFeedback(feedbackId, 'Link copied — paste it anywhere to share this exact scenario.');
@@ -719,6 +752,79 @@ function initShareLinkButton(btnId, feedbackId) {
       window.prompt('Copy this link to share your scenario:', url);
     }
   });
+}
+
+// ==================================================================
+// Inbound shared-link consent gate — a link (current fragment format, or a legacy query-string
+// one) is parsed and immediately scrubbed from the address bar regardless of what the user
+// decides, but is NOT applied or persisted until they explicitly confirm. Declining leaves
+// localStorage byte-identical. Accepting snapshots the prior raw state first so an "Undo" toast
+// can restore it exactly.
+// ==================================================================
+const SHARE_UNDO_KEY_PREFIX = 'ccfire:undo:';
+
+function snapshotForUndo() {
+  if (!hasStorage) return;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    sessionStorage.setItem(SHARE_UNDO_KEY_PREFIX + window.location.pathname, JSON.stringify({ raw }));
+  } catch (e) { /* quota/private mode — proceed without undo */ }
+}
+function offerUndoToast() {
+  const el = document.createElement('div');
+  el.className = 'sample-banner';
+  const text = document.createElement('div');
+  text.className = 'sb-text';
+  text.textContent = 'Applied data from a shared link, replacing what was here before.';
+  const undoBtn = document.createElement('button');
+  undoBtn.type = 'button';
+  undoBtn.textContent = 'Undo';
+  undoBtn.addEventListener('click', () => {
+    try {
+      const key = SHARE_UNDO_KEY_PREFIX + window.location.pathname;
+      const snap = sessionStorage.getItem(key);
+      if (snap !== null) {
+        const { raw } = JSON.parse(snap);
+        if (raw === null) localStorage.removeItem(STORAGE_KEY); else localStorage.setItem(STORAGE_KEY, raw);
+        sessionStorage.removeItem(key);
+      }
+    } catch (e) { /* ignore — worst case the undo silently no-ops */ }
+    window.location.reload();
+  });
+  const dismissBtn = document.createElement('button');
+  dismissBtn.type = 'button';
+  dismissBtn.className = 'sb-dismiss';
+  dismissBtn.textContent = 'Dismiss';
+  dismissBtn.addEventListener('click', () => el.remove());
+  el.append(text, undoBtn, dismissBtn);
+  document.body.insertBefore(el, document.body.firstChild);
+}
+
+// Runs the full consent flow for a page's inbound shared link, if one is present. Returns true
+// if data was applied and saved (the caller should skip its normal restoreInputs() call in that
+// case), false otherwise — nothing to apply, or the user declined.
+function initSharedParamsConsentFlow() {
+  const shared = readSharedParamsFromLocation();
+  if (!shared) return false;
+
+  // Scrub immediately, before the user even answers — a shared link (current-format fragment or
+  // legacy query string) shouldn't sit in the address bar a moment longer than necessary.
+  history.replaceState(null, '', window.location.pathname);
+
+  const fieldCount = Object.keys(shared).length;
+  const confirmMsg = `This link contains ${fieldCount} saved value${fieldCount === 1 ? '' : 's'} ` +
+    `(ages, balances, rates, and similar) from someone else's scenario.\n\n` +
+    `Apply it here? Your current inputs on this page will be replaced — you'll get a chance to undo ` +
+    `right after.`;
+  if (!window.confirm(confirmMsg)) return false;
+
+  snapshotForUndo();
+  const applied = applySharedParamsToDom(shared);
+  if (applied) {
+    saveInputs();
+    offerUndoToast();
+  }
+  return applied;
 }
 
 // ==================================================================
@@ -1305,5 +1411,6 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     escapeHtml, sanitizeImportedName, parseNum, parseLifeEvents,
     compute, stepAccounts, convertToReport, simulateDrawdown,
+    SENSITIVE_SHARE_FIELDS, buildSharePayload, parseShareParamsString,
   };
 }
