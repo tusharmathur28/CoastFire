@@ -5,15 +5,19 @@
 // script-level variable or a live DOM read into another page's markup.
 
 // Cloudflare Web Analytics — injected here so every page gets it via this one shared script.
-(function () {
-  const s = document.createElement('script');
-  s.type = 'module';
-  s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
-  s.setAttribute('data-cf-beacon', '{"token": "023d624f5e7e4815b6172a9022bfbd68"}');
-  document.head.appendChild(s);
-})();
+// Guarded so this file can also be `require()`d under Node (no `document`) for unit tests.
+if (typeof document !== 'undefined') {
+  (function () {
+    const s = document.createElement('script');
+    s.type = 'module';
+    s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    s.setAttribute('data-cf-beacon', '{"token": "023d624f5e7e4815b6172a9022bfbd68"}');
+    document.head.appendChild(s);
+  })();
+}
 
 const $ = id => document.getElementById(id);
+
 // Strips thousands-separator commas (and a stray currency symbol) before parsing, so a
 // comma-formatted field like "60,000" reads as 60000, not 60 — see COMMA_FIELDS below.
 // Safe to call on a value that never had commas; behaves exactly like parseFloat(...) || 0 then.
@@ -1276,4 +1280,13 @@ function simulateDrawdown(overrides, strategyName) {
 
   const endingBalance = Object.values(bal).reduce((s, v) => s + v, 0);
   return { years, totalTaxPaid, endingBalance, depletionAge, strategyName, filingStatus };
+}
+
+// Node-testable exports of the pure helpers (no `document`/`window` dependency once called with
+// a complete `overrides` object). Browser behavior is unaffected — `module` is undefined there.
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    parseNum, parseLifeEvents,
+    compute, stepAccounts, convertToReport, simulateDrawdown,
+  };
 }
