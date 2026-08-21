@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RRSP vs. TFSA vs. 401(k)/IRA: Retirement Drawdown Order — Two Currencies, One Number</title>
+  <meta name="description" content="Why the order you draw down accounts in retirement can be worth tens of thousands of dollars in lifetime tax when RRSP withholding and US brackets interact.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="canonical" href="https://crossborder.fintools.workers.dev/guides/retirement-drawdown-order-rrsp-401k">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Two Currencies, One Number">
+  <meta property="og:title" content="RRSP vs. TFSA vs. 401(k)/IRA: Retirement Drawdown Order — Two Currencies, One Number">
+  <meta property="og:description" content="Why the order you draw down accounts in retirement can be worth tens of thousands of dollars in lifetime tax when RRSP withholding and US brackets interact.">
+  <meta property="og:image" content="https://crossborder.fintools.workers.dev/og-image.png">
+  <meta property="og:url" content="https://crossborder.fintools.workers.dev/guides/retirement-drawdown-order-rrsp-401k">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RRSP vs. TFSA vs. 401(k)/IRA: Retirement Drawdown Order — Two Currencies, One Number">
+  <meta name="twitter:description" content="Why the order you draw down accounts in retirement can be worth tens of thousands of dollars in lifetime tax when RRSP withholding and US brackets interact.">
+  <meta name="twitter:image" content="https://crossborder.fintools.workers.dev/og-image.png">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('ccfire:theme');
+        if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css?v=2aab8185">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "RRSP vs. TFSA vs. 401(k)/IRA: Retirement Drawdown Order",
+    "description": "Why the order you draw down accounts in retirement can be worth tens of thousands of dollars in lifetime tax when RRSP withholding and US brackets interact.",
+    "url": "https://crossborder.fintools.workers.dev/guides/retirement-drawdown-order-rrsp-401k",
+    "datePublished": "2026-08-20",
+    "dateModified": "2026-08-20",
+    "author": { "@type": "Organization", "name": "Two Currencies, One Number" },
+    "publisher": { "@type": "Organization", "name": "Two Currencies, One Number" },
+    "mainEntityOfPage": "https://crossborder.fintools.workers.dev/guides/retirement-drawdown-order-rrsp-401k",
+    "isPartOf": { "@type": "WebSite", "name": "Two Currencies, One Number", "url": "https://crossborder.fintools.workers.dev/" }
+  }
+  </script>
+</head>
+
+<body>
+  <a href="#guideBody" class="skip-link">Skip to guide</a>
+  <div class="wrap">
+
+    <header class="compact">
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
+            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
+            accounts in their native currencies.</p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍<span class="btn-label"> Search</span></button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙<span class="btn-label"> Dark mode</span></button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰<span class="btn-label"> Menu</span></button>
+        </div>
+      </div>
+      <nav class="page-nav" id="pageNav">
+        <a href="/">All Tools</a>
+        <a href="/coastfire-calculator">CoastFIRE Calculator</a>
+        <a href="/action-items">Action Items</a>
+        <a href="/departure-tax">Departure Tax</a>
+        <a href="/rrsp-withholding">RRSP Withholding</a>
+        <a href="/benefit-timing">Benefit Timing</a>
+        <a href="/drawdown-optimizer">Drawdown Optimizer</a>
+        <a href="/moving-back">Moving Back to Canada</a>
+        <a href="/compare-scenarios">Compare Scenarios</a>
+        <a href="/guides" aria-current="page">Guides</a>
+      </nav>
+    </header>
+
+    <main>
+
+    <div class="tool-header">
+      <a class="tool-breadcrumb" href="/guides">&larr; All guides</a>
+      <h2><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/><path d="M2 20h20"/></svg></span>RRSP vs. TFSA vs. 401(k)/IRA: Retirement Drawdown Order</h2>
+      <div class="guide-meta"><span>~9 min read</span><span class="gm-dot">·</span><span>Updated August 2026</span></div>
+      <div class="next-step-nudge"><span class="nsn-label">Calculator:</span><span><a href="/drawdown-optimizer">Drawdown-Order Optimizer</a> — run your own numbers.</span></div>
+    </div>
+
+    <div class="guide-body" id="guideBody">
+
+      <p class="guide-lead">Most retirement advice about withdrawal order assumes one country's accounts and one
+        country's tax brackets. Add a second country and the question gets genuinely harder — and genuinely more
+        valuable to get right, since RRSP withdrawals carry Canadian non-resident withholding on top of whatever US
+        tax applies, on top of everything else in your return that year.</p>
+
+      <h3>Why order changes your tax bill at all</h3>
+      <p>Every account type is taxed differently when you pull money out of it:</p>
+      <ul>
+        <li><strong>RRSP/RRIF withdrawals</strong> carry Canadian non-resident withholding tax — 15% under the
+          treaty's periodic-payment rate for a RRIF, 25% for a lump-sum RRSP collapse — layered on top of ordinary
+          US federal tax on the same income.</li>
+        <li><strong>401(k) and traditional IRA withdrawals</strong> are taxed as ordinary income in the US, the same
+          as any other paycheck, with no equivalent foreign withholding to layer on top.</li>
+        <li><strong>Taxable brokerage account gains</strong> stack differently than ordinary income — capital gains
+          rates generally run lower than ordinary income brackets, so pulling from a taxable account doesn't push
+          you up a bracket the same way an RRSP or 401(k) withdrawal does.</li>
+        <li><strong>TFSA and Roth IRA withdrawals</strong> are free of tax on the way out (assuming the accounts
+          were funded correctly to begin with) — pulling from these doesn't add a dollar of taxable income in
+          either country.</li>
+      </ul>
+      <p>Because US federal tax brackets are the binding constraint for a US resident, every account gets converted
+        to a common USD basis for comparison — but the Canadian withholding is real money leaving the RRSP/RRIF
+        regardless of which currency you're thinking in.</p>
+
+      <div class="tool-card">
+        <h3>Why sequencing isn't obvious</h3>
+        <div class="card-sub">Four common orderings, and why "spend the tax-free account last" isn't always right.</div>
+        <p style="margin:0 0 10px;">The intuitive answer — "save the tax-free TFSA/Roth for last, since it grows
+          tax-free the longest" — is often right, but not always. Drawing RRSP/401(k) money early in a low-income
+          year can fill up cheap, low tax brackets that would otherwise go unused; leaving too much in tax-deferred
+          accounts for too long can push future required minimum distributions into a much higher bracket, with
+          the RRSP withholding stacked on top.</p>
+        <p style="margin:0;">The order that minimizes lifetime tax generally depends on your specific balances,
+          spending rate, and how many years you'll draw down before other income (like CPP/OAS/Social Security)
+          starts — which is exactly why a single generic rule of thumb doesn't reliably apply cross-border.</p>
+      </div>
+
+      <h3>What "optimizing" actually means here</h3>
+      <p>A proper comparison doesn't pick one rule and apply it forever — it simulates a full retirement year by
+        year, under a handful of different withdrawal-order strategies, and compares the total lifetime tax paid
+        under each. The order that comes out ahead is whichever one keeps you out of higher brackets for the
+        longest stretch of retirement while still covering your actual spending need every year, factoring the
+        RRSP/RRIF withholding as real cash leaving the account at withdrawal time — not just a line-item
+        adjustment at the end.</p>
+
+      <div class="consideration-item level-warning">
+        <div class="ci-title"><span class="ci-icon">⚠️</span>"Tax-free" doesn't mean "spend it last, always"</div>
+        <div class="ci-body">Depleting tax-deferred RRSP/401(k) balances too slowly can mean much larger mandatory
+          withdrawals later, taxed at a higher marginal rate than if you'd drawn them down earlier and more evenly.
+          Bracket-filling early sometimes beats brand loyalty to the tax-free account.</div>
+      </div>
+      <div class="consideration-item level-info">
+        <div class="ci-title"><span class="ci-icon">ℹ️</span>Compare orders, don't guess one</div>
+        <div class="ci-body">The gap between the best and worst ordering, run over a full retirement, is often
+          large enough to be worth the ten minutes it takes to actually simulate — rather than defaulting to
+          whichever order feels intuitively "safe."</div>
+      </div>
+
+      <p style="margin-top:28px;">Simulate your own accounts year by year with the <a
+        href="/drawdown-optimizer">Drawdown-Order Optimizer</a>, then save the result and compare it against a
+        different order using <a href="/compare-scenarios">Compare Scenarios</a>.</p>
+
+    </div>
+
+    </main>
+
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Nothing you enter is uploaded — it all stays in your browser
+      <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
+    </footer>
+  </div>
+
+  <script src="/shared.js?v=1672ad80"></script>
+  <script>
+    initTheme();
+    initThemeToggle();
+    initMobileNav();
+    initToolSearch();
+  </script>
+</body>
+
+</html>

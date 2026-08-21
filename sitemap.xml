@@ -45,4 +45,39 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://crossborder.fintools.workers.dev/guides</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crossborder.fintools.workers.dev/guides/rrsp-withholding-tax-us-resident</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crossborder.fintools.workers.dev/guides/canada-departure-tax-explained</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crossborder.fintools.workers.dev/guides/cpp-oas-social-security-cross-border</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crossborder.fintools.workers.dev/guides/moving-back-to-canada-from-us-taxes</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crossborder.fintools.workers.dev/guides/coastfire-cross-border-canadians</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crossborder.fintools.workers.dev/guides/retirement-drawdown-order-rrsp-401k</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

@@ -1940,3 +1940,39 @@ body.wizard-mode .sample-banner:not(.stale-banner),
 body.wizard-mode .scenarios-panel {
   display: none !important;
 }
+
+/* ---- Guides (long-form articles) ---- */
+.guides-intro { font-size: 14.5px; color: var(--ink-soft); max-width: 640px; margin: 0 0 24px; }
+
+.guide-meta {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  font-size: 12px; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace;
+  margin: 4px 0 20px;
+}
+.guide-meta .gm-dot { opacity: .6; }
+
+.guide-body { max-width: 700px; font-size: 15.5px; line-height: 1.72; color: var(--ink); }
+.guide-body p { margin: 0 0 18px; }
+.guide-body .guide-lead { font-size: 17px; color: var(--ink-soft); margin: 0 0 28px; }
+.guide-body h3 { font-size: 22px; margin: 40px 0 14px; }
+.guide-body h4 { font-size: 17.5px; margin: 28px 0 10px; font-family: 'Fraunces', serif; }
+.guide-body ul, .guide-body ol { margin: 0 0 18px; padding-left: 22px; }
+.guide-body li { margin-bottom: 8px; }
+.guide-body strong { color: var(--ink); }
+.guide-body .tool-card { max-width: 100%; }
+@media(max-width: 640px) {
+  .guide-body { font-size: 14.5px; }
+  .guide-body .guide-lead { font-size: 15.5px; }
+}
+
+.guide-directory-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;
+}
+.guide-directory-card {
+  display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px; text-decoration: none; color: var(--ink); transition: border-color .15s ease;
+}
+.guide-directory-card:hover { border-color: var(--harbor); }
+.guide-directory-card .gdc-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+.guide-directory-card .gdc-sub { font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+.guide-directory-card .gdc-arrow { color: var(--harbor); font-size: 12px; font-weight: 700; margin-top: 10px; display: block; }

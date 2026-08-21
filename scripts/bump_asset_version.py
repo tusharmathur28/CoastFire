@@ -29,7 +29,7 @@ def main():
         hashes[name] = content_hash(path)
 
     changed = []
-    for html_path in ROOT.glob("*.html"):
+    for html_path in ROOT.glob("**/*.html"):
         text = html_path.read_text(encoding="utf-8")
         original = text
         for name, digest in hashes.items():

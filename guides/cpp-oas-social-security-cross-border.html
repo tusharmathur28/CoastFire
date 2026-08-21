@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPP, OAS, and Social Security: When to Claim as a Cross-Border Retiree — Two Currencies, One Number</title>
+  <meta name="description" content="How the Canada-US Totalization Agreement works, and why the claim-early-vs-late math changes when you've split a career across two countries.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="canonical" href="https://crossborder.fintools.workers.dev/guides/cpp-oas-social-security-cross-border">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Two Currencies, One Number">
+  <meta property="og:title" content="CPP, OAS, and Social Security: When to Claim as a Cross-Border Retiree — Two Currencies, One Number">
+  <meta property="og:description" content="How the Canada-US Totalization Agreement works, and why the claim-early-vs-late math changes when you've split a career across two countries.">
+  <meta property="og:image" content="https://crossborder.fintools.workers.dev/og-image.png">
+  <meta property="og:url" content="https://crossborder.fintools.workers.dev/guides/cpp-oas-social-security-cross-border">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CPP, OAS, and Social Security: When to Claim as a Cross-Border Retiree — Two Currencies, One Number">
+  <meta name="twitter:description" content="How the Canada-US Totalization Agreement works, and why the claim-early-vs-late math changes when you've split a career across two countries.">
+  <meta name="twitter:image" content="https://crossborder.fintools.workers.dev/og-image.png">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('ccfire:theme');
+        if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css?v=2aab8185">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "CPP, OAS, and Social Security: When to Claim as a Cross-Border Retiree",
+    "description": "How the Canada-US Totalization Agreement works, and why the claim-early-vs-late math changes when you've split a career across two countries.",
+    "url": "https://crossborder.fintools.workers.dev/guides/cpp-oas-social-security-cross-border",
+    "datePublished": "2026-08-20",
+    "dateModified": "2026-08-20",
+    "author": { "@type": "Organization", "name": "Two Currencies, One Number" },
+    "publisher": { "@type": "Organization", "name": "Two Currencies, One Number" },
+    "mainEntityOfPage": "https://crossborder.fintools.workers.dev/guides/cpp-oas-social-security-cross-border",
+    "isPartOf": { "@type": "WebSite", "name": "Two Currencies, One Number", "url": "https://crossborder.fintools.workers.dev/" }
+  }
+  </script>
+</head>
+
+<body>
+  <a href="#guideBody" class="skip-link">Skip to guide</a>
+  <div class="wrap">
+
+    <header class="compact">
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">
+            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
+            <span>&nbsp;·&nbsp;Cross-border planning</span>
+          </div>
+          <h1>Two Currencies,<br>One Number</h1>
+          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
+            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
+            accounts in their native currencies.</p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍<span class="btn-label"> Search</span></button>
+          <button type="button" class="theme-toggle" id="themeToggle">🌙<span class="btn-label"> Dark mode</span></button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰<span class="btn-label"> Menu</span></button>
+        </div>
+      </div>
+      <nav class="page-nav" id="pageNav">
+        <a href="/">All Tools</a>
+        <a href="/coastfire-calculator">CoastFIRE Calculator</a>
+        <a href="/action-items">Action Items</a>
+        <a href="/departure-tax">Departure Tax</a>
+        <a href="/rrsp-withholding">RRSP Withholding</a>
+        <a href="/benefit-timing">Benefit Timing</a>
+        <a href="/drawdown-optimizer">Drawdown Optimizer</a>
+        <a href="/moving-back">Moving Back to Canada</a>
+        <a href="/compare-scenarios">Compare Scenarios</a>
+        <a href="/guides" aria-current="page">Guides</a>
+      </nav>
+    </header>
+
+    <main>
+
+    <div class="tool-header">
+      <a class="tool-breadcrumb" href="/guides">&larr; All guides</a>
+      <h2><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg></span>CPP, OAS, and Social Security: When to Claim as a Cross-Border Retiree</h2>
+      <div class="guide-meta"><span>~9 min read</span><span class="gm-dot">·</span><span>Updated August 2026</span></div>
+      <div class="next-step-nudge"><span class="nsn-label">Calculator:</span><span><a href="/benefit-timing">Benefit Claiming-Age Optimizer</a> — run your own numbers.</span></div>
+    </div>
+
+    <div class="guide-body" id="guideBody">
+
+      <p class="guide-lead">CPP, OAS, and US Social Security each have their own "claim early vs. claim late"
+        math — but if you've worked and lived on both sides of the border, two things change: whether you even
+        qualify for full benefits in the first place, and how much each month of delay is actually worth to you.</p>
+
+      <h3>The three programs, briefly</h3>
+      <ul>
+        <li><strong>CPP (Canada Pension Plan)</strong> — based on your contributions while working in Canada.
+          Claimable as early as 60 (reduced) or as late as 70 (increased).</li>
+        <li><strong>OAS (Old Age Security)</strong> — based on years of Canadian residency, not work history. Full
+          OAS generally requires 40 years of residency after age 18; fewer years means a prorated amount.</li>
+        <li><strong>US Social Security</strong> — based on US work credits, with your Full Retirement Age (FRA)
+          landing around 66-67 depending on birth year.</li>
+      </ul>
+
+      <h3>The Totalization Agreement: how the two systems talk to each other</h3>
+      <p>The Canada-US Social Security Agreement — often called <strong>Totalization</strong> — lets you combine
+        CPP/QPP contribution periods with US Social Security work credits to <em>qualify</em> for benefits in either
+        country, even if you don't have enough history in one country alone to meet its minimum. It's a
+        qualification bridge, not a benefit-calculation formula: it doesn't change the per-country reduction and
+        delay math below, it just gets you into the room.</p>
+      <p>This matters most for people who split a career fairly evenly — say, 12 years contributing to CPP and 15
+        years paying into Social Security. Neither history alone might clear a minimum threshold; combined, they
+        often do.</p>
+
+      <h3>The early-vs-late math, per program</h3>
+      <p>Once you're qualified, each program calculates its own delay/early-claim adjustment independently:</p>
+      <ul>
+        <li><strong>OAS</strong> grows by roughly 0.6% per month you delay past 65 — up to 36% more if you wait
+          until 70.</li>
+        <li><strong>Social Security</strong> shrinks by up to 5/9 of a percent per month for each month claimed
+          before your Full Retirement Age, and grows by roughly 2/3 of a percent per month delayed past FRA, up to
+          70.</li>
+        <li><strong>CPP</strong> reduces for claiming before 65 and increases for delaying past 65, up to age 70,
+          on its own separate schedule.</li>
+      </ul>
+      <p>These are standard government formulas, not estimates — but stacking three independent formulas for one
+        retirement decision is exactly the kind of thing that's easy to get wrong by hand.</p>
+
+      <div class="tool-card">
+        <h3>Why cross-border changes the "break-even age" answer</h3>
+        <div class="card-sub">The usual advice — "delay if you expect to live a long time" — still holds, but the
+          break-even age itself shifts once currency and dual benefit streams are involved.</div>
+        <p style="margin:0;">A longer expected retirement horizon still favors delaying; a shorter one still favors
+          claiming early. What's different cross-border is that you're comparing break-even ages across two
+          currencies and two benefit formulas at once, rather than one — so the "obvious" answer from a US-only or
+          Canada-only retirement calculator can be off for your actual situation.</p>
+      </div>
+
+      <h3>The WEP/GPO repeal (as of January 2025)</h3>
+      <p>If you'd read older advice about cross-border Social Security claiming, a lot of it assumed the Windfall
+        Elimination Provision (WEP) and Government Pension Offset (GPO) would reduce US benefits for people also
+        receiving a foreign pension like CPP. The Social Security Fairness Act repealed WEP and GPO in January
+        2025 — so if you're working from an older article or spreadsheet, the numbers in it are likely stale.</p>
+
+      <div class="consideration-item level-info">
+        <div class="ci-title"><span class="ci-icon">ℹ️</span>Check your OAS residency years even if you've already left Canada</div>
+        <div class="ci-body">If you haven't started collecting OAS yet, years of Canadian residency accrue toward
+          the 40-year full-pension calculation even after you've moved — including years after you return, if you
+          eventually move back. It's worth tracking rather than assuming the clock stopped the day you left.</div>
+      </div>
+
+      <p style="margin-top:28px;">Model your own claiming ages across all three programs with the <a
+        href="/benefit-timing">Benefit Claiming-Age Optimizer</a> — it factors in your specific work history in
+        each country rather than a generic assumption.</p>
+
+    </div>
+
+    </main>
+
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Nothing you enter is uploaded — it all stays in your browser
+      <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
+    </footer>
+  </div>
+
+  <script src="/shared.js?v=1672ad80"></script>
+  <script>
+    initTheme();
+    initThemeToggle();
+    initMobileNav();
+    initToolSearch();
+  </script>
+</body>
+
+</html>
