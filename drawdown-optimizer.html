@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://api.frankfurter.dev">
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=96ffb559">
+  <link rel="stylesheet" href="styles.css?v=aafe986e">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -68,9 +68,9 @@
             accounts in their native currencies.</p>
         </div>
         <div class="header-actions">
-          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍<span class="btn-label"> Search</span></button>
-          <button type="button" class="theme-toggle" id="themeToggle">🌙<span class="btn-label"> Dark mode</span></button>
-          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰<span class="btn-label"> Menu</span></button>
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)"><span class="icon" data-icon="search" aria-hidden="true">🔍</span><span class="btn-label"> Search</span></button>
+          <button type="button" class="theme-toggle" id="themeToggle"><span class="icon" data-icon="moon" aria-hidden="true">🌙</span><span class="btn-label"> Dark mode</span></button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav"><span class="icon" data-icon="menu" aria-hidden="true">☰</span><span class="btn-label"> Menu</span></button>
         </div>
       </div>
       <nav class="page-nav" id="pageNav">
@@ -113,7 +113,6 @@
     </div>
 
     <div class="sample-banner" id="sampleBanner">
-      <div class="sb-icon">👋</div>
       <div class="sb-text">
         <strong>Heads up:</strong> the balances below are pre-filled with a made-up example scenario, just so you
         can see how the drawdown simulation works before you commit to typing in your own numbers. None of this is
@@ -226,7 +225,7 @@
       </div>
       <div class="deferral-note" id="ddoNote">—</div>
       <div class="share-row">
-        <button type="button" class="ghost" id="shareLinkBtn">🔗 Copy shareable link</button>
+        <button type="button" class="ghost" id="shareLinkBtn"><span class="icon" data-icon="link" aria-hidden="true">🔗</span> Copy shareable link</button>
         <span class="share-feedback" id="shareFeedback" role="status" aria-live="polite"></span>
       </div>
 
@@ -318,7 +317,7 @@
     </div>
 
     <details class="freshness-note">
-      <summary>📅 Figures current as of 2026</summary>
+      <summary><span class="icon" data-icon="calendar" aria-hidden="true">📅</span> Figures current as of 2026</summary>
       <ul>
         <li><strong>2026</strong> — CPP, OAS &amp; Social Security maximums, HSA contribution limits, the capital
           gains inclusion rate, and moving-back thresholds are all updated for 2026.</li>
@@ -336,10 +335,11 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=1b4460cb"></script>
+  <script src="shared.js?v=4b5ceebc"></script>
   <script>
     (function () {
       initTheme();
+      hydrateChromeIcons();
       initThemeToggle();
       initMobileNav();
       initToolSearch();

@@ -82,7 +82,12 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   const btn = $('themeToggle');
   // innerHTML (not textContent) so the icon-only mobile layout's nested .btn-label survives a toggle.
-  if (btn) btn.innerHTML = theme === 'dark' ? '☀️<span class="btn-label"> Light mode</span>' : '🌙<span class="btn-label"> Dark mode</span>';
+  if (btn) {
+    btn.innerHTML = theme === 'dark'
+      ? '<span class="icon" data-icon="sun" aria-hidden="true">☀️</span><span class="btn-label"> Light mode</span>'
+      : '<span class="icon" data-icon="moon" aria-hidden="true">🌙</span><span class="btn-label"> Dark mode</span>';
+    hydrateChromeIcons();
+  }
 }
 function initTheme() {
   let theme = null;
@@ -114,7 +119,10 @@ function initMobileNav() {
   function setOpen(open) {
     nav.classList.toggle('nav-open', open);
     btn.setAttribute('aria-expanded', String(open));
-    btn.innerHTML = open ? '✕<span class="btn-label"> Close</span>' : '☰<span class="btn-label"> Menu</span>';
+    btn.innerHTML = open
+      ? '<span class="icon" data-icon="x" aria-hidden="true">✕</span><span class="btn-label"> Close</span>'
+      : '<span class="icon" data-icon="menu" aria-hidden="true">☰</span><span class="btn-label"> Menu</span>';
+    hydrateChromeIcons();
   }
   btn.addEventListener('click', () => setOpen(!nav.classList.contains('nav-open')));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
@@ -141,12 +149,13 @@ function initStaleBanner() {
 
   const monthsAgo = Math.round(days / 30);
   el.innerHTML = `
-    <div class="sb-icon">🕓</div>
+    <div class="sb-icon"><span class="icon" data-icon="clock" aria-hidden="true">🕓</span></div>
     <div class="sb-text"><strong>Your numbers are getting stale.</strong> You last updated your inputs
       about ${monthsAgo} month${monthsAgo === 1 ? '' : 's'} ago (${days} days) — balances, contribution
       amounts, and benefit estimates likely need a refresh for accurate results.</div>
     <a href="/coastfire-calculator"><button type="button">Update my numbers</button></a>
     <button type="button" class="sb-dismiss" id="staleDismissBtn">Remind me later</button>`;
+  hydrateChromeIcons();
   el.hidden = false;
   el.className = 'sample-banner stale-banner';
   $('staleDismissBtn').addEventListener('click', () => {
@@ -247,8 +256,29 @@ const ICONS = {
   leaf: `<svg ${SVG_ATTRS}><path d="M6 20C6 11 12 4 20 4c0 8-7 14-16 16z"/><path d="M6 20l6-6"/></svg>`,
   columns: `<svg ${SVG_ATTRS}><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/></svg>`,
   home: `<svg ${SVG_ATTRS}><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>`,
-  lock: `<svg ${SVG_ATTRS}><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`
+  lock: `<svg ${SVG_ATTRS}><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`,
+  search: `<svg ${SVG_ATTRS}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>`,
+  moon: `<svg ${SVG_ATTRS}><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>`,
+  sun: `<svg ${SVG_ATTRS}><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>`,
+  menu: `<svg ${SVG_ATTRS}><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>`,
+  x: `<svg ${SVG_ATTRS}><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>`,
+  clock: `<svg ${SVG_ATTRS}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>`,
+  link: `<svg ${SVG_ATTRS}><path d="M9 17H7a5 5 0 0 1 0-10h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><path d="M8 12h8"/></svg>`,
+  printer: `<svg ${SVG_ATTRS}><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 17v4h12v-4"/></svg>`,
+  download: `<svg ${SVG_ATTRS}><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>`,
+  save: `<svg ${SVG_ATTRS}><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`
 };
+
+// Populates every `<span class="icon" data-icon="name">emoji</span>` placeholder with the
+// matching ICONS entry, replacing the emoji fallback content. The fallback stays in the markup
+// (not an empty span) so a bootstrap failure upstream of this call degrades to today's emoji
+// rather than a blank icon slot.
+function hydrateChromeIcons() {
+  document.querySelectorAll('[data-icon]').forEach(el => {
+    const icon = ICONS[el.dataset.icon];
+    if (icon) el.innerHTML = icon;
+  });
+}
 
 const SEARCH_TOOLS = [
   { icon: ICONS.compass, title: 'CoastFIRE Calculator', desc: 'The core cross-border retirement calculator — see when your portfolio can coast.', href: '/coastfire-calculator' },
@@ -595,7 +625,7 @@ function animateValue(el, fromNumber, toNumber, formatFn, durationMs) {
   if (!el) return;
   const existing = animateValueState.get(el);
   if (existing) { cancelAnimationFrame(existing.rafId); clearTimeout(existing.timeoutId); }
-  if (!Number.isFinite(fromNumber) || fromNumber === toNumber) {
+  if (!Number.isFinite(fromNumber) || fromNumber === toNumber || matchMedia('(prefers-reduced-motion: reduce)').matches) {
     el.textContent = formatFn(toNumber);
     animateValueState.delete(el);
     return;

@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://api.frankfurter.dev">
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=96ffb559">
+  <link rel="stylesheet" href="styles.css?v=aafe986e">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -68,9 +68,9 @@
             accounts in their native currencies.</p>
         </div>
         <div class="header-actions">
-          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)">🔍<span class="btn-label"> Search</span></button>
-          <button type="button" class="theme-toggle" id="themeToggle">🌙<span class="btn-label"> Dark mode</span></button>
-          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav">☰<span class="btn-label"> Menu</span></button>
+          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)"><span class="icon" data-icon="search" aria-hidden="true">🔍</span><span class="btn-label"> Search</span></button>
+          <button type="button" class="theme-toggle" id="themeToggle"><span class="icon" data-icon="moon" aria-hidden="true">🌙</span><span class="btn-label"> Dark mode</span></button>
+          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav"><span class="icon" data-icon="menu" aria-hidden="true">☰</span><span class="btn-label"> Menu</span></button>
         </div>
       </div>
       <nav class="page-nav" id="pageNav">
@@ -101,7 +101,6 @@
     </div>
 
     <div class="sample-banner" id="sampleBanner">
-      <div class="sb-icon">👋</div>
       <div class="sb-text">
         <strong>Heads up:</strong> the form below is pre-filled with a made-up example scenario, just so you can see
         how everything works before you commit to typing in your own numbers. None of this is your data.
@@ -501,9 +500,9 @@
         <button type="button" class="ghost" id="resetBtn">Start new calculation</button>
       </div>
       <div class="share-row" style="margin-top:14px;">
-        <button type="button" class="ghost" id="shareLinkBtn">🔗 Copy shareable link</button>
-        <button type="button" class="ghost" id="printBtn">🖨️ Print summary</button>
-        <button type="button" class="ghost" id="downloadPdfBtn">📄 Download full plan (PDF)</button>
+        <button type="button" class="ghost" id="shareLinkBtn"><span class="icon" data-icon="link" aria-hidden="true">🔗</span> Copy shareable link</button>
+        <button type="button" class="ghost" id="printBtn"><span class="icon" data-icon="printer" aria-hidden="true">🖨️</span> Print summary</button>
+        <button type="button" class="ghost" id="downloadPdfBtn"><span class="icon" data-icon="download" aria-hidden="true">📄</span> Download full plan (PDF)</button>
         <span class="share-feedback" id="shareFeedback" role="status" aria-live="polite">Link copied!</span>
       </div>
       <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.<span class="save-indicator" id="saveIndicator" role="status" aria-live="polite">Saved</span>
@@ -683,7 +682,7 @@
         </div>
         <div class="mc-caveat" id="chartDollarsNote"></div>
         <div class="chart-wrap">
-          <canvas id="chart" height="280" role="img" aria-label="Chart of projected portfolio value versus your CoastFIRE number over time"></canvas>
+          <canvas id="chart" height="300" role="img" aria-label="Chart of projected portfolio value versus your CoastFIRE number over time"></canvas>
           <div class="chart-tooltip" id="chartTooltip"></div>
         </div>
         <div class="mc-caveat" id="mcCaveat" style="display:none;">Volatility (±<span id="mcStdev">—</span>%/yr) is an illustrative planning range tied to your Conservative/Base/Optimistic preset, not derived from your actual asset mix. Only the portfolio path is randomized — the CoastFIRE target line still uses your fixed return-rate assumption.</div>
@@ -977,7 +976,7 @@
     </details>
     <details class="scenarios-panel card-collapsible" id="scenariosPanel">
       <summary>
-        <h3>💾 My Scenarios</h3>
+        <h3><span class="icon" data-icon="save" aria-hidden="true">💾</span> My Scenarios</h3>
         <span class="toggle-icon"></span>
       </summary>
       <div class="card-collapsible-body">
@@ -991,7 +990,7 @@
         <button type="button" class="primary" id="saveScenarioBtn">Save current as scenario</button>
       </div>
       <div class="scenarios-row">
-        <button type="button" class="ghost" id="exportAllBtn">⬇️ Export all data (JSON)</button>
+        <button type="button" class="ghost" id="exportAllBtn"><span class="icon" data-icon="download" aria-hidden="true">⬇️</span> Export all data (JSON)</button>
         <button type="button" class="ghost" id="importAllBtn">⬆️ Import data (JSON)</button>
         <input type="file" id="importAllFile" accept="application/json,.json" hidden>
       </div>
@@ -1012,7 +1011,7 @@
     </div>
 
     <details class="freshness-note">
-      <summary>📅 Figures current as of 2026</summary>
+      <summary><span class="icon" data-icon="calendar" aria-hidden="true">📅</span> Figures current as of 2026</summary>
       <ul>
         <li><strong>2026</strong> — CPP, OAS &amp; Social Security maximums, HSA contribution limits, the capital
           gains inclusion rate, and moving-back thresholds are all updated for 2026.</li>
@@ -1030,10 +1029,11 @@
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=1b4460cb"></script>
+  <script src="shared.js?v=4b5ceebc"></script>
   <script>
     (function () {
       initTheme();
+      hydrateChromeIcons();
       initThemeToggle();
       initMobileNav();
       initToolSearch();
@@ -1533,14 +1533,17 @@
         const canvas = $('chart');
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.parentElement.clientWidth - 40;
-        const cssH = 260;
+        const cssH = 300;
+        // The end-of-line label needs extra right padding to fit; below the mobile breakpoint
+        // that would eat a large share of the plot width, so the label is dropped instead.
+        const showEndLabel = window.innerWidth > 560;
         canvas.width = cssW * dpr; canvas.height = cssH * dpr;
         canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
         const ctx = canvas.getContext('2d');
         ctx.scale(dpr, dpr);
         ctx.clearRect(0, 0, cssW, cssH);
 
-        const padL = 60, padR = 12, padT = 14, padB = 26;
+        const padL = 60, padR = showEndLabel ? 84 : 12, padT = 14, padB = 26;
         const w = cssW - padL - padR, h = cssH - padT - padB;
         const maxVal = Math.max(...rows.map(r => Math.max(r.combined, r.coastNum))) * 1.08 || 1;
         const xFor = i => padL + (rows.length <= 1 ? 0 : (i / (rows.length - 1)) * w);
@@ -1561,6 +1564,22 @@
           ctx.fillText((reportCurrency === 'CAD' ? 'CA$' : '$') + Math.round(val / 1000) + 'k', 4, y + 4);
         }
 
+        // Gradient area fill under the portfolio line only — filling under the CoastFIRE-number
+        // line too would just muddy the space between the two lines.
+        const fillGrad = ctx.createLinearGradient(0, padT, 0, padT + h);
+        fillGrad.addColorStop(0, harborColor + '26'); // ~15% opacity
+        fillGrad.addColorStop(1, harborColor + '00');
+        ctx.beginPath();
+        rows.forEach((r, i) => {
+          const x = xFor(i), y = yFor(r.combined);
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.lineTo(xFor(rows.length - 1), padT + h);
+        ctx.lineTo(xFor(0), padT + h);
+        ctx.closePath();
+        ctx.fillStyle = fillGrad;
+        ctx.fill();
+
         const drawLine = (key, color) => {
           ctx.beginPath();
           ctx.strokeStyle = color; ctx.lineWidth = 2.5;
@@ -1573,7 +1592,16 @@
         drawLine('coastNum', mapleColor);
         drawLine('combined', harborColor);
 
+        if (showEndLabel) {
+          const lastRow = rows[rows.length - 1];
+          const x = xFor(rows.length - 1), y = yFor(lastRow.combined);
+          ctx.fillStyle = harborColor;
+          ctx.font = '600 11px IBM Plex Mono, monospace';
+          ctx.fillText(fmt(lastRow.combined, reportCurrency), x + 8, y + 4);
+        }
+
         ctx.fillStyle = softColor;
+        ctx.font = '11px IBM Plex Mono, monospace';
         const step = Math.max(1, Math.round(rows.length / 6));
         rows.forEach((r, i) => {
           if (i % step === 0 || i === rows.length - 1) {
@@ -1591,7 +1619,7 @@
         const canvas = $('chart');
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.parentElement.clientWidth - 40;
-        const cssH = 260;
+        const cssH = 300;
         canvas.width = cssW * dpr; canvas.height = cssH * dpr;
         canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
         const ctx = canvas.getContext('2d');
@@ -1644,7 +1672,7 @@
         const canvas = $('chart');
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.parentElement.clientWidth - 40;
-        const cssH = 260;
+        const cssH = 300;
         canvas.width = cssW * dpr; canvas.height = cssH * dpr;
         canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
         const ctx = canvas.getContext('2d');
