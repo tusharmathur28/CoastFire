@@ -833,7 +833,7 @@ function compute(overrides) {
     currentAge, retireAge, n, reportCurrency, exchangeRate, requiredAtRetirement,
     coastNumberToday: coastNumberAt(n), rows, coastYearIndex, currentYear, stopAtCoast,
     annualGovBenefit, annualGapAfterBenefits, bridgeYears, futureAnnualExpense,
-    cppMonthly, oasMonthly, ssMonthly, returnRate, withdrawalRate, benefitsStartAge,
+    cppMonthly, oasMonthly, ssMonthly, returnRate, withdrawalRate, benefitsStartAge, inflationRate,
     cadTotalToday: rows[0].cadTotal, usdTotalToday: rows[0].usdTotal, startBal
   };
 }

@@ -215,6 +215,26 @@ header p.sub {
   .hs-arrow { display: none; }
 }
 
+.hero-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 20px;
+  font-size: 14.5px; font-weight: 600;
+  padding: 13px 26px; border-radius: 7px;
+  background: var(--ink); color: var(--paper);
+  text-decoration: none;
+}
+.hero-cta:hover { background: #0c141c; }
+
+.trust-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.trust-badge {
+  display: inline-flex; align-items: center;
+  font-size: 12px; font-weight: 600; color: var(--ink-soft);
+  background: var(--paper-2); border: 1px solid var(--line); border-radius: 20px;
+  padding: 5px 12px;
+}
+a.trust-badge { text-decoration: none; }
+a.trust-badge:hover { color: var(--ink); border-color: var(--ink-soft); }
+
 header.compact {
   padding: 26px 0 18px;
 }
@@ -513,6 +533,13 @@ details.collapsible-section .collapsible-body { padding-top: 4px; }
   color: var(--ink);
   font-size: 14px;
 }
+/* 16px on phones avoids Safari's zoom-on-focus for text inputs under that size. */
+@media(max-width: 560px) {
+  .field input,
+  .field select {
+    font-size: 16px;
+  }
+}
 
 .field input:focus,
 .field select:focus {
@@ -692,6 +719,13 @@ button.ghost:hover {
 .stat .stat-sub {
   font-size: 11.5px;
   color: var(--ink-soft);
+  margin-top: 4px;
+}
+
+.stat .stat-dual {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-family: 'IBM Plex Mono', monospace;
   margin-top: 4px;
 }
 
@@ -1284,6 +1318,9 @@ button.export:hover {
   padding: 14px 16px; font-size: 15px; font-family: inherit;
 }
 .tool-search-modal input:focus { outline: none; }
+@media(max-width: 560px) {
+  .tool-search-modal input { font-size: 16px; }
+}
 .tool-search-results { list-style: none; margin: 0; padding: 6px; max-height: 340px; overflow-y: auto; }
 .tsr-item {
   display: flex; align-items: center; gap: 12px;
@@ -1306,6 +1343,9 @@ button.export:hover {
   background: var(--surface); color: var(--ink); font-size: 13px; font-family: 'Inter', sans-serif;
 }
 .scenarios-row button { flex: none; }
+@media(max-width: 560px) {
+  .scenarios-row select, .scenarios-row input[type="text"] { font-size: 16px; }
+}
 .scenario-feedback { font-size: 12.5px; color: var(--good); font-weight: 600; opacity: 0; transition: opacity .3s ease; }
 .scenarios-panel .sp-note { font-size: 11.5px; color: var(--ink-soft); }
 .scenarios-panel .sp-note a { color: var(--harbor); font-weight: 600; text-decoration: none; }
