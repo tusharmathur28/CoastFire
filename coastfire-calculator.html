@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://api.frankfurter.dev">
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=aafe986e">
+  <link rel="stylesheet" href="styles.css?v=449106f9">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -1005,6 +1005,24 @@
       </div>
     </details>
 
+    <details class="card-collapsible" id="privacyPanel">
+      <summary>
+        <h3><span class="icon" aria-hidden="true">🔒</span> Privacy &amp; Data</h3>
+        <span class="toggle-icon"></span>
+      </summary>
+      <div class="card-collapsible-body">
+        <div class="scenarios-row">
+          <button type="button" class="ghost" id="viewStoredDataBtn">View stored data</button>
+          <button type="button" class="ghost" id="eraseAllDataBtn">Erase everything</button>
+        </div>
+        <pre class="stored-data-view" id="storedDataView" hidden></pre>
+        <div class="sp-note">Everything here is stored only in this browser (localStorage), never on a server —
+          see the footer for the full picture of what does leave your device. "Erase everything" removes every
+          input, saved scenario, and preference this site has saved here, including anything kept via the
+          "Remember immigration status" opt-in on Moving Back to Canada. This can't be undone.</div>
+      </div>
+    </details>
+
     <div class="next-step-nudge">
       <span class="nsn-label">Next:</span>
       <span><a href="/action-items">Your Action Items</a> — see what deadlines and forms these numbers trigger.</span>
@@ -1022,14 +1040,14 @@
 
     </main>
 
-    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Nothing you enter is uploaded — it all stays in your browser
+    <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Your financial inputs are processed entirely on your device and are never uploaded by us. Like any website, our host processes standard technical data (e.g. your IP address), and Cloudflare Web Analytics counts anonymous visits. Exchange rates load once from frankfurter.dev. Shared links contain only the numbers you choose — see the share dialog for details.
       <a class="footer-feedback" href="https://github.com/tusharmathur28/CrossBorder/issues/new" target="_blank" rel="noopener">Found a bug or a missing account type? Open an issue on GitHub →</a>
     </footer>
   </div>
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=e05dc50e"></script>
+  <script src="shared.js?v=558d47a0"></script>
   <script>
     (function () {
       initTheme();
@@ -2422,6 +2440,9 @@
 
       // ---- Shareable permalink (buildShareUrl/initSharedParamsConsentFlow/initShareLinkButton are shared.js utilities) ----
       initShareLinkButton('shareLinkBtn', 'shareFeedback');
+
+      // ---- Privacy & data controls (shared.js utility, since "everything under ccfire:" spans every tool page) ----
+      initDataControlsPanel('viewStoredDataBtn', 'storedDataView', 'eraseAllDataBtn');
 
       // ---- Sample-scenario banner ----
       const BANNER_DISMISS_KEY = 'ccfire:bannerDismissed';

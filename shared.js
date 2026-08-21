@@ -1,7 +1,7 @@
 // Shared utilities loaded by every page, before that page's own inline <script>.
 // Kept deliberately DOM-independent where possible (compute/readStoredInputs/etc.) so any
 // tool page can use them even though it only has its own fields in the DOM — every other
-// tool's data comes from localStorage['ccfire:v2'] via readStoredInputs(), not from a shared
+// tool's data comes from localStorage['ccfire:v3'] via readStoredInputs(), not from a shared
 // script-level variable or a live DOM read into another page's markup.
 
 // Cloudflare Web Analytics — injected here so every page gets it via this one shared script.
@@ -154,7 +154,7 @@ function initMobileNav() {
 
 // ---- Stale-data nudge ----
 // Shows a dismissible banner (in a page's #staleBanner container, if present) when it's been a
-// while since any tool page last wrote to ccfire:v2 — a reminder to refresh assumptions rather
+// while since any tool page last wrote to ccfire:v3 — a reminder to refresh assumptions rather
 // than an error state, so dismissing it just snoozes it instead of hiding it forever.
 function initStaleBanner() {
   const el = $('staleBanner');
@@ -436,7 +436,7 @@ function fxFetchedAtLabel() {
   return ' (as of ' + new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ')';
 }
 
-// For a genuinely first-ever visitor (nothing saved yet under ccfire:v2) landing on any page
+// For a genuinely first-ever visitor (nothing saved yet under ccfire:v3) landing on any page
 // other than the calculator — which already runs its own richer live-fetch flow on load — seed
 // a live rate in place of the static 0.73 default. No-ops silently if a rate was ever saved
 // (by the user or a prior seed) or if the fetch fails.
@@ -462,7 +462,12 @@ function renderFxIndicator(containerId) {
 // ==================================================================
 // Storage: the single cross-tool source of truth
 // ==================================================================
-const STORAGE_KEY = 'ccfire:v2';
+const STORAGE_KEY = 'ccfire:v3';
+const LEGACY_STORAGE_KEY_V2 = 'ccfire:v2';
+// Gated behind explicit opt-in (see rememberSensitive below) — different in kind from the rest
+// of FIELD_IDS, which is ordinary financial/planning data this site's whole purpose is to store.
+// US citizenship and Green Card status aren't dollar figures; they're immigration status.
+const SENSITIVE_STORE_FIELDS = ['mbIsCitizen', 'mbHasGreenCard', 'mbGreenCardYears'];
 const FIELD_IDS = ['currentAge', 'retireAge', 'contribFreq', 'rrspBal', 'rrspContrib', 'rrspMatch', 'tfsaBal', 'tfsaContrib',
   'nonregCadBal', 'nonregCadContrib', 'fhsaBal', 'fhsaContrib', 'respBal', 'respContrib',
   'k401Bal', 'k401Contrib', 'k401Match', 'iraBal', 'iraContrib', 'rothBal', 'rothContrib',
@@ -521,7 +526,7 @@ function renderCompactSnapshot(containerId, statIds) {
   container.hidden = false;
 }
 
-// Timestamp of the last time any tool page actually wrote to ccfire:v2 — used to nudge users
+// Timestamp of the last time any tool page actually wrote to ccfire:v3 — used to nudge users
 // whose numbers have gone stale, separately from SNOOZE_KEY which mutes that nudge for a while.
 const LAST_SAVED_KEY = 'ccfire:lastSaved';
 const STALE_SNOOZE_KEY = 'ccfire:staleSnoozeUntil';
@@ -537,6 +542,44 @@ function storageAvailable() {
   catch (e) { return false; }
 }
 const hasStorage = storageAvailable();
+
+// Pure — given a parsed v2 state object, returns what it becomes under v3: stripped of
+// SENSITIVE_STORE_FIELDS unless the visitor had already set rememberSensitive.
+function transformV2StateToV3(state) {
+  const next = { ...state };
+  if (!next.rememberSensitive) { SENSITIVE_STORE_FIELDS.forEach(k => delete next[k]); }
+  return next;
+}
+
+// One-time migration off the old, no-consent-gate storage key. Every existing visitor's
+// citizenship/Green Card answers are stripped here unless rememberSensitive is already true —
+// which nobody could have set before this shipped, so in practice this clears those three fields
+// for every pre-existing visitor once, the first time they load any page after the update.
+function migrateV2toV3() {
+  if (!hasStorage) return;
+  try {
+    if (localStorage.getItem(STORAGE_KEY) !== null) return; // already on v3
+    const raw = localStorage.getItem(LEGACY_STORAGE_KEY_V2);
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(transformV2StateToV3(state)));
+    localStorage.removeItem(LEGACY_STORAGE_KEY_V2);
+  } catch (e) { /* malformed v2 blob — proceed as a fresh v3 visitor rather than throwing */ }
+}
+migrateV2toV3();
+
+// Whether the visitor has explicitly opted in to keeping SENSITIVE_STORE_FIELDS on this device.
+// Defaults to false (opt-in, not opt-out) for anyone who hasn't set it.
+function getRememberSensitive() {
+  return readRawStore().rememberSensitive === true;
+}
+function setRememberSensitive(value) {
+  if (!hasStorage) return;
+  const stored = readRawStore();
+  stored.rememberSensitive = !!value;
+  if (!value) { SENSITIVE_STORE_FIELDS.forEach(k => delete stored[k]); }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stored)); } catch (e) { /* ignore quota/availability errors */ }
+}
 
 function readRawStore() {
   if (!hasStorage) return {};
@@ -557,7 +600,7 @@ function readStoredInputs() {
 }
 
 // True once the user has actually changed at least one tracked field from its shipped-example
-// default — distinct from "has ccfire:v2 been written at all" (LAST_SAVED_KEY), since
+// default — distinct from "has ccfire:v3 been written at all" (LAST_SAVED_KEY), since
 // seedLiveFxRateIfNeeded() silently writes an exchangeRate for every first-time visitor to any
 // page, regardless of whether they've touched anything else. Pages that need to tell "a real
 // visitor with their own numbers" apart from "someone who just landed here" should use this,
@@ -568,7 +611,7 @@ function hasUserData() {
   return FIELD_IDS.some(id => id !== 'exchangeRate' && stored[id] !== DEFAULT_FIELD_VALUES[id]);
 }
 
-// Read-modify-write a specific set of fields into ccfire:v2 without touching the DOM — for
+// Read-modify-write a specific set of fields into ccfire:v3 without touching the DOM — for
 // writes that target fields that don't exist on the current page (e.g. Benefit Timing's
 // "Apply to my CoastFIRE plan" button updating the calculator's cppMonthly/oasMonthly/etc.
 // from a different page).
@@ -577,6 +620,7 @@ function writeStoredInputs(patch) {
   const stored = readRawStore();
   FIELD_IDS.forEach(id => { if (stored[id] === undefined) stored[id] = DEFAULT_FIELD_VALUES[id]; });
   Object.assign(stored, patch);
+  if (!stored.rememberSensitive) { SENSITIVE_STORE_FIELDS.forEach(k => delete stored[k]); }
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stored)); markSaved(); } catch (e) { /* ignore quota/availability errors */ }
 }
 
@@ -594,7 +638,7 @@ function showSaveIndicator() {
   }, 600);
 }
 
-// Saves this page's own fields into ccfire:v2. Merges with whatever's already stored rather
+// Saves this page's own fields into ccfire:v3. Merges with whatever's already stored rather
 // than replacing it outright — each tool page only has its own fields in the DOM, so a plain
 // "build data fresh from FIELD_IDS" would silently drop every other tool's saved values.
 function saveInputs() {
@@ -604,6 +648,9 @@ function saveInputs() {
     // Comma-formatted fields persist their clean numeric string, never the display string with
     // commas in it — fail-safe rather than fail-silent if some future read site forgets parseNum().
     FIELD_IDS.forEach(id => { const el = $(id); if (el) data[id] = COMMA_FIELDS.has(id) ? String(parseNum(el.value)) : el.value; });
+    // SENSITIVE_STORE_FIELDS never persist unless the visitor explicitly opted in (moving-back.html's
+    // "Remember immigration status" toggle) — everything else on this page still saves normally.
+    if (!data.rememberSensitive) { SENSITIVE_STORE_FIELDS.forEach(k => delete data[k]); }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     markSaved();
     showSaveIndicator();
@@ -825,6 +872,65 @@ function initSharedParamsConsentFlow() {
     offerUndoToast();
   }
   return applied;
+}
+
+// ==================================================================
+// Data controls — everything this site ever writes to localStorage lives under a 'ccfire:'
+// prefix, so both of these work by prefix rather than an individually-maintained key list (one
+// less place to forget to update when a new key is added).
+// ==================================================================
+function dumpAllStoredData() {
+  const dump = {};
+  if (!hasStorage) return dump;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('ccfire:')) dump[k] = localStorage.getItem(k);
+    }
+  } catch (e) { /* ignore */ }
+  return dump;
+}
+function eraseAllStoredData() {
+  if (!hasStorage) return;
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('ccfire:')) keys.push(k);
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+  } catch (e) { /* ignore */ }
+  try {
+    const sessKeys = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k && k.startsWith('ccfire:')) sessKeys.push(k);
+    }
+    sessKeys.forEach(k => sessionStorage.removeItem(k));
+  } catch (e) { /* ignore */ }
+}
+
+// Wires a small data-controls panel: "View stored data" pretty-prints everything under the
+// 'ccfire:' prefix (via textContent, not innerHTML — it's the visitor's own data, but there's no
+// reason to trust it as markup either), "Erase everything" clears it after a confirm and reloads.
+function initDataControlsPanel(viewBtnId, viewOutputId, eraseBtnId) {
+  const viewBtn = $(viewBtnId);
+  const viewOutput = $(viewOutputId);
+  if (viewBtn && viewOutput) {
+    viewBtn.addEventListener('click', () => {
+      if (!viewOutput.hidden) { viewOutput.hidden = true; return; }
+      viewOutput.textContent = JSON.stringify(dumpAllStoredData(), null, 2);
+      viewOutput.hidden = false;
+    });
+  }
+  const eraseBtn = $(eraseBtnId);
+  if (eraseBtn) {
+    eraseBtn.addEventListener('click', () => {
+      if (!window.confirm('Erase everything this site has saved on this device — all inputs, saved scenarios, and preferences? This cannot be undone.')) return;
+      eraseAllStoredData();
+      window.location.reload();
+    });
+  }
 }
 
 // ==================================================================
@@ -1412,5 +1518,6 @@ if (typeof module !== 'undefined' && module.exports) {
     escapeHtml, sanitizeImportedName, parseNum, parseLifeEvents,
     compute, stepAccounts, convertToReport, simulateDrawdown,
     SENSITIVE_SHARE_FIELDS, buildSharePayload, parseShareParamsString,
+    SENSITIVE_STORE_FIELDS, transformV2StateToV3,
   };
 }
