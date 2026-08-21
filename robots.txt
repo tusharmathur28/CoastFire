@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://crossborder.fintools.workers.dev/sitemap.xml
