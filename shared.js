@@ -102,11 +102,11 @@ const THEME_KEY = 'ccfire:theme';
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   const btn = $('themeToggle');
-  // innerHTML (not textContent) so the icon-only mobile layout's nested .btn-label survives a toggle.
   if (btn) {
     btn.innerHTML = theme === 'dark'
-      ? '<span class="icon" data-icon="sun" aria-hidden="true">☀️</span><span class="btn-label"> Light mode</span>'
-      : '<span class="icon" data-icon="moon" aria-hidden="true">🌙</span><span class="btn-label"> Dark mode</span>';
+      ? '<span class="icon" data-icon="sun" aria-hidden="true">☀️</span>'
+      : '<span class="icon" data-icon="moon" aria-hidden="true">🌙</span>';
+    btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
     hydrateChromeIcons();
   }
 }
@@ -127,28 +127,6 @@ function initThemeToggle() {
     applyTheme(next);
     try { localStorage.setItem(THEME_KEY, next); } catch (e) { }
     if (typeof window.onThemeChange === 'function') window.onThemeChange(next);
-  });
-}
-
-// Wires the header's mobile-only hamburger button — the full page-nav link list stays visible
-// (and this button stays hidden) at desktop widths via CSS; this only toggles the collapsed
-// dropdown state used below the 760px breakpoint.
-function initMobileNav() {
-  const btn = $('navToggleBtn');
-  const nav = $('pageNav');
-  if (!btn || !nav) return;
-  function setOpen(open) {
-    nav.classList.toggle('nav-open', open);
-    btn.setAttribute('aria-expanded', String(open));
-    btn.innerHTML = open
-      ? '<span class="icon" data-icon="x" aria-hidden="true">✕</span><span class="btn-label"> Close</span>'
-      : '<span class="icon" data-icon="menu" aria-hidden="true">☰</span><span class="btn-label"> Menu</span>';
-    hydrateChromeIcons();
-  }
-  btn.addEventListener('click', () => setOpen(!nav.classList.contains('nav-open')));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
-  document.addEventListener('click', e => {
-    if (nav.classList.contains('nav-open') && !nav.contains(e.target) && e.target !== btn) setOpen(false);
   });
 }
 
@@ -303,17 +281,161 @@ function hydrateChromeIcons() {
   });
 }
 
-const SEARCH_TOOLS = [
-  { icon: ICONS.compass, title: 'CoastFIRE Calculator', desc: 'The core cross-border retirement calculator — see when your portfolio can coast.', href: '/coastfire-calculator' },
-  { icon: ICONS.checkSquare, title: 'Your Action Items', desc: "A prioritized checklist of deadlines and to-dos based on what you've entered.", href: '/action-items' },
-  { icon: ICONS.departure, title: 'Departure Tax Estimator', desc: 'Leaving Canada? Estimate the one-time deemed-disposition tax bill.', href: '/departure-tax' },
-  { icon: ICONS.landmark, title: 'RRSP Withholding Tax', desc: 'See how much Canada withholds when you draw down your RRSP as a US resident.', href: '/rrsp-withholding' },
-  { icon: ICONS.calendar, title: 'Benefit Claiming-Age Optimizer', desc: 'Compare claiming CPP, OAS & Social Security early vs. late.', href: '/benefit-timing' },
-  { icon: ICONS.barChart, title: 'Drawdown-Order Optimizer', desc: 'Sequence RRSP, TFSA, 401(k)/IRA, Roth & taxable withdrawals to minimize tax in retirement.', href: '/drawdown-optimizer' },
-  { icon: ICONS.leaf, title: 'Moving Back to Canada', desc: 'Re-entering Canada? See what happens to each account and whether exit-tax rules apply.', href: '/moving-back' },
-  { icon: ICONS.columns, title: 'Compare Scenarios', desc: 'Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.', href: '/compare-scenarios' },
-  { icon: ICONS.home, title: 'All Tools (Home)', desc: 'Your snapshot, the "where do I start" quiz, and the full tool directory.', href: '/' }
+// ==================================================================
+// Site navigation — grouped "Tools" dropdown (desktop) + slide-in drawer (mobile), both
+// rendered from NAV_GROUPS/NAV_ITEMS so adding a tool is a one-line data change instead of a
+// per-page markup hunt. `home` deliberately isn't in any NAV_GROUPS list (the panel/drawer
+// already carry their own "Browse all tools" link) but stays in NAV_ITEMS so it derives into
+// SEARCH_TOOLS below — otherwise ⌘K would lose the ability to jump straight to the homepage.
+// ==================================================================
+const NAV_GROUPS = [
+  { label: 'Plan your retirement', items: ['coastfire', 'benefit-timing', 'drawdown'] },
+  { label: 'Cross-border moves', items: ['departure-tax', 'moving-back', 'rrsp-withholding'] },
+  { label: 'Track & compare', items: ['action-items', 'compare-scenarios'] }
 ];
+const NAV_ITEMS = {
+  coastfire: { icon: ICONS.compass, title: 'CoastFIRE Calculator', desc: 'The core cross-border retirement calculator — see when your portfolio can coast.', href: '/coastfire-calculator' },
+  'action-items': { icon: ICONS.checkSquare, title: 'Your Action Items', desc: "A prioritized checklist of deadlines and to-dos based on what you've entered.", href: '/action-items' },
+  'departure-tax': { icon: ICONS.departure, title: 'Departure Tax Estimator', desc: 'Leaving Canada? Estimate the one-time deemed-disposition tax bill.', href: '/departure-tax' },
+  'rrsp-withholding': { icon: ICONS.landmark, title: 'RRSP Withholding Tax', desc: 'See how much Canada withholds when you draw down your RRSP as a US resident.', href: '/rrsp-withholding' },
+  'benefit-timing': { icon: ICONS.calendar, title: 'Benefit Claiming-Age Optimizer', desc: 'Compare claiming CPP, OAS & Social Security early vs. late.', href: '/benefit-timing' },
+  drawdown: { icon: ICONS.barChart, title: 'Drawdown-Order Optimizer', desc: 'Sequence RRSP, TFSA, 401(k)/IRA, Roth & taxable withdrawals to minimize tax in retirement.', href: '/drawdown-optimizer' },
+  'moving-back': { icon: ICONS.leaf, title: 'Moving Back to Canada', desc: 'Re-entering Canada? See what happens to each account and whether exit-tax rules apply.', href: '/moving-back' },
+  'compare-scenarios': { icon: ICONS.columns, title: 'Compare Scenarios', desc: 'Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.', href: '/compare-scenarios' },
+  home: { icon: ICONS.home, title: 'All Tools (Home)', desc: 'Your snapshot, the "where do I start" quiz, and the full tool directory.', href: '/' }
+};
+// Derived from NAV_ITEMS so search, the mega-panel, and the mobile drawer all render from one
+// source of truth — adding a tool is a one-line data change.
+const SEARCH_TOOLS = Object.values(NAV_ITEMS);
+
+// Sets aria-current="page" on every same-page link inside `container`, matching the current URL.
+function markCurrentPage(container) {
+  const here = location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+  container.querySelectorAll('a[href]').forEach(a => {
+    const linkPath = a.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+    if (linkPath === here) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+}
+
+function renderMegaPanel() {
+  const panel = $('toolsPanel');
+  if (!panel) return;
+  const cols = NAV_GROUPS.map(group => `
+    <div class="mp-col">
+      <div class="mp-col-label">${escapeHtml(group.label)}</div>
+      ${group.items.map(key => { const item = NAV_ITEMS[key]; return `
+        <a class="mp-item" href="${escapeHtml(item.href)}">
+          <span class="mp-icon">${item.icon}</span>
+          <span class="mp-text"><span class="mp-title">${escapeHtml(item.title)}</span><span class="mp-desc">${escapeHtml(item.desc)}</span></span>
+        </a>`; }).join('')}
+    </div>`).join('');
+  // lint-sinks-ok: every interpolated value is escapeHtml()'d or a fixed ICONS SVG string
+  panel.innerHTML = `<div class="mp-cols">${cols}</div><a class="mp-all" href="/">Browse all tools →</a>`;
+  markCurrentPage(panel);
+}
+
+function renderDrawer() {
+  const drawer = document.querySelector('#mobileDrawer .drawer');
+  if (!drawer) return;
+  const groups = NAV_GROUPS.map(group => `
+    <div class="dr-group">
+      <div class="dr-group-label">${escapeHtml(group.label)}</div>
+      ${group.items.map(key => { const item = NAV_ITEMS[key]; return `
+        <a class="dr-link" href="${escapeHtml(item.href)}">${item.icon}<span>${escapeHtml(item.title)}</span></a>`; }).join('')}
+    </div>`).join('');
+  // lint-sinks-ok: every interpolated value is escapeHtml()'d or a fixed ICONS SVG string
+  drawer.innerHTML =
+    `<button type="button" class="dr-search" id="drawerSearchBtn">${ICONS.search}<span>Search tools…</span></button>` +
+    groups +
+    `<div class="dr-group"><div class="dr-group-label">Learn</div><a class="dr-link" href="/guides">${ICONS.link}<span>Guides</span></a></div>`;
+  markCurrentPage(drawer);
+}
+
+// A tiny coordination point so opening one kind of chrome overlay (search modal, Tools panel,
+// mobile drawer) closes the others instead of stacking behind it — simpler than each controller
+// tracking every other controller's open/closed state directly. Glossary popovers are excluded
+// on purpose: they're small inline tooltips triggered by hover/focus deep in page content, and
+// closing the nav drawer every time someone hovers a glossary term would steal focus for no reason.
+function closeAllOverlays(except) {
+  if (except !== 'search') closeToolSearch();
+  if (except !== 'tools') { const p = $('toolsPanel'); if (p && !p.hidden) { p.hidden = true; const b = $('toolsMenuBtn'); if (b) b.setAttribute('aria-expanded', 'false'); } }
+  if (except !== 'drawer') { const d = $('mobileDrawer'); if (d && !d.hidden) { d.hidden = true; document.body.classList.remove('drawer-open'); const b = $('navToggleBtn'); if (b) b.setAttribute('aria-expanded', 'false'); } }
+}
+
+// Wires the desktop "Tools ▾" dropdown (click + hover-intent) and the mobile slide-in drawer.
+// Desktop and mobile controls are mutually exclusive by breakpoint (CSS hides one or the
+// other), so they can't really both be open at once, but each still routes through
+// closeAllOverlays() on open to keep search/panel/drawer from stacking.
+function initNavBar() {
+  renderMegaPanel();
+  renderDrawer();
+  const siteNav = document.querySelector('.site-nav');
+  if (siteNav) markCurrentPage(siteNav); // the static "Guides" link isn't JS-rendered like the panel/drawer
+
+  const toolsBtn = $('toolsMenuBtn');
+  const toolsPanel = $('toolsPanel');
+  const menuBtn = $('navToggleBtn');
+  const drawerRoot = $('mobileDrawer');
+  const drawerEl = drawerRoot ? drawerRoot.querySelector('.drawer') : null;
+
+  function setToolsOpen(open) {
+    if (!toolsBtn || !toolsPanel || toolsPanel.hidden === !open) return;
+    toolsPanel.hidden = !open;
+    toolsBtn.setAttribute('aria-expanded', String(open));
+    if (open) closeAllOverlays('tools');
+  }
+  function setDrawerOpen(open) {
+    if (!menuBtn || !drawerRoot || !drawerEl || drawerRoot.hidden === !open) return;
+    drawerRoot.hidden = !open;
+    menuBtn.setAttribute('aria-expanded', String(open));
+    document.body.classList.toggle('drawer-open', open);
+    if (open) { closeAllOverlays('drawer'); drawerEl.focus(); }
+    else { menuBtn.focus(); }
+  }
+
+  if (toolsBtn && toolsPanel) {
+    const dd = toolsBtn.closest('.nav-dd');
+    toolsBtn.addEventListener('click', () => setToolsOpen(toolsPanel.hidden));
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      let hoverOpenTimer = null, hoverCloseTimer = null;
+      dd.addEventListener('mouseenter', () => {
+        clearTimeout(hoverCloseTimer);
+        hoverOpenTimer = setTimeout(() => setToolsOpen(true), 150);
+      });
+      dd.addEventListener('mouseleave', () => {
+        clearTimeout(hoverOpenTimer);
+        hoverCloseTimer = setTimeout(() => setToolsOpen(false), 250);
+      });
+    }
+    dd.addEventListener('focusout', e => {
+      if (!toolsPanel.hidden && !dd.contains(e.relatedTarget)) setToolsOpen(false);
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !toolsPanel.hidden) { setToolsOpen(false); toolsBtn.focus(); }
+    });
+    document.addEventListener('click', e => {
+      if (!toolsPanel.hidden && !dd.contains(e.target)) setToolsOpen(false);
+    });
+  }
+
+  if (menuBtn && drawerRoot && drawerEl) {
+    menuBtn.addEventListener('click', () => setDrawerOpen(drawerRoot.hidden));
+    drawerRoot.querySelector('.drawer-backdrop').addEventListener('click', () => setDrawerOpen(false));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !drawerRoot.hidden) setDrawerOpen(false); });
+    drawerEl.addEventListener('keydown', e => {
+      if (e.key !== 'Tab') return;
+      const focusables = drawerEl.querySelectorAll('a[href], button:not([disabled])');
+      if (!focusables.length) return;
+      const first = focusables[0], last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    drawerEl.addEventListener('click', e => {
+      if (e.target.closest('#drawerSearchBtn')) { setDrawerOpen(false); openToolSearch(); return; }
+      if (e.target.closest('a[href]')) setDrawerOpen(false); // let the navigation proceed
+    });
+  }
+}
 
 let toolSearchEl = null, toolSearchInputEl = null, toolSearchResultsEl = null,
   toolSearchActiveIndex = 0, toolSearchFiltered = [];
@@ -372,6 +494,7 @@ function moveToolSearchSelection(delta) {
 
 function openToolSearch() {
   if (!toolSearchEl) buildToolSearchModal();
+  closeAllOverlays('search');
   toolSearchEl.hidden = false;
   toolSearchInputEl.value = '';
   renderToolSearchResults();

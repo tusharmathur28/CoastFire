@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://api.frankfurter.dev">
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=449106f9">
+  <link rel="stylesheet" href="styles.css?v=60d3108a">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -56,44 +56,38 @@
   <a href="#calcForm" class="skip-link">Skip to calculator</a>
   <div class="wrap">
 
-    <header class="compact">
-      <div class="header-row">
-        <div>
-          <div class="eyebrow">
-            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
-            <span>&nbsp;·&nbsp;Cross-border planning</span>
-          </div>
-          <h1>Two Currencies,<br>One Number</h1>
-          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
-            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
-            accounts in their native currencies.</p>
+    <header class="site-bar site-bar-inner">
+      <a class="brand" href="/" aria-label="Two Currencies, One Number — home">
+        <span class="chip ca">CA</span><span class="brand-plus">+</span><span class="chip us">US</span>
+        <span class="brand-name">Two&nbsp;Currencies</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Main">
+        <div class="nav-dd">
+          <button type="button" id="toolsMenuBtn" class="nav-item" aria-expanded="false" aria-controls="toolsPanel">Tools ▾</button>
+          <div id="toolsPanel" class="mega-panel" hidden></div>
         </div>
-        <div class="header-actions">
-          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)"><span class="icon" data-icon="search" aria-hidden="true">🔍</span><span class="btn-label"> Search</span></button>
-          <button type="button" class="theme-toggle" id="themeToggle"><span class="icon" data-icon="moon" aria-hidden="true">🌙</span><span class="btn-label"> Dark mode</span></button>
-          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav"><span class="icon" data-icon="menu" aria-hidden="true">☰</span><span class="btn-label"> Menu</span></button>
-        </div>
-      </div>
-      <nav class="page-nav" id="pageNav">
-        <a href="/">All Tools</a>
-        <a href="/coastfire-calculator" aria-current="page">CoastFIRE Calculator</a>
-        <a href="/action-items">Action Items</a>
-        <a href="/departure-tax">Departure Tax</a>
-        <a href="/rrsp-withholding">RRSP Withholding</a>
-        <a href="/benefit-timing">Benefit Timing</a>
-        <a href="/drawdown-optimizer">Drawdown Optimizer</a>
-        <a href="/moving-back">Moving Back to Canada</a>
-        <a href="/compare-scenarios">Compare Scenarios</a>
-        <a href="/guides">Guides</a>
+        <a class="nav-item" href="/guides">Guides</a>
       </nav>
+
+      <div class="bar-actions">
+        <button type="button" class="bar-btn" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)"><span class="icon" data-icon="search" aria-hidden="true">🔍</span><span class="btn-search-label"> Search</span> <kbd>⌘K</kbd></button>
+        <button type="button" class="bar-btn icon-btn" id="themeToggle" aria-label="Switch to dark mode"><span class="icon" data-icon="moon" aria-hidden="true">🌙</span></button>
+        <button type="button" class="bar-btn icon-btn nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="mobileDrawer" aria-label="Menu"><span class="icon" data-icon="menu" aria-hidden="true">☰</span></button>
+      </div>
     </header>
+
+    <div id="mobileDrawer" class="drawer-root" hidden>
+      <div class="drawer-backdrop"></div>
+      <div class="drawer" role="dialog" aria-modal="true" aria-label="Site menu" tabindex="-1"></div>
+    </div>
 
     <main>
     <div class="sample-banner stale-banner" id="staleBanner" hidden></div>
 
     <div class="tool-header" id="calcFormHeader">
       <a class="tool-breadcrumb" href="/">&larr; All tools</a>
-      <h2><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="12,7 13.5,12 12,17 10.5,12" fill="currentColor" stroke="none"/></svg></span>CoastFIRE Calculator</h2>
+      <h1><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="12,7 13.5,12 12,17 10.5,12" fill="currentColor" stroke="none"/></svg></span>CoastFIRE Calculator</h1>
       <p class="tool-sub"><strong>CoastFIRE</strong> is the point where your portfolio is projected to grow, on its own,
         into everything you'll need for retirement — no further contributions required. Once you're there, you can
         "coast": cover today's expenses while your accounts do the rest. This calculator walks through your Canadian
@@ -1049,13 +1043,13 @@
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=755d72bc"></script>
+  <script src="shared.js?v=bba864b3"></script>
   <script>
     (function () {
       initTheme();
       hydrateChromeIcons();
       initThemeToggle();
-      initMobileNav();
+      initNavBar();
       initToolSearch();
       initStaleBanner();
 

@@ -31,7 +31,7 @@
   </script>
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/styles.css?v=449106f9">
+  <link rel="stylesheet" href="/styles.css?v=60d3108a">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -53,43 +53,37 @@
   <a href="#guideBody" class="skip-link">Skip to guide</a>
   <div class="wrap">
 
-    <header class="compact">
-      <div class="header-row">
-        <div>
-          <div class="eyebrow">
-            <span class="chip ca">CA</span><span>+</span><span class="chip us">US</span>
-            <span>&nbsp;·&nbsp;Cross-border planning</span>
-          </div>
-          <h1>Two Currencies,<br>One Number</h1>
-          <p class="sub">Financial planning tools for Canadians living and investing in the United States — CoastFIRE
-            retirement math, departure tax, RRSP withholding, benefit timing, and moving back, all tracking your
-            accounts in their native currencies.</p>
+    <header class="site-bar site-bar-inner">
+      <a class="brand" href="/" aria-label="Two Currencies, One Number — home">
+        <span class="chip ca">CA</span><span class="brand-plus">+</span><span class="chip us">US</span>
+        <span class="brand-name">Two&nbsp;Currencies</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Main">
+        <div class="nav-dd">
+          <button type="button" id="toolsMenuBtn" class="nav-item" aria-expanded="false" aria-controls="toolsPanel">Tools ▾</button>
+          <div id="toolsPanel" class="mega-panel" hidden></div>
         </div>
-        <div class="header-actions">
-          <button type="button" class="theme-toggle" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)"><span class="icon" data-icon="search" aria-hidden="true">🔍</span><span class="btn-label"> Search</span></button>
-          <button type="button" class="theme-toggle" id="themeToggle"><span class="icon" data-icon="moon" aria-hidden="true">🌙</span><span class="btn-label"> Dark mode</span></button>
-          <button type="button" class="theme-toggle nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="pageNav"><span class="icon" data-icon="menu" aria-hidden="true">☰</span><span class="btn-label"> Menu</span></button>
-        </div>
-      </div>
-      <nav class="page-nav" id="pageNav">
-        <a href="/">All Tools</a>
-        <a href="/coastfire-calculator">CoastFIRE Calculator</a>
-        <a href="/action-items">Action Items</a>
-        <a href="/departure-tax">Departure Tax</a>
-        <a href="/rrsp-withholding">RRSP Withholding</a>
-        <a href="/benefit-timing">Benefit Timing</a>
-        <a href="/drawdown-optimizer">Drawdown Optimizer</a>
-        <a href="/moving-back">Moving Back to Canada</a>
-        <a href="/compare-scenarios">Compare Scenarios</a>
-        <a href="/guides" aria-current="page">Guides</a>
+        <a class="nav-item" href="/guides">Guides</a>
       </nav>
+
+      <div class="bar-actions">
+        <button type="button" class="bar-btn" id="searchToolsBtn" title="Search tools (Ctrl/Cmd+K)"><span class="icon" data-icon="search" aria-hidden="true">🔍</span><span class="btn-search-label"> Search</span> <kbd>⌘K</kbd></button>
+        <button type="button" class="bar-btn icon-btn" id="themeToggle" aria-label="Switch to dark mode"><span class="icon" data-icon="moon" aria-hidden="true">🌙</span></button>
+        <button type="button" class="bar-btn icon-btn nav-toggle" id="navToggleBtn" aria-expanded="false" aria-controls="mobileDrawer" aria-label="Menu"><span class="icon" data-icon="menu" aria-hidden="true">☰</span></button>
+      </div>
     </header>
+
+    <div id="mobileDrawer" class="drawer-root" hidden>
+      <div class="drawer-backdrop"></div>
+      <div class="drawer" role="dialog" aria-modal="true" aria-label="Site menu" tabindex="-1"></div>
+    </div>
 
     <main>
 
     <div class="tool-header">
       <a class="tool-breadcrumb" href="/guides">&larr; All guides</a>
-      <h2><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"/><path d="M20 12H10"/><path d="M15 7l5 5-5 5"/></svg></span>Canada's Departure Tax, Explained</h2>
+      <h1><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"/><path d="M20 12H10"/><path d="M15 7l5 5-5 5"/></svg></span>Canada's Departure Tax, Explained</h1>
       <div class="guide-meta"><span>~8 min read</span><span class="gm-dot">·</span><span>Updated August 2026</span></div>
       <div class="next-step-nudge"><span class="nsn-label">Calculator:</span><span><a href="/departure-tax">Departure Tax Estimator</a> — run your own numbers.</span></div>
     </div>
@@ -186,12 +180,12 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Your financial inputs are processed entirely on your device and are never uploaded by us.</footer>
   </div>
 
-  <script src="/shared.js?v=755d72bc"></script>
+  <script src="/shared.js?v=bba864b3"></script>
   <script>
     initTheme();
     hydrateChromeIcons();
     initThemeToggle();
-    initMobileNav();
+    initNavBar();
     initToolSearch();
   </script>
 </body>
