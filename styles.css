@@ -623,6 +623,7 @@ details.collapsible-section .collapsible-body { padding-top: 4px; }
 .extra-accounts-toggle:hover { border-color: var(--harbor); }
 
 .extra-accounts-body { margin-top: -4px; }
+.extra-accounts-body[hidden] { display: none; }
 
 .assumptions-note {
   font-size: 13px;
