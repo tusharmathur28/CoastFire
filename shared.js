@@ -1520,6 +1520,148 @@ function simulateMonteCarlo(overrides, trials, stdevReturn) {
 }
 
 // ==================================================================
+// Historical backtest — replays actual annual real (inflation-adjusted) S&P 500 total
+// returns through every possible n-year window, instead of simulateMonteCarlo()'s
+// normal-distribution draws. Source: Aswath Damodaran / NYU Stern, "Historical Returns on
+// Stocks, Bonds and Bills" (pages.stern.nyu.edu/~adamodar/pc/datasets/histretSP.xlsx,
+// "Returns by year" sheet), downloaded and parsed programmatically (not hand-transcribed)
+// to avoid any transcription risk in financial data. 1928-2025, no gaps. Single US-equity
+// benchmark only — same simplification simulateMonteCarlo() already makes with one blended
+// returnRate/stdev, just applied to real history instead of a parametric distribution. Real
+// dollars only: the sourced series is already inflation-adjusted and there's no matching
+// historical-inflation series bundled to reconstruct nominal figures from it.
+const SP500_REAL_RETURNS = [
+  [1928,0.454932],[1929,-0.088311],[1930,-0.200079],[1931,-0.380674],[1932,0.018184],[1933,0.48846],
+  [1934,-0.026634],[1935,0.424871],[1936,0.300585],[1937,-0.371329],[1938,0.329764],[1939,-0.010976],
+  [1940,-0.113064],[1941,-0.206502],[1942,0.093014],[1943,0.214676],[1944,0.163558],[1945,0.32836],
+  [1946,-0.224842],[1947,-0.033419],[1948,0.026343],[1949,0.208096],[1950,0.234804],[1951,0.166778],
+  [1952,0.17266],[1953,-0.019427],[1954,0.537061],[1955,0.321026],[1956,0.043253],[1957,-0.129797],
+  [1958,0.412335],[1959,0.101507],[1960,-0.010103],[1961,0.257935],[1962,-0.100113],[1963,0.206279],
+  [1964,0.152961],[1965,0.102785],[1966,-0.12981],[1967,0.20151],[1968,0.058204],[1969,-0.13596],
+  [1970,-0.019031],[1971,0.106083],[1972,0.148434],[1973,-0.211708],[1974,-0.340397],[1975,0.28109],
+  [1976,0.180863],[1977,-0.128216],[1978,-0.023009],[1979,0.046124],[1980,0.17081],[1981,-0.125087],
+  [1982,0.159774],[1983,0.178688],[1984,0.02114],[1985,0.264324],[1986,0.172078],[1987,0.013198],
+  [1988,0.116049],[1989,0.256365],[1990,-0.08643],[1991,0.263627],[1992,0.044636],[1993,0.070256],
+  [1994,-0.013138],[1995,0.337988],[1996,0.18736],[1997,0.308756],[1998,0.263021],[1999,0.17725],
+  [2000,-0.120118],[2001,-0.131967],[2002,-0.237778],[2003,0.259879],[2004,0.072512],[2005,0.01372],
+  [2006,0.12748],[2007,0.013484],[2008,-0.366103],[2009,0.225989],[2010,0.13129],[2011,-0.008392],
+  [2012,0.139074],[2013,0.3019],[2014,0.126721],[2015,0.006447],[2016,0.095013],[2017,0.190937],
+  [2018,-0.06022],[2019,0.282803],[2020,0.164373],[2021,0.200235],[2022,-0.230069],[2023,0.21972],
+  [2024,0.213733],[2025,0.145895]
+].map(([year, real]) => ({ year, real }));
+
+// Same setup as simulateMonteCarlo() (target/coastNum math uses the user's own returnRate
+// assumption, independent of which return sequence funds each trial), but each "trial" is
+// one historical starting year replayed exactly rather than a random draw. Returns the same
+// {bands, successProb, ...} shape simulateMonteCarlo() does so drawFanChart() needs no
+// changes — only `trials`'s meaning differs (a count of overlapping historical windows, not
+// independent samples; the caller's caveat copy needs to say so, this function doesn't).
+// Returns null if the plan's horizon is longer than the historical series covers — there's
+// no valid window to test.
+function simulateHistoricalBacktest(overrides, series) {
+  overrides = overrides || {};
+  const raw = id => (overrides[id] !== undefined ? overrides[id] : $(id).value);
+  const val = id => parseNum(raw(id));
+
+  const currentAge = val('currentAge');
+  const retireAge = val('retireAge');
+  const n = Math.max(0, Math.round(retireAge - currentAge));
+  if (n >= series.length) return null;
+
+  const freqMult = raw('contribFreq') === 'monthly' ? 12 : 1;
+  const meanReturn = val('returnRate') / 100;
+  const inflationRate = val('inflationRate') / 100;
+  const withdrawalRate = Math.max(0.001, val('withdrawalRate') / 100);
+  const stopAtCoast = raw('stopAtCoast');
+  const reportCurrency = raw('reportCurrency');
+  const exchangeRate = val('exchangeRate') || 0.73;
+  const monthlyExpenses = val('monthlyExpenses');
+  const cppMonthly = val('cppMonthly'), oasMonthly = val('oasMonthly'), ssMonthly = val('ssMonthly');
+  const benefitsStartAge = val('benefitsStartAge');
+  const lifeEvents = parseLifeEvents(raw('lifeEvents'));
+  const dragKeys = raw('taxDragEnabled') === 'yes' ? TAX_DRAG_ACCOUNT_KEYS : undefined;
+
+  const startBal = {
+    rrsp: val('rrspBal'), tfsa: val('tfsaBal'), nonregCad: val('nonregCadBal'), fhsa: val('fhsaBal'), resp: val('respBal'),
+    k401: val('k401Bal'), ira: val('iraBal'), roth: val('rothBal'), taxableUsd: val('taxableUsdBal'), hsa: val('hsaBal')
+  };
+  const contribAnnual = {
+    rrsp: (val('rrspContrib') + val('rrspMatch')) * freqMult, tfsa: val('tfsaContrib') * freqMult,
+    nonregCad: val('nonregCadContrib') * freqMult, fhsa: val('fhsaContrib') * freqMult, resp: val('respContrib') * freqMult,
+    k401: (val('k401Contrib') + val('k401Match')) * freqMult, ira: val('iraContrib') * freqMult,
+    roth: val('rothContrib') * freqMult, taxableUsd: val('taxableUsdContrib') * freqMult, hsa: val('hsaContrib') * freqMult
+  };
+
+  const futureAnnualExpense = monthlyExpenses * Math.pow(1 + inflationRate, n) * 12;
+  const annualGovBenefit = convertToReport((cppMonthly + oasMonthly) * 12, ssMonthly * 12, reportCurrency, exchangeRate);
+  const annualGapAfterBenefits = Math.max(0, futureAnnualExpense - annualGovBenefit);
+  const bridgeYears = Math.max(0, benefitsStartAge - retireAge);
+  const pvBridge = bridgeYears > 0
+    ? (meanReturn > 0
+      ? futureAnnualExpense * (1 - Math.pow(1 + meanReturn, -bridgeYears)) / meanReturn
+      : futureAnnualExpense * bridgeYears)
+    : 0;
+  const pvPostBenefit = (annualGapAfterBenefits / withdrawalRate) / Math.pow(1 + meanReturn, bridgeYears);
+  const requiredAtRetirement = pvBridge + pvPostBenefit;
+  const coastNumberAt = yrsRemaining => requiredAtRetirement / Math.pow(1 + meanReturn, Math.max(0, yrsRemaining));
+
+  const currentYear = new Date().getFullYear();
+  const windowCount = series.length - n;
+  const paths = [];
+  const startYears = [];
+  let coastHits = 0;
+
+  for (let w = 0; w < windowCount; w++) {
+    let bal = { ...startBal };
+    let coastedFlag = false;
+    const path = [];
+    for (let i = 0; i <= n; i++) {
+      applyLifeEventsForAge(bal, lifeEvents, currentAge + i, exchangeRate, false);
+      const cadTotal = bal.rrsp + bal.tfsa + bal.nonregCad + bal.fhsa + bal.resp;
+      const usdTotal = bal.k401 + bal.ira + bal.roth + bal.taxableUsd + bal.hsa;
+      const combined = convertToReport(cadTotal, usdTotal, reportCurrency, exchangeRate);
+      const coastNum = coastNumberAt(n - i);
+      if (!coastedFlag && combined >= coastNum) coastedFlag = true;
+      path.push(combined);
+      if (i < n) {
+        const r = series[w + i].real;
+        const mult = (stopAtCoast === 'yes' && coastedFlag) ? 0 : 1;
+        bal = stepAccounts(bal, contribAnnual, r, mult, dragKeys);
+      }
+    }
+    if (coastedFlag) coastHits++;
+    paths.push(path);
+    startYears.push(series[w].year);
+  }
+
+  const bands = [];
+  for (let i = 0; i <= n; i++) {
+    const yearVals = paths.map(p => p[i]).sort((a, b) => a - b);
+    const pick = p => yearVals[Math.min(yearVals.length - 1, Math.floor(p / 100 * yearVals.length))];
+    bands.push({
+      age: currentAge + i, year: currentYear + i,
+      p10: pick(10), p25: pick(25), p50: pick(50), p75: pick(75), p90: pick(90),
+      coastNum: coastNumberAt(n - i)
+    });
+  }
+
+  // Worst/best starting year by final combined balance — a concrete, memorable detail
+  // (cFIREsim-style), not just percentile abstractions.
+  let worstIdx = 0, bestIdx = 0;
+  paths.forEach((p, i) => {
+    if (p[p.length - 1] < paths[worstIdx][paths[worstIdx].length - 1]) worstIdx = i;
+    if (p[p.length - 1] > paths[bestIdx][paths[bestIdx].length - 1]) bestIdx = i;
+  });
+
+  return {
+    n, currentAge, retireAge, currentYear, reportCurrency, trials: windowCount,
+    successProb: coastHits / windowCount, bands, requiredAtRetirement,
+    windowCount, dataStartYear: series[0].year, dataEndYear: series[series.length - 1].year,
+    worstStartYear: startYears[worstIdx], bestStartYear: startYears[bestIdx]
+  };
+}
+
+// ==================================================================
 // Benefit claiming-age factors — used by Benefit Timing's own page and by the
 // calculator's PDF export.
 // ==================================================================
@@ -1861,7 +2003,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     escapeHtml, sanitizeImportedName, parseNum, parseLifeEvents,
     compute, stepAccounts, convertToReport, simulateDrawdown, buildDecumulationOverrides,
-    simulateMonteCarlo, cppFactor, oasFactor, ssFactor,
+    simulateMonteCarlo, simulateHistoricalBacktest, SP500_REAL_RETURNS, cppFactor, oasFactor, ssFactor,
     SENSITIVE_SHARE_FIELDS, buildSharePayload, parseShareParamsString,
     SENSITIVE_STORE_FIELDS, transformV2StateToV3,
     CAD_TO_USD_PLAUSIBLE, validatedRate,

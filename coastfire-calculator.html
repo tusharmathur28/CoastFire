@@ -708,11 +708,19 @@
             <span><span class="legend-swatch" style="background:var(--harbor); opacity:0.15;"></span>Middle 80%</span>
             <span><span class="legend-dot" style="background:var(--maple);"></span>CoastFIRE number</span>
           </div>
+          <div class="chart-legend" id="chartLegendHistorical" style="display:none;">
+            <span class="mc-headline" id="histHeadline">—</span>
+            <span><span class="legend-dot" style="background:var(--harbor);"></span>Median historical path</span>
+            <span><span class="legend-swatch" style="background:var(--harbor); opacity:0.3;"></span>Middle 50%</span>
+            <span><span class="legend-swatch" style="background:var(--harbor); opacity:0.15;"></span>Middle 80%</span>
+            <span><span class="legend-dot" style="background:var(--maple);"></span>CoastFIRE number</span>
+          </div>
           <div class="view-tabs" id="chartModeTabs" role="tablist" aria-label="Chart view mode">
             <button type="button" data-mode="single" class="active" role="tab" aria-selected="true">Projection</button>
             <button type="button" data-mode="range" role="tab" aria-selected="false">Scenario range</button>
             <button type="button" data-mode="coast" role="tab" aria-selected="false">Coast on vs off</button>
             <button type="button" data-mode="montecarlo" role="tab" aria-selected="false">Monte Carlo</button>
+            <button type="button" data-mode="historical" role="tab" aria-selected="false">Historical backtest</button>
           </div>
           <div class="view-tabs" id="chartDollarsTabs" role="tablist" aria-label="Nominal vs. real dollars">
             <button type="button" data-dollars="real" class="active" role="tab" aria-selected="true">Today's $ (real)</button>
@@ -726,6 +734,7 @@
           <div class="chart-tooltip" id="chartTooltip"></div>
         </div>
         <div class="mc-caveat" id="mcCaveat" style="display:none;">Volatility (±<span id="mcStdev">—</span>%/yr) is an illustrative planning range tied to your Conservative/Base/Optimistic preset, not derived from your actual asset mix. Only the portfolio path is randomized — the CoastFIRE target line still uses your fixed return-rate assumption.</div>
+        <div class="mc-caveat" id="historicalCaveat" style="display:none;"></div>
       </div>
 
       <div class="income-stack-card" id="incomeStackSection">
@@ -1096,7 +1105,7 @@
     <a href="#results" class="srb-cta" id="srbCta">See results ↓</a>
   </div>
 
-  <script src="shared.js?v=bbe5b136"></script>
+  <script src="shared.js?v=602b58a2"></script>
   <script>
     (function () {
       initTheme();
@@ -1114,6 +1123,7 @@
         renderFxSparkline();
         if ($('results').hidden) return;
         if (chartMode === 'montecarlo' && lastMc) drawFanChart(lastMc, chartReportCurrency);
+        else if (chartMode === 'historical' && lastHist) drawFanChart(lastHist, chartReportCurrency);
         else drawChart(chartRows, chartReportCurrency, chartRetireIndex);
       };
 
@@ -1601,7 +1611,7 @@
       // when planToAge doesn't leave room for one) — kept alongside chartRows/chartSeries/chartFan
       // so redraws (theme flip, tooltip hover) don't need to recompute it.
       let chartRetireIndex = undefined;
-      let lastRes = null, lastMc = null, donutMode = 'account', chartMode = 'single';
+      let lastRes = null, lastMc = null, lastHist = null, donutMode = 'account', chartMode = 'single';
       // Defaults to real (inflation-adjusted) dollars, matching FI-calculator convention
       // (FICalc/cFIREsim/ProjectionLab) — only applies to the single-series Projection chart,
       // since Scenario range/Coast/Monte Carlo each build their own multi-series data separately.
@@ -1955,6 +1965,8 @@
         $('chartLegendMulti').style.display = (chartMode === 'range' || chartMode === 'coast') ? 'flex' : 'none';
         $('chartLegendMonteCarlo').style.display = chartMode === 'montecarlo' ? 'flex' : 'none';
         $('mcCaveat').style.display = chartMode === 'montecarlo' ? 'block' : 'none';
+        $('chartLegendHistorical').style.display = chartMode === 'historical' ? 'flex' : 'none';
+        if (chartMode !== 'historical') $('historicalCaveat').style.display = 'none';
         $('chartDollarsTabs').style.display = chartMode === 'single' ? 'flex' : 'none';
         $('chartDollarsNote').style.display = chartMode === 'single' ? 'block' : 'none';
         if (chartMode !== 'single') $('decumCaveat').style.display = 'none';
@@ -1997,6 +2009,32 @@
           lastMc = mc;
           $('mcHeadline').textContent = Math.round(mc.successProb * 100) + '% chance you\'re coasting by age ' + mc.retireAge;
           drawFanChart(mc, res.reportCurrency);
+        } else if (chartMode === 'historical') {
+          if (skipMonteCarlo) return;
+          const hist = simulateHistoricalBacktest({}, SP500_REAL_RETURNS);
+          lastHist = hist;
+          const dataStart = SP500_REAL_RETURNS[0].year, dataEnd = SP500_REAL_RETURNS[SP500_REAL_RETURNS.length - 1].year;
+          if (!hist) {
+            // Plan horizon longer than the bundled series — nothing valid to draw. Reset the
+            // shared chart state so a stale mode's tooltip/redraw logic (chartPointerHandler,
+            // redrawChartBase) can't reference leftover data from whatever was on screen before.
+            chartFan = null; chartSeries = null; chartRows = []; chartRetireIndex = undefined;
+            const canvas = $('chart');
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            canvas.setAttribute('aria-label', 'Historical backtest unavailable for this plan.');
+            $('histHeadline').textContent = '—';
+            $('historicalCaveat').textContent = `Your plan spans more years (${res.n}) than the bundled historical data covers (${dataEnd - dataStart + 1} years, ${dataStart}–${dataEnd}) — try a shorter time to retirement to see a backtest.`;
+            $('historicalCaveat').style.display = 'block';
+            return;
+          }
+          $('histHeadline').textContent = `${Math.round(hist.successProb * 100)}% of ${hist.windowCount} historical ${hist.n}-year periods (starting ${dataStart}–${dataEnd - hist.n}) reached CoastFIRE by age ${hist.retireAge}`;
+          $('historicalCaveat').textContent = `Real (inflation-adjusted) US S&P 500 returns only, ${dataStart}–${dataEnd} — not a blend of your actual CAD/USD accounts, and not extended into decumulation. These are ${hist.windowCount} overlapping historical periods, not independent trials, so treat the spread as illustrative rather than a statistical probability. Worst historical start: ${hist.worstStartYear}. Best: ${hist.bestStartYear}.`;
+          $('historicalCaveat').style.display = 'block';
+          drawFanChart(hist, res.reportCurrency);
+          // drawFanChart() itself never touches aria-label (true for Monte Carlo mode too,
+          // pre-existing) — only reset it here so a prior "unavailable" state (set above) can't
+          // linger once a valid backtest actually renders.
+          $('chart').setAttribute('aria-label', `Chart of historical backtest outcomes for a ${hist.n}-year plan across ${hist.windowCount} historical starting years, ${Math.round(hist.successProb * 100)}% reaching CoastFIRE.`);
         }
       }
 
