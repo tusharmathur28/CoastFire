@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://api.frankfurter.dev">
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=23093a60">
+  <link rel="stylesheet" href="styles.css?v=2b4edaea">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -355,6 +355,10 @@
               <div class="helper-hint" id="fxHint">Fetching live exchange rate...</div>
               <button type="button" class="small ghost-small" id="fetchFxBtn"
                 style="padding: 4px 8px; font-size: 11px; margin-top: 2px;">Fetch live</button>
+              <button type="button" class="small ghost-small" id="fetchFxAvgBtn"
+                style="padding: 4px 8px; font-size: 11px; margin-top: 2px;">Use 5-yr avg</button>
+              <canvas id="fxSparkline" width="120" height="32" aria-hidden="true"
+                style="margin-top:4px;"></canvas>
             </div>
           </div>
           <div class="field" data-step="1">
@@ -369,6 +373,15 @@
             <label for="stopAtCoast">Stop contributions at CoastFIRE?</label>
             <div class="label-plain">Once you hit your number, should we assume you stop actively saving?</div>
             <select id="stopAtCoast">
+              <option value="no" selected>No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <div class="field" data-step="3">
+            <label for="taxDragEnabled">Apply tax drag to non-registered/taxable accounts? <span class="info"
+                title="A rough simplification, not a real tax model: when enabled, your Non-Registered (CAD) and Taxable (USD) accounts compound at 80% of your expected return, representing annual taxation on interest/dividends/realized gains — registered/tax-advantaged accounts (RRSP, TFSA, 401(k), IRA, Roth, HSA, FHSA) are unaffected. Note this only lowers projected balances — the CoastFIRE number itself is still computed on your gross return, so enabling this can push your coast year later, the same way the site's other totals are pre-tax estimates.">?</span></label>
+            <div class="label-plain">A simplified estimate of annual taxes eating into growth in taxable accounts</div>
+            <select id="taxDragEnabled">
               <option value="no" selected>No</option>
               <option value="yes">Yes</option>
             </select>
@@ -498,6 +511,7 @@
         <button type="button" class="ghost" id="shareLinkBtn"><span class="icon" data-icon="link" aria-hidden="true">🔗</span> Copy shareable link</button>
         <button type="button" class="ghost" id="printBtn"><span class="icon" data-icon="printer" aria-hidden="true">🖨️</span> Print summary</button>
         <button type="button" class="ghost" id="downloadPdfBtn"><span class="icon" data-icon="download" aria-hidden="true">📄</span> Download full plan (PDF)</button>
+        <button type="button" class="ghost" id="copySummaryBtn"><span class="icon" data-icon="clipboard" aria-hidden="true">📋</span> Copy summary</button>
         <span class="share-feedback" id="shareFeedback" role="status" aria-live="polite">Link copied!</span>
       </div>
       <div class="save-note">Your inputs are saved in this browser automatically, so you won't lose them on refresh.<span class="save-indicator" id="saveIndicator" role="status" aria-live="polite">Saved</span>
@@ -1051,7 +1065,7 @@
     <a href="#results" class="srb-cta" id="srbCta">See results ↓</a>
   </div>
 
-  <script src="shared.js?v=6b370c18"></script>
+  <script src="shared.js?v=7078afd9"></script>
   <script>
     (function () {
       initTheme();
@@ -1066,6 +1080,7 @@
       // Chart colors come from CSS vars, so they need a manual redraw on theme flip —
       // initThemeToggle() (shared.js) calls this after applying the new theme.
       window.onThemeChange = () => {
+        renderFxSparkline();
         if ($('results').hidden) return;
         if (chartMode === 'montecarlo' && lastMc) drawFanChart(lastMc, chartReportCurrency);
         else drawChart(chartRows, chartReportCurrency);
@@ -2433,8 +2448,18 @@
         if (!wizardActive) openSectionsForSteps([...new Set(rawErrors.map(e => e.step))]);
         const errors = rawErrors.map(e => e.message);
         if (showErrors(errors)) return;
+        const freqMult = $('contribFreq').value === 'monthly' ? 12 : 1;
+        // 2026 figures: TFSA/FHSA (CRA), 401(k)/IRA/HSA (IRS). Base annual limits only — no
+        // catch-up-age tiers, this is a soft nudge, not a real contribution-limits engine. Worded
+        // around carryforward room since exceeding the annual limit isn't necessarily wrong if
+        // there's banked unused room (TFSA/FHSA both carry forward).
         renderSoftWarning('calcWarnBanner', [
-          { condition: num('returnRate') > 15, message: `A ${num('returnRate')}% expected annual return looks unusually high — even the Optimistic preset above uses 9%. Double check for a typo.` }
+          { condition: num('returnRate') > 15, message: `A ${num('returnRate')}% expected annual return looks unusually high — even the Optimistic preset above uses 9%. Double check for a typo.` },
+          { condition: num('tfsaContrib') * freqMult > 7000, message: `Your TFSA contribution looks like it exceeds the 2026 annual limit (CA$7,000) — check your remaining contribution room, since unused room carries forward.` },
+          { condition: num('fhsaContrib') * freqMult > 8000, message: `Your FHSA contribution looks like it exceeds the 2026 annual limit (CA$8,000) — check your remaining contribution room, since unused room carries forward (up to the CA$40,000 lifetime cap).` },
+          { condition: num('k401Contrib') * freqMult > 24500, message: `Your 401(k) contribution looks like it exceeds the 2026 employee-deferral limit (US$24,500) — this doesn't include employer match, which has its own combined cap.` },
+          { condition: (num('iraContrib') + num('rothContrib')) * freqMult > 7500, message: `Your combined Traditional + Roth IRA contributions look like they exceed the 2026 annual limit (US$7,500 across both accounts, not each).` },
+          { condition: num('hsaContrib') * freqMult > 8750, message: `Your HSA contribution looks like it exceeds the 2026 annual limit (US$8,750 for family HDHP coverage, US$4,400 for self-only — check which applies to you).` }
         ]);
         doRender(scrollToResults);
       }
@@ -2572,6 +2597,139 @@
       }
 
       const DEFERRAL_TAX_THRESHOLD = 16500; // approx. federal tax owing (~$100k gain) before CRA requires security
+
+      // Single source of truth for both the PDF export and the plain-text "Copy summary" export,
+      // so the two can't silently drift apart on which conditional sections they include. Each
+      // section is either 'body' style (plain label/value pairs) or 'table' style (subheads,
+      // indent/bold/divider — the account-balances layout); the PDF and text renderers below both
+      // walk the same structure, just formatting it differently.
+      function collectPlanSummarySections() {
+        const res = lastRes;
+        const first = res.rows[0];
+        const headlineText = $('resultHeadline').textContent.trim();
+        const sections = [];
+
+        sections.push({
+          title: 'Your Snapshot',
+          lines: [
+            { label: 'Current age', value: res.currentAge },
+            { label: 'Planned retirement age', value: res.retireAge },
+            { label: 'Reporting currency', value: res.reportCurrency },
+            { label: 'Exchange rate used', value: '1 CAD = ' + res.exchangeRate + ' USD' }
+          ]
+        });
+
+        sections.push({
+          title: 'Key Results',
+          lines: [
+            { label: 'Combined portfolio today', value: fmt(first.combined, res.reportCurrency) },
+            { label: 'Required at retirement', value: fmt(res.requiredAtRetirement, res.reportCurrency) },
+            { label: 'CoastFIRE number today', value: fmt(res.coastNumberToday, res.reportCurrency) },
+            { label: 'Years until CoastFIRE', value: res.coastYearIndex !== null ? res.coastYearIndex : 'Not yet on track' }
+          ],
+          note: headlineText
+        });
+
+        const accountLines = [{ subhead: 'Canadian accounts (CAD)' }];
+        accountLines.push({ label: 'RRSP', value: fmt(first.rrsp, 'CAD'), indent: true });
+        accountLines.push({ label: 'TFSA', value: fmt(first.tfsa, 'CAD'), indent: true });
+        accountLines.push({ label: 'Non-registered', value: fmt(first.nonregCad, 'CAD'), indent: true });
+        if (first.fhsa > 0) accountLines.push({ label: 'FHSA', value: fmt(first.fhsa, 'CAD'), indent: true });
+        if (first.resp > 0) accountLines.push({ label: 'RESP', value: fmt(first.resp, 'CAD'), indent: true });
+        accountLines.push({ label: 'CAD Total', value: fmt(first.cadTotal, 'CAD'), bold: true });
+        accountLines.push({ subhead: 'US accounts (USD)' });
+        accountLines.push({ label: '401(k)/403(b)', value: fmt(first.k401, 'USD'), indent: true });
+        accountLines.push({ label: 'Traditional IRA', value: fmt(first.ira, 'USD'), indent: true });
+        accountLines.push({ label: 'Roth IRA', value: fmt(first.roth, 'USD'), indent: true });
+        accountLines.push({ label: 'Taxable brokerage', value: fmt(first.taxableUsd, 'USD'), indent: true });
+        if (first.hsa > 0) accountLines.push({ label: 'HSA', value: fmt(first.hsa, 'USD'), indent: true });
+        accountLines.push({ label: 'USD Total', value: fmt(first.usdTotal, 'USD'), bold: true });
+        accountLines.push({ label: 'Combined portfolio (' + res.reportCurrency + ')', value: fmt(first.combined, res.reportCurrency), bold: true, divider: true });
+        sections.push({ title: 'Account Balances Today', style: 'table', lines: accountLines });
+
+        // Departure Tax / Benefit Timing / Moving Back all live on their own pages now — read
+        // their last-saved values from storage instead of the DOM, which no longer has them.
+        const stored = readStoredInputs();
+        const storedNum = id => parseNum(stored[id]);
+
+        // ---- Departure Tax (only if there's a meaningful gain on the books) ----
+        const dtGain = Math.max(0, storedNum('dtNonregFmv') - storedNum('dtNonregAcb')) + Math.max(0, storedNum('dtOtherFmv') - storedNum('dtOtherAcb'));
+        if (dtGain > 0) {
+          const dtTaxable = dtGain * 0.5;
+          const dtRate = Math.max(0, Math.min(100, storedNum('dtMarginalRate'))) / 100;
+          const dtOwing = dtTaxable * dtRate;
+          sections.push({
+            title: 'Departure Tax Estimate (if leaving Canada)',
+            lines: [
+              { label: 'Estimated capital gain', value: fmt(dtGain, 'CAD') },
+              { label: 'Taxable amount (50% inclusion)', value: fmt(dtTaxable, 'CAD') },
+              { label: 'Estimated tax owing', value: fmt(dtOwing, 'CAD') },
+              { label: 'Deferral likely available (Form T1244)', value: dtOwing < DEFERRAL_TAX_THRESHOLD ? 'Yes, without security' : 'Yes, may require posted security' }
+            ]
+          });
+        }
+
+        // ---- Claiming-age choices (only if benefit amounts were entered) ----
+        const claimCppBase = storedNum('claimCppBase'), claimOasBase = storedNum('claimOasBase'), claimSsBase = storedNum('claimSsBase');
+        if (claimCppBase > 0 || claimOasBase > 0 || claimSsBase > 0) {
+          const lines = [];
+          if (claimCppBase > 0) lines.push({ label: 'CPP, claiming at age ' + stored.claimCppAge, value: fmt(claimCppBase * cppFactor(parseInt(stored.claimCppAge, 10)), 'CAD') + '/mo' });
+          if (claimOasBase > 0) lines.push({ label: 'OAS, claiming at age ' + stored.claimOasAge, value: fmt(claimOasBase * oasFactor(parseInt(stored.claimOasAge, 10)), 'CAD') + '/mo' });
+          if (claimSsBase > 0) lines.push({ label: 'Social Security, claiming at age ' + stored.claimSsAge, value: fmt(claimSsBase * ssFactor(parseInt(stored.claimSsAge, 10)), 'USD') + '/mo' });
+          sections.push({ title: 'Benefit Claiming-Age Choices', lines });
+        }
+
+        // ---- Moving Back to Canada (only if there's something relevant to say) ----
+        const mbIsCitizen = stored.mbIsCitizen === 'yes';
+        const mbHasGreenCard = stored.mbHasGreenCard === 'yes';
+        if (mbIsCitizen || mbHasGreenCard || first.rrsp > 0 || first.tfsa > 0 || first.roth > 0) {
+          const lines = [{ label: 'US citizen', value: mbIsCitizen ? 'Yes — US filing continues for life' : 'No' }];
+          if (mbHasGreenCard) {
+            const gcYears = storedNum('mbGreenCardYears');
+            lines.push({ label: 'Green Card, years held (of 15)', value: String(gcYears) + (gcYears >= 8 ? ' — past Long-Term Resident threshold' : '') });
+          }
+          if (first.tfsa > 0) lines.push({ label: 'TFSA note', value: 'Room does not accrue while non-resident' });
+          if (first.roth > 0) lines.push({ label: 'Roth IRA note', value: 'Needs one-time treaty election if returning to Canada' });
+          sections.push({ title: 'Moving Back to Canada — Key Flags', lines });
+        }
+
+        // ---- RRSP Withholding Tax (only if there's a projected RRSP balance) ----
+        const rrspAtRetirement = res.rows[res.rows.length - 1].rrsp;
+        if (rrspAtRetirement > 0) {
+          const rwRateStored = parseFloat(stored.rwWithdrawalType);
+          const rwRate = Number.isFinite(rwRateStored) ? rwRateStored : RRSP_WITHHOLDING_RATES.lumpSum;
+          const rwWithheld = rrspAtRetirement * rwRate;
+          sections.push({
+            title: 'RRSP Withholding Estimate',
+            lines: [
+              { label: 'Projected RRSP at retirement', value: fmt(rrspAtRetirement, 'CAD') },
+              { label: 'Withholding rate', value: Math.round(rwRate * 100) + '%' },
+              { label: 'Estimated withheld at source', value: fmt(rwWithheld, 'CAD') },
+              { label: 'Net after withholding', value: fmt(rrspAtRetirement - rwWithheld, 'CAD') }
+            ]
+          });
+        }
+
+        // ---- Drawdown Order (only if the Drawdown Optimizer's balances have been entered) ----
+        const ddoTotal = ['ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal']
+          .reduce((s, id) => s + storedNum(id), 0);
+        if (ddoTotal > 0) {
+          const ddoSims = ['greedy', 'taxableFirst', 'rrspFirst', 'proportional'].map(name => ({ name, sim: simulateDrawdown(stored, name) }));
+          const ddoBest = ddoSims.reduce((a, b) => (b.sim.totalTaxPaid < a.sim.totalTaxPaid ? b : a));
+          sections.push({
+            title: 'Drawdown Order (Retirement Withdrawal Sequence)',
+            lines: [
+              { label: 'Recommended order', value: DRAWDOWN_STRATEGIES[ddoBest.name].label },
+              { label: 'Total lifetime tax (USD)', value: fmt(ddoBest.sim.totalTaxPaid, 'USD') },
+              { label: 'Ending balance (USD)', value: fmt(ddoBest.sim.endingBalance, 'USD') },
+              { label: 'Portfolio lasts until', value: ddoBest.sim.depletionAge === null ? 'Beyond plan-to-age' : 'Age ' + ddoBest.sim.depletionAge }
+            ]
+          });
+        }
+
+        return sections;
+      }
+
       function buildPdfDocument() {
         if (!window.jspdf || !window.jspdf.jsPDF) {
           alert("Couldn't load the PDF library — check your internet connection and try again.");
@@ -2586,7 +2744,7 @@
         let y = 60;
         let pageNum = 1;
 
-        const maple = [169, 54, 42], harbor = [43, 88, 118], inkSoft = [91, 100, 112], ink = [23, 33, 43];
+        const harbor = [43, 88, 118], inkSoft = [91, 100, 112], ink = [23, 33, 43];
 
         function addFooter() {
           doc.setFont('helvetica', 'normal');
@@ -2645,6 +2803,15 @@
           doc.text(value, pageW - marginX, y, { align: 'right' });
           y += 15;
         }
+        function renderNote(text) {
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(10);
+          doc.setTextColor(...ink);
+          const lines = doc.splitTextToSize(text, contentW);
+          ensureSpace(lines.length * 13 + 10);
+          doc.text(lines, marginX, y);
+          y += lines.length * 13 + 10;
+        }
 
         // Title
         doc.setFont('helvetica', 'bold');
@@ -2665,134 +2832,55 @@
         doc.text(disclaimerLines, marginX, y);
         y += disclaimerLines.length * 12 + 16;
 
-        const res = lastRes;
-        const first = res.rows[0];
-
-        sectionHeader('Your Snapshot');
-        bodyLine('Current age', res.currentAge);
-        bodyLine('Planned retirement age', res.retireAge);
-        bodyLine('Reporting currency', res.reportCurrency);
-        bodyLine('Exchange rate used', '1 CAD = ' + res.exchangeRate + ' USD');
-        y += 8;
-
-        sectionHeader('Key Results');
-        bodyLine('Combined portfolio today', fmt(first.combined, res.reportCurrency));
-        bodyLine('Required at retirement', fmt(res.requiredAtRetirement, res.reportCurrency));
-        bodyLine('CoastFIRE number today', fmt(res.coastNumberToday, res.reportCurrency));
-        bodyLine('Years until CoastFIRE', res.coastYearIndex !== null ? res.coastYearIndex : 'Not yet on track');
-        y += 6;
-        const headlineText = $('resultHeadline').textContent.trim();
-        doc.setFont('helvetica', 'italic');
-        doc.setFontSize(10);
-        doc.setTextColor(...ink);
-        const headlineLines = doc.splitTextToSize(headlineText, contentW);
-        ensureSpace(headlineLines.length * 13 + 10);
-        doc.text(headlineLines, marginX, y);
-        y += headlineLines.length * 13 + 16;
-
-        sectionHeader('Account Balances Today');
-        tableSubhead('Canadian accounts (CAD)');
-        tableRow('RRSP', fmt(first.rrsp, 'CAD'), { indent: 10 });
-        tableRow('TFSA', fmt(first.tfsa, 'CAD'), { indent: 10 });
-        tableRow('Non-registered', fmt(first.nonregCad, 'CAD'), { indent: 10 });
-        if (first.fhsa > 0) tableRow('FHSA', fmt(first.fhsa, 'CAD'), { indent: 10 });
-        if (first.resp > 0) tableRow('RESP', fmt(first.resp, 'CAD'), { indent: 10 });
-        tableRow('CAD Total', fmt(first.cadTotal, 'CAD'), { bold: true });
-        y += 6;
-
-        tableSubhead('US accounts (USD)');
-        tableRow('401(k)/403(b)', fmt(first.k401, 'USD'), { indent: 10 });
-        tableRow('Traditional IRA', fmt(first.ira, 'USD'), { indent: 10 });
-        tableRow('Roth IRA', fmt(first.roth, 'USD'), { indent: 10 });
-        tableRow('Taxable brokerage', fmt(first.taxableUsd, 'USD'), { indent: 10 });
-        if (first.hsa > 0) tableRow('HSA', fmt(first.hsa, 'USD'), { indent: 10 });
-        tableRow('USD Total', fmt(first.usdTotal, 'USD'), { bold: true });
-        y += 10;
-
-        doc.setDrawColor(...harbor);
-        doc.setLineWidth(1);
-        ensureSpace(24);
-        doc.line(marginX, y, pageW - marginX, y);
-        y += 16;
-        tableRow('Combined portfolio (' + res.reportCurrency + ')', fmt(first.combined, res.reportCurrency), { bold: true });
-        y += 10;
-
-        // Departure Tax / Benefit Timing / Moving Back all live on their own pages now — read
-        // their last-saved values from storage instead of the DOM, which no longer has them.
-        const stored = readStoredInputs();
-        const storedNum = id => parseNum(stored[id]);
-
-        // ---- Departure Tax (only if there's a meaningful gain on the books) ----
-        const dtGain = Math.max(0, storedNum('dtNonregFmv') - storedNum('dtNonregAcb')) + Math.max(0, storedNum('dtOtherFmv') - storedNum('dtOtherAcb'));
-        if (dtGain > 0) {
-          const dtTaxable = dtGain * 0.5;
-          const dtRate = Math.max(0, Math.min(100, storedNum('dtMarginalRate'))) / 100;
-          const dtOwing = dtTaxable * dtRate;
-          sectionHeader('Departure Tax Estimate (if leaving Canada)');
-          bodyLine('Estimated capital gain', fmt(dtGain, 'CAD'));
-          bodyLine('Taxable amount (50% inclusion)', fmt(dtTaxable, 'CAD'));
-          bodyLine('Estimated tax owing', fmt(dtOwing, 'CAD'));
-          bodyLine('Deferral likely available (Form T1244)', dtOwing < DEFERRAL_TAX_THRESHOLD ? 'Yes, without security' : 'Yes, may require posted security');
+        collectPlanSummarySections().forEach(sec => {
+          sectionHeader(sec.title);
+          sec.lines.forEach(line => {
+            if (line.subhead) { tableSubhead(line.subhead); return; }
+            if (line.divider) {
+              doc.setDrawColor(...harbor);
+              doc.setLineWidth(1);
+              ensureSpace(24);
+              doc.line(marginX, y, pageW - marginX, y);
+              y += 16;
+            }
+            if (sec.style === 'table') tableRow(line.label, line.value, { indent: line.indent ? 10 : 0, bold: !!line.bold });
+            else bodyLine(line.label, line.value);
+          });
+          if (sec.note) renderNote(sec.note);
           y += 8;
-        }
-
-        // ---- Claiming-age choices (only if benefit amounts were entered) ----
-        const claimCppBase = storedNum('claimCppBase'), claimOasBase = storedNum('claimOasBase'), claimSsBase = storedNum('claimSsBase');
-        if (claimCppBase > 0 || claimOasBase > 0 || claimSsBase > 0) {
-          sectionHeader('Benefit Claiming-Age Choices');
-          if (claimCppBase > 0) bodyLine('CPP, claiming at age ' + stored.claimCppAge, fmt(claimCppBase * cppFactor(parseInt(stored.claimCppAge, 10)), 'CAD') + '/mo');
-          if (claimOasBase > 0) bodyLine('OAS, claiming at age ' + stored.claimOasAge, fmt(claimOasBase * oasFactor(parseInt(stored.claimOasAge, 10)), 'CAD') + '/mo');
-          if (claimSsBase > 0) bodyLine('Social Security, claiming at age ' + stored.claimSsAge, fmt(claimSsBase * ssFactor(parseInt(stored.claimSsAge, 10)), 'USD') + '/mo');
-          y += 8;
-        }
-
-        // ---- Moving Back to Canada (only if there's something relevant to say) ----
-        const mbIsCitizen = stored.mbIsCitizen === 'yes';
-        const mbHasGreenCard = stored.mbHasGreenCard === 'yes';
-        if (mbIsCitizen || mbHasGreenCard || first.rrsp > 0 || first.tfsa > 0 || first.roth > 0) {
-          sectionHeader('Moving Back to Canada — Key Flags');
-          bodyLine('US citizen', mbIsCitizen ? 'Yes — US filing continues for life' : 'No');
-          if (mbHasGreenCard) {
-            const gcYears = storedNum('mbGreenCardYears');
-            bodyLine('Green Card, years held (of 15)', String(gcYears) + (gcYears >= 8 ? ' — past Long-Term Resident threshold' : ''));
-          }
-          if (first.tfsa > 0) bodyLine('TFSA note', 'Room does not accrue while non-resident');
-          if (first.roth > 0) bodyLine('Roth IRA note', 'Needs one-time treaty election if returning to Canada');
-          y += 8;
-        }
-
-        // ---- RRSP Withholding Tax (only if there's a projected RRSP balance) ----
-        const rrspAtRetirement = res.rows[res.rows.length - 1].rrsp;
-        if (rrspAtRetirement > 0) {
-          const rwRateStored = parseFloat(stored.rwWithdrawalType);
-          const rwRate = Number.isFinite(rwRateStored) ? rwRateStored : RRSP_WITHHOLDING_RATES.lumpSum;
-          const rwWithheld = rrspAtRetirement * rwRate;
-          sectionHeader('RRSP Withholding Estimate');
-          bodyLine('Projected RRSP at retirement', fmt(rrspAtRetirement, 'CAD'));
-          bodyLine('Withholding rate', Math.round(rwRate * 100) + '%');
-          bodyLine('Estimated withheld at source', fmt(rwWithheld, 'CAD'));
-          bodyLine('Net after withholding', fmt(rrspAtRetirement - rwWithheld, 'CAD'));
-          y += 8;
-        }
-
-        // ---- Drawdown Order (only if the Drawdown Optimizer's balances have been entered) ----
-        const ddoTotal = ['ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal']
-          .reduce((s, id) => s + storedNum(id), 0);
-        if (ddoTotal > 0) {
-          const ddoSims = ['greedy', 'taxableFirst', 'rrspFirst', 'proportional'].map(name => ({ name, sim: simulateDrawdown(stored, name) }));
-          const ddoBest = ddoSims.reduce((a, b) => (b.sim.totalTaxPaid < a.sim.totalTaxPaid ? b : a));
-          sectionHeader('Drawdown Order (Retirement Withdrawal Sequence)');
-          bodyLine('Recommended order', DRAWDOWN_STRATEGIES[ddoBest.name].label);
-          bodyLine('Total lifetime tax (USD)', fmt(ddoBest.sim.totalTaxPaid, 'USD'));
-          bodyLine('Ending balance (USD)', fmt(ddoBest.sim.endingBalance, 'USD'));
-          bodyLine('Portfolio lasts until', ddoBest.sim.depletionAge === null ? 'Beyond plan-to-age' : 'Age ' + ddoBest.sim.depletionAge);
-          y += 8;
-        }
+        });
 
         addFooter();
         doc.save('cross-border-financial-plan.pdf');
       }
       $('downloadPdfBtn').addEventListener('click', handleDownloadPdfClick);
+
+      // ---- "Copy summary for my accountant" — plain-text export ----
+      function buildPlanSummaryText() {
+        const lines = ['CROSS-BORDER FINANCIAL PLAN', 'Generated ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), ''];
+        collectPlanSummarySections().forEach(sec => {
+          lines.push(sec.title.toUpperCase());
+          sec.lines.forEach(line => {
+            if (line.subhead) { lines.push(line.subhead + ':'); return; }
+            const prefix = line.indent ? '  ' : '';
+            lines.push(prefix + line.label + ': ' + line.value);
+          });
+          if (sec.note) lines.push(sec.note);
+          lines.push('');
+        });
+        lines.push('Not tax, legal, or immigration advice — confirm all figures with a cross-border specialist.');
+        return lines.join('\n');
+      }
+      $('copySummaryBtn').addEventListener('click', async () => {
+        if (!lastRes) { alert('Please calculate your results first.'); return; }
+        const text = buildPlanSummaryText();
+        try {
+          await navigator.clipboard.writeText(text);
+          showTransientFeedback('shareFeedback', 'Summary copied — paste it into an email to your accountant.');
+        } catch (e) {
+          window.prompt('Copy this summary:', text);
+        }
+      });
 
       const hadSavedDataBeforeLoad = hasUserData();
       let bannerDismissedBefore = false;
@@ -3043,7 +3131,67 @@
         fetchExchangeRate(false);
       });
 
+      // Decorative 90-day sparkline next to the rate field. Cached in memory so a theme flip
+      // (window.onThemeChange, above) redraws with the already-fetched series instead of
+      // re-hitting the API — fetchFxSparklineSeries() itself also caches per tab session.
+      let fxSparklineSeries = null;
+      function drawFxSparkline(series) {
+        const canvas = $('fxSparkline');
+        if (!canvas || !series || !series.length) return;
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = 120, cssH = 32;
+        canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+        canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, cssW, cssH);
+        const rates = series.map(p => p.rate);
+        const min = Math.min(...rates), max = Math.max(...rates);
+        const range = (max - min) || 1;
+        const xFor = i => (i / (series.length - 1 || 1)) * (cssW - 4) + 2;
+        const yFor = r => cssH - 4 - ((r - min) / range) * (cssH - 8);
+        ctx.strokeStyle = cssVar('--harbor');
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        series.forEach((p, i) => {
+          const x = xFor(i), y = yFor(p.rate);
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+      async function renderFxSparkline() {
+        const canvas = $('fxSparkline');
+        if (!canvas) return;
+        if (fxSparklineSeries) { drawFxSparkline(fxSparklineSeries); return; }
+        try {
+          fxSparklineSeries = await fetchFxSparklineSeries(90);
+          drawFxSparkline(fxSparklineSeries);
+        } catch (e) {
+          canvas.hidden = true; // decorative only — fail silently, matches seedLiveFxRateIfNeeded
+        }
+      }
+
+      $('fetchFxAvgBtn').addEventListener('click', async () => {
+        const hintEl = $('fxHint');
+        const btnEl = $('fetchFxAvgBtn');
+        btnEl.disabled = true;
+        try {
+          const avg = await fetchFx5YearAverage();
+          // Deliberately does NOT call stampFxFetched() — that stamp drives the "(as of ...)"
+          // label implying a live quote, which a 5-year average is not.
+          $('exchangeRate').value = avg.toFixed(4);
+          hintEl.textContent = `5-year average applied: 1 CAD = ${avg.toFixed(4)} USD.`;
+          saveInputs();
+          validateAndRender();
+        } catch (e) {
+          hintEl.textContent = "Couldn't fetch the 5-year average — try again later.";
+        } finally {
+          btnEl.disabled = false;
+        }
+      });
+
       fetchExchangeRate(true);
+      renderFxSparkline();
     })();
 
     // A few "On this page" / cross-tool links (e.g. Action Items' "See Cross-Border Notes")

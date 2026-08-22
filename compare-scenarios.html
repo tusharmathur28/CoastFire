@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Compare Scenarios — Two Currencies, One Number</title>
-  <meta name="description" content="Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.">
+  <meta name="description" content="Put 2-3 saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="icon" href="apple-touch-icon.png" type="image/png" sizes="180x180">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -13,12 +13,12 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Two Currencies, One Number">
   <meta property="og:title" content="Compare Scenarios — Two Currencies, One Number">
-  <meta property="og:description" content="Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.">
+  <meta property="og:description" content="Put 2-3 saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.">
   <meta property="og:image" content="https://crossborder.fintools.workers.dev/og-image.png">
   <meta property="og:url" content="https://crossborder.fintools.workers.dev/compare-scenarios">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Compare Scenarios — Two Currencies, One Number">
-  <meta name="twitter:description" content="Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.">
+  <meta name="twitter:description" content="Put 2-3 saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.">
   <meta name="twitter:image" content="https://crossborder.fintools.workers.dev/og-image.png">
   <script>
     (function () {
@@ -32,14 +32,14 @@
   <link rel="preconnect" href="https://api.frankfurter.dev">
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=23093a60">
+  <link rel="stylesheet" href="styles.css?v=2b4edaea">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "Compare Scenarios",
     "url": "https://crossborder.fintools.workers.dev/compare-scenarios",
-    "description": "Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.",
+    "description": "Put 2-3 saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.",
     "applicationCategory": "FinanceApplication",
     "operatingSystem": "Any",
     "isAccessibleForFree": true,
@@ -88,14 +88,14 @@
     <div class="tool-header">
       <a class="tool-breadcrumb" href="/">&larr; All tools</a>
       <h1><span class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/></svg></span>Compare Scenarios</h1>
-      <p class="tool-sub">Put two of your saved scenarios side by side — key numbers and portfolio path together,
+      <p class="tool-sub">Put 2-3 of your saved scenarios side by side — key numbers and portfolio path together,
         without touching whatever's currently in the CoastFIRE Calculator. Save at least two scenarios in
         "My Scenarios" on the calculator page to use this.</p>
     </div>
 
     <div class="tool-card" id="comparePickCard" hidden>
-      <h3>Pick two scenarios</h3>
-      <div class="grid2">
+      <h3>Pick 2-3 scenarios</h3>
+      <div class="grid3">
         <div class="field">
           <label for="compareScenarioA">Scenario A</label>
           <select id="compareScenarioA"><option value="">— Select a saved scenario —</option></select>
@@ -103,6 +103,10 @@
         <div class="field">
           <label for="compareScenarioB">Scenario B</label>
           <select id="compareScenarioB"><option value="">— Select a saved scenario —</option></select>
+        </div>
+        <div class="field">
+          <label for="compareScenarioC">Scenario C <span class="info" title="Optional — leave blank to compare just two.">?</span></label>
+          <select id="compareScenarioC"><option value="">— Select a saved scenario (optional) —</option></select>
         </div>
       </div>
     </div>
@@ -167,7 +171,7 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Your financial inputs are processed entirely on your device and are never uploaded by us.</footer>
   </div>
 
-  <script src="shared.js?v=6b370c18"></script>
+  <script src="shared.js?v=7078afd9"></script>
   <script>
     (function () {
       initTheme();
@@ -181,14 +185,23 @@
         if (!$('compareChartCard').hidden) renderScenarioComparison();
       };
 
-      function fillScenarioSelect(selectEl, names) {
+      const COMPARE_SELECT_IDS = ['compareScenarioA', 'compareScenarioB', 'compareScenarioC'];
+      // Read fresh on every render (not cached), since cssVar() reflects whatever theme is
+      // currently active and a dark/light toggle can happen between renders.
+      const compareColors = () => [cssVar('--harbor'), cssVar('--maple'), cssVar('--gold')];
+      const COMPARE_COL_CLASSES = ['col-a', 'col-b', 'col-c'];
+
+      function fillScenarioSelect(selectEl, names, excludeNames) {
         const prevValue = selectEl.value;
         selectEl.textContent = '';
         const emptyOpt = document.createElement('option');
         emptyOpt.value = '';
-        emptyOpt.textContent = '— Select a saved scenario —';
+        emptyOpt.textContent = selectEl.id === 'compareScenarioC' ? '— Select a saved scenario (optional) —' : '— Select a saved scenario —';
         selectEl.appendChild(emptyOpt);
         for (const name of names) {
+          // A scenario already picked in another slot is left out here, so the same scenario
+          // can't be selected twice across A/B/C.
+          if (excludeNames.has(name) && name !== prevValue) continue;
           const opt = document.createElement('option');
           opt.value = name;
           opt.textContent = name;
@@ -197,14 +210,27 @@
         if (names.includes(prevValue)) selectEl.value = prevValue;
       }
 
+      function refillAllCompareSelects(names) {
+        COMPARE_SELECT_IDS.forEach(id => {
+          const chosenElsewhere = new Set(COMPARE_SELECT_IDS.filter(other => other !== id).map(other => $(other).value).filter(Boolean));
+          fillScenarioSelect($(id), names, chosenElsewhere);
+        });
+      }
+
       function refreshCompareSelects() {
         const store = loadScenariosStore();
         const names = Object.keys(store).sort((a, b) => a.localeCompare(b));
-        ['compareScenarioA', 'compareScenarioB'].forEach(id => fillScenarioSelect($(id), names));
-        // Auto-select the first two distinct scenarios the first time there are enough to compare
+        // Populate <option> elements first — a select can't hold a value that isn't yet one of
+        // its own options, so auto-selecting below has to happen after this, not before it.
+        refillAllCompareSelects(names);
+        // Auto-select the first two (or three, if available) distinct scenarios the first time
+        // there are enough saved to compare.
         if (names.length >= 2 && !$('compareScenarioA').value && !$('compareScenarioB').value) {
           $('compareScenarioA').value = names[0];
           $('compareScenarioB').value = names[1];
+          if (names.length >= 3) $('compareScenarioC').value = names[2];
+          // Re-run so the other two selects' option lists exclude what was just auto-picked.
+          refillAllCompareSelects(names);
         }
         $('comparePickCard').hidden = names.length < 2;
         $('compareEmptyNote').hidden = names.length >= 2;
@@ -212,7 +238,7 @@
         renderScenarioComparison();
       }
 
-      function drawComparisonChart(resA, resB, nameA, nameB) {
+      function drawComparisonChart(entries) {
         const canvas = $('compareChart');
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.parentElement.clientWidth - 40;
@@ -225,16 +251,12 @@
 
         const padL = 60, padR = 12, padT = 14, padB = 26;
         const w = cssW - padL - padR, h = cssH - padT - padB;
-        const maxYears = Math.max(resA.n, resB.n, 1);
-        const maxVal = Math.max(
-          ...resA.rows.map(r => r.combined),
-          ...resB.rows.map(r => r.combined)
-        ) * 1.08 || 1;
+        const maxYears = Math.max(...entries.map(e => e.res.n), 1);
+        const maxVal = Math.max(...entries.flatMap(e => e.res.rows.map(r => r.combined))) * 1.08 || 1;
         const xFor = yrs => padL + (yrs / maxYears) * w;
         const yFor = v => padT + h - (v / maxVal) * h;
 
         const lineColor = cssVar('--line'), softColor = cssVar('--ink-soft');
-        const colorA = cssVar('--harbor'), colorB = cssVar('--maple');
 
         ctx.strokeStyle = lineColor; ctx.fillStyle = softColor;
         ctx.font = '11px IBM Plex Mono, monospace'; ctx.lineWidth = 1;
@@ -253,8 +275,7 @@
           });
           ctx.stroke();
         };
-        drawSeries(resA, colorA);
-        drawSeries(resB, colorB);
+        entries.forEach(e => drawSeries(e.res, e.color));
 
         ctx.fillStyle = softColor;
         const step = Math.max(1, Math.round(maxYears / 6));
@@ -271,74 +292,74 @@
           span.appendChild(document.createTextNode(label));
           return span;
         };
-        $('compareChartLegend').replaceChildren(
-          legendSpan(colorA, `${nameA} (${resA.reportCurrency})`),
-          legendSpan(colorB, `${nameB} (${resB.reportCurrency})`)
-        );
+        $('compareChartLegend').replaceChildren(...entries.map(e => legendSpan(e.color, `${e.name} (${e.res.reportCurrency})`)));
 
-        const lastA = resA.rows[resA.rows.length - 1], lastB = resB.rows[resB.rows.length - 1];
-        canvas.setAttribute('aria-label', `Line chart comparing ${nameA} (ending at ${fmt(lastA.combined, resA.reportCurrency)}) and ${nameB} (ending at ${fmt(lastB.combined, resB.reportCurrency)}) over time.`);
+        const lastLabels = entries.map(e => `${e.name} (ending at ${fmt(e.res.rows[e.res.rows.length - 1].combined, e.res.reportCurrency)})`).join(', ');
+        canvas.setAttribute('aria-label', `Line chart comparing ${lastLabels} over time.`);
       }
 
       function renderScenarioComparison() {
-        const nameA = $('compareScenarioA').value;
-        const nameB = $('compareScenarioB').value;
         const store = loadScenariosStore();
-        const snapA = nameA ? store[nameA] : null;
-        const snapB = nameB ? store[nameB] : null;
+        const colors = compareColors();
+        const entries = COMPARE_SELECT_IDS.map((id, i) => {
+          const name = $(id).value;
+          const snap = name ? store[name] : null;
+          if (!snap) return null;
+          return { name, res: compute(snap), color: colors[i], colClass: COMPARE_COL_CLASSES[i] };
+        }).filter(Boolean);
 
-        if (!snapA || !snapB) {
+        if (entries.length < 2) {
           $('compareResultsCard').hidden = true;
           $('compareChartCard').hidden = true;
           return;
         }
 
-        const resA = compute(snapA);
-        const resB = compute(snapB);
-        const firstA = resA.rows[0], firstB = resB.rows[0];
-
         $('compareResultsCard').hidden = false;
         $('compareChartCard').hidden = false;
 
+        const metric = (label, get) => [label, ...entries.map(get)];
         const rows = [
-          ['Current age', resA.currentAge, resB.currentAge],
-          ['Retirement age', resA.retireAge, resB.retireAge],
-          ['Combined portfolio today', fmt(firstA.combined, resA.reportCurrency), fmt(firstB.combined, resB.reportCurrency)],
-          ['Required at retirement', fmt(resA.requiredAtRetirement, resA.reportCurrency), fmt(resB.requiredAtRetirement, resB.reportCurrency)],
-          ['CoastFIRE number today', fmt(resA.coastNumberToday, resA.reportCurrency), fmt(resB.coastNumberToday, resB.reportCurrency)],
-          ['Years until CoastFIRE', resA.coastYearIndex !== null ? resA.coastYearIndex : 'Not yet on track', resB.coastYearIndex !== null ? resB.coastYearIndex : 'Not yet on track'],
-          ['CoastFIRE age', resA.coastYearIndex !== null ? (resA.currentAge + resA.coastYearIndex) : '—', resB.coastYearIndex !== null ? (resB.currentAge + resB.coastYearIndex) : '—']
+          metric('Current age', e => e.res.currentAge),
+          metric('Retirement age', e => e.res.retireAge),
+          metric('Combined portfolio today', e => fmt(e.res.rows[0].combined, e.res.reportCurrency)),
+          metric('Required at retirement', e => fmt(e.res.requiredAtRetirement, e.res.reportCurrency)),
+          metric('CoastFIRE number today', e => fmt(e.res.coastNumberToday, e.res.reportCurrency)),
+          metric('Years until CoastFIRE', e => e.res.coastYearIndex !== null ? e.res.coastYearIndex : 'Not yet on track'),
+          metric('CoastFIRE age', e => e.res.coastYearIndex !== null ? (e.res.currentAge + e.res.coastYearIndex) : '—')
         ];
         const th = (text, className) => { const el = document.createElement('th'); el.textContent = text; if (className) el.className = className; return el; };
         const td = text => { const el = document.createElement('td'); el.textContent = text; return el; };
 
         const thead = document.createElement('thead');
         const headRow = document.createElement('tr');
-        headRow.append(th('Metric'), th(nameA, 'col-a'), th(nameB, 'col-b'));
+        headRow.appendChild(th('Metric'));
+        entries.forEach(e => headRow.appendChild(th(e.name, e.colClass)));
         thead.appendChild(headRow);
 
         const tbody = document.createElement('tbody');
         rows.forEach(r => {
           const tr = document.createElement('tr');
-          tr.append(td(r[0]), td(r[1]), td(r[2]));
+          r.forEach(cell => tr.appendChild(td(cell)));
           tbody.appendChild(tr);
         });
 
         $('compareTable').replaceChildren(thead, tbody);
 
         const currencyNote = $('compareCurrencyNote');
-        if (resA.reportCurrency !== resB.reportCurrency) {
+        const currencies = new Set(entries.map(e => e.res.reportCurrency));
+        if (currencies.size > 1) {
           currencyNote.hidden = false;
-          currencyNote.textContent = `⚠️ "${nameA}" reports in ${resA.reportCurrency} and "${nameB}" reports in ${resB.reportCurrency} — figures above are each in their own scenario's currency, not converted to match.`;
+          const list = entries.map(e => `"${e.name}" reports in ${e.res.reportCurrency}`).join(', ');
+          currencyNote.textContent = `⚠️ ${list} — figures above are each in their own scenario's currency, not converted to match.`;
         } else {
           currencyNote.hidden = true;
         }
 
-        drawComparisonChart(resA, resB, nameA, nameB);
+        drawComparisonChart(entries);
       }
 
-      ['compareScenarioA', 'compareScenarioB'].forEach(id => {
-        $(id).addEventListener('change', renderScenarioComparison);
+      COMPARE_SELECT_IDS.forEach(id => {
+        $(id).addEventListener('change', () => { refreshCompareSelects(); });
       });
       window.addEventListener('resize', () => {
         if (!$('compareChartCard').hidden) renderScenarioComparison();

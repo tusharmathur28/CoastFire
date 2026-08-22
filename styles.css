@@ -1999,6 +1999,7 @@ table.compare-table th:first-child, table.compare-table td:first-child { text-al
 table.compare-table th { background: var(--paper-2); font-weight: 700; }
 table.compare-table th.col-a { color: var(--harbor); }
 table.compare-table th.col-b { color: var(--maple); }
+table.compare-table th.col-c { color: var(--gold-text-on-soft); }
 .compare-currency-note {
   font-size: 12px; color: var(--ink-soft); background: var(--gold-soft); padding: 10px 12px;
   border-radius: 6px; margin-top: 12px;

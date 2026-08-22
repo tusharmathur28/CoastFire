@@ -292,7 +292,8 @@ const ICONS = {
   link: `<svg ${SVG_ATTRS}><path d="M9 17H7a5 5 0 0 1 0-10h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><path d="M8 12h8"/></svg>`,
   printer: `<svg ${SVG_ATTRS}><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 17v4h12v-4"/></svg>`,
   download: `<svg ${SVG_ATTRS}><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>`,
-  save: `<svg ${SVG_ATTRS}><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`
+  save: `<svg ${SVG_ATTRS}><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
+  clipboard: `<svg ${SVG_ATTRS}><rect x="7" y="4" width="10" height="4" rx="1"/><path d="M7 6H5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>`
 };
 
 // Populates every `<span class="icon" data-icon="name">emoji</span>` placeholder with the
@@ -326,7 +327,7 @@ const NAV_ITEMS = {
   'benefit-timing': { icon: ICONS.calendar, title: 'Benefit Claiming-Age Optimizer', desc: 'Compare claiming CPP, OAS & Social Security early vs. late.', href: '/benefit-timing' },
   drawdown: { icon: ICONS.barChart, title: 'Drawdown-Order Optimizer', desc: 'Sequence RRSP, TFSA, 401(k)/IRA, Roth & taxable withdrawals to minimize tax in retirement.', href: '/drawdown-optimizer' },
   'moving-back': { icon: ICONS.leaf, title: 'Moving Back to Canada', desc: 'Re-entering Canada? See what happens to each account and whether exit-tax rules apply.', href: '/moving-back' },
-  'compare-scenarios': { icon: ICONS.columns, title: 'Compare Scenarios', desc: 'Put two saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.', href: '/compare-scenarios' },
+  'compare-scenarios': { icon: ICONS.columns, title: 'Compare Scenarios', desc: 'Put 2-3 saved scenarios side by side — key numbers and portfolio path, without touching your current inputs.', href: '/compare-scenarios' },
   home: { icon: ICONS.home, title: 'All Tools (Home)', desc: 'Your snapshot, the "where do I start" quiz, and the full tool directory.', href: '/' }
 };
 // Derived from NAV_ITEMS so search, the mega-panel, and the mobile drawer all render from one
@@ -642,6 +643,48 @@ async function fetchLiveFxRate() {
   return validatedRate(data);
 }
 
+function isoDateDaysAgo(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+// sessionStorage cache keyed by the date range, so a reload within the same tab doesn't re-hit
+// the free API for a series that only gains one new point per day.
+function cachedTimeseries(cacheKey) {
+  if (!hasStorage) return null;
+  try { return JSON.parse(sessionStorage.getItem(cacheKey)); } catch (e) { return null; }
+}
+function cacheTimeseries(cacheKey, data) {
+  if (!hasStorage) return;
+  try { sessionStorage.setItem(cacheKey, JSON.stringify(data)); } catch (e) { }
+}
+
+// Returns a sorted [{date, rate}] series for the trailing `days` days — used for the FX sparkline.
+// Individual implausible points are dropped rather than throwing out the whole series over one.
+async function fetchFxSparklineSeries(days) {
+  const start = isoDateDaysAgo(days), end = isoDateDaysAgo(0);
+  const cacheKey = 'ccfire:fxSeries:' + start + ':' + end;
+  const cached = cachedTimeseries(cacheKey);
+  if (cached) return cached;
+  const response = await fetch(`https://api.frankfurter.dev/v1/${start}..${end}?from=CAD&to=USD`);
+  if (!response.ok) throw new Error('API response not OK');
+  const data = await response.json();
+  const series = Object.entries(data.rates || {})
+    .map(([date, r]) => ({ date, rate: Number(r?.USD) }))
+    .filter(p => Number.isFinite(p.rate) && p.rate >= CAD_TO_USD_PLAUSIBLE.min && p.rate <= CAD_TO_USD_PLAUSIBLE.max)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  cacheTimeseries(cacheKey, series);
+  return series;
+}
+
+// Averages every plausible daily rate over the trailing 5 years — used by the "Use 5-yr avg" button.
+async function fetchFx5YearAverage() {
+  const series = await fetchFxSparklineSeries(5 * 365);
+  if (!series.length) throw new Error('No FX history available');
+  return series.reduce((sum, p) => sum + p.rate, 0) / series.length;
+}
+
 // If the last-saved exchangeRate came from a live fetch (stamped by stampFxFetched()) within the
 // last FX_CACHE_MAX_AGE_DAYS, returns it — used so a failed live fetch can fall back to a recent
 // real rate instead of jumping straight to the static DEFAULT_FIELD_VALUES.exchangeRate.
@@ -707,7 +750,7 @@ const SENSITIVE_STORE_FIELDS = ['mbIsCitizen', 'mbHasGreenCard', 'mbGreenCardYea
 const FIELD_IDS = ['currentAge', 'retireAge', 'contribFreq', 'rrspBal', 'rrspContrib', 'rrspMatch', 'tfsaBal', 'tfsaContrib',
   'nonregCadBal', 'nonregCadContrib', 'fhsaBal', 'fhsaContrib', 'respBal', 'respContrib',
   'k401Bal', 'k401Contrib', 'k401Match', 'iraBal', 'iraContrib', 'rothBal', 'rothContrib',
-  'taxableUsdBal', 'taxableUsdContrib', 'hsaBal', 'hsaContrib', 'exchangeRate', 'reportCurrency', 'stopAtCoast', 'returnRate', 'inflationRate',
+  'taxableUsdBal', 'taxableUsdContrib', 'hsaBal', 'hsaContrib', 'exchangeRate', 'reportCurrency', 'stopAtCoast', 'taxDragEnabled', 'returnRate', 'inflationRate',
   'withdrawalRate', 'monthlyExpenses', 'cppMonthly', 'oasYears', 'oasMonthly', 'ssMonthly', 'benefitsStartAge',
   // Departure Tax Estimator
   'dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'dtMarginalRate',
@@ -733,7 +776,7 @@ const DEFAULT_FIELD_VALUES = {
   tfsaBal: '25000', tfsaContrib: '200', nonregCadBal: '10000', nonregCadContrib: '100', fhsaBal: '0', fhsaContrib: '0',
   respBal: '0', respContrib: '0', k401Bal: '45000', k401Contrib: '500', k401Match: '0', iraBal: '8000', iraContrib: '50',
   rothBal: '12000', rothContrib: '150', taxableUsdBal: '15000', taxableUsdContrib: '200', hsaBal: '0', hsaContrib: '0',
-  exchangeRate: '0.73', reportCurrency: 'USD', stopAtCoast: 'no', returnRate: '7', inflationRate: '2.5',
+  exchangeRate: '0.73', reportCurrency: 'USD', stopAtCoast: 'no', taxDragEnabled: 'no', returnRate: '7', inflationRate: '2.5',
   withdrawalRate: '4', monthlyExpenses: '5000', cppMonthly: '900', oasYears: '18', oasMonthly: '334', ssMonthly: '2000',
   benefitsStartAge: '65',
   dtNonregFmv: '10000', dtNonregAcb: '7000', dtOtherFmv: '0', dtOtherAcb: '0', dtMarginalRate: '35',
@@ -1215,11 +1258,19 @@ const CAD_ACCOUNT_KEYS = ['rrsp', 'tfsa', 'nonregCad', 'fhsa', 'resp'];
 
 // One year's compounding step for every account, shared by the deterministic compute() loop
 // and the Monte Carlo engine below so the two never drift out of sync with each other.
-function stepAccounts(bal, contribAnnual, returnRate, mult) {
+// dragKeys (optional): account keys that compound at TAX_DRAG_FACTOR of returnRate instead of the
+// full rate, for the tax-drag toggle — each caller must independently opt in (see compute() and
+// simulateMonteCarlo()), since there is no other shared code path between them.
+const TAX_DRAG_FACTOR = 0.8; // flat 20% haircut on return — see coastfire-calculator.html tooltip
+function stepAccounts(bal, contribAnnual, returnRate, mult, dragKeys) {
   const next = {};
-  for (const k of ACCOUNT_KEYS) next[k] = bal[k] * (1 + returnRate) + contribAnnual[k] * mult;
+  for (const k of ACCOUNT_KEYS) {
+    const rate = (dragKeys && dragKeys.has(k)) ? returnRate * TAX_DRAG_FACTOR : returnRate;
+    next[k] = bal[k] * (1 + rate) + contribAnnual[k] * mult;
+  }
   return next;
 }
+const TAX_DRAG_ACCOUNT_KEYS = new Set(['nonregCad', 'taxableUsd']);
 
 // ==================================================================
 // One-time life events — dated, signed, account-targeted lump sums (house down payment,
@@ -1268,6 +1319,7 @@ function compute(overrides) {
   const cppMonthly = val('cppMonthly'), oasMonthly = val('oasMonthly'), ssMonthly = val('ssMonthly');
   const benefitsStartAge = val('benefitsStartAge');
   const lifeEvents = parseLifeEvents(raw('lifeEvents'));
+  const dragKeys = raw('taxDragEnabled') === 'yes' ? TAX_DRAG_ACCOUNT_KEYS : undefined;
 
   let bal = {
     rrsp: val('rrspBal'), tfsa: val('tfsaBal'), nonregCad: val('nonregCadBal'), fhsa: val('fhsaBal'), resp: val('respBal'),
@@ -1336,7 +1388,7 @@ function compute(overrides) {
 
     if (i < n) {
       const mult = (stopAtCoast === 'yes' && coastedFlag) ? 0 : 1;
-      bal = stepAccounts(bal, contribAnnual, returnRate, mult);
+      bal = stepAccounts(bal, contribAnnual, returnRate, mult, dragKeys);
     }
   }
 
@@ -1398,6 +1450,7 @@ function simulateMonteCarlo(overrides, trials, stdevReturn) {
   const cppMonthly = val('cppMonthly'), oasMonthly = val('oasMonthly'), ssMonthly = val('ssMonthly');
   const benefitsStartAge = val('benefitsStartAge');
   const lifeEvents = parseLifeEvents(raw('lifeEvents'));
+  const dragKeys = raw('taxDragEnabled') === 'yes' ? TAX_DRAG_ACCOUNT_KEYS : undefined;
 
   const startBal = {
     rrsp: val('rrspBal'), tfsa: val('tfsaBal'), nonregCad: val('nonregCadBal'), fhsa: val('fhsaBal'), resp: val('respBal'),
@@ -1442,7 +1495,7 @@ function simulateMonteCarlo(overrides, trials, stdevReturn) {
       if (i < n) {
         const r = Math.max(meanReturn + randNormal() * stdevReturn, -0.95);
         const mult = (stopAtCoast === 'yes' && coastedFlag) ? 0 : 1;
-        bal = stepAccounts(bal, contribAnnual, r, mult);
+        bal = stepAccounts(bal, contribAnnual, r, mult, dragKeys);
       }
     }
     if (coastedFlag) coastHits++;
