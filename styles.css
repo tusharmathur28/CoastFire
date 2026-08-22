@@ -551,6 +551,23 @@ details.collapsible-section .collapsible-body { padding-top: 4px; }
   outline-offset: 1px;
 }
 
+/* Inline validation — a message under the field itself, shown on blur, alongside the existing
+   page-level error banner rather than instead of it (the banner also auto-opens a collapsed
+   section that holds the error; the inline message here is the "which exact field" detail). */
+.field.has-error input,
+.field.has-error select {
+  border-color: var(--warn);
+}
+.field-error {
+  display: none;
+  font-size: 12px;
+  color: var(--warn);
+  margin-top: 4px;
+}
+.field.has-error .field-error {
+  display: block;
+}
+
 .field .tag {
   display: inline-block;
   margin-left: 6px;
@@ -1510,6 +1527,36 @@ body.drawer-open { overflow: hidden; }
 .back-to-top.visible { opacity: 1; visibility: visible; transform: translateY(0); }
 .back-to-top:hover { background: var(--harbor); }
 @media print { .back-to-top { display: none !important; } }
+
+/* Mobile-only sticky bar mirroring the page's headline stat while scrolling through a long
+   form, with a CTA to jump straight to the full results. Desktop already keeps that stat
+   visible without help (it's above the fold or a quick scroll away), so this stays mobile-only. */
+.sticky-result-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
+  background: var(--paper); border-top: 1px solid var(--line);
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  padding-left: calc(16px + env(safe-area-inset-left));
+  padding-right: calc(16px + env(safe-area-inset-right));
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, .1);
+}
+.sticky-result-bar[hidden] { display: none; }
+@media(min-width: 761px) { .sticky-result-bar { display: none !important; } }
+.srb-stat { display: flex; flex-direction: column; min-width: 0; }
+.srb-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
+.srb-value { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 700; color: var(--harbor); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srb-cta {
+  flex: none; background: var(--ink); color: var(--paper); text-decoration: none;
+  padding: 10px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+@media print { .sticky-result-bar { display: none !important; } }
+/* Keeps the "back to top" button from sitting under the sticky result bar on mobile. */
+body.has-sticky-result-bar .back-to-top {
+  bottom: calc(78px + env(safe-area-inset-bottom));
+}
+@media(min-width: 761px) {
+  body.has-sticky-result-bar .back-to-top { bottom: calc(22px + env(safe-area-inset-bottom)); }
+}
 
 .not-sure-hint {
   font-size: 12px; color: var(--ink-soft); margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;

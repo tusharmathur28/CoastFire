@@ -547,6 +547,62 @@ function initToolSearch() {
 }
 
 // ==================================================================
+// Inline field validation (on blur) — a lightweight per-field companion to a page's own
+// full-form error banner. Shows/clears a small message right under the field instead of only
+// surfacing problems after a full submit or wizard-step continue.
+// ==================================================================
+
+// Sets or clears the inline error message under fieldId's own .field wrapper. Creates the
+// message element lazily on first use rather than requiring every field's markup to carry one.
+function setFieldError(fieldId, message) {
+  const el = $(fieldId);
+  if (!el) return;
+  const field = el.closest('.field');
+  if (!field) return;
+  let msgEl = field.querySelector('.field-error');
+  if (!message) {
+    field.classList.remove('has-error');
+    el.removeAttribute('aria-invalid');
+    if (msgEl) msgEl.textContent = '';
+    return;
+  }
+  field.classList.add('has-error');
+  el.setAttribute('aria-invalid', 'true');
+  if (!msgEl) {
+    msgEl = document.createElement('div');
+    msgEl.className = 'field-error';
+    msgEl.id = fieldId + 'Error';
+    msgEl.setAttribute('role', 'alert');
+    field.appendChild(msgEl);
+  }
+  el.setAttribute('aria-describedby', msgEl.id);
+  msgEl.textContent = message;
+}
+
+// Wires blur-time inline validation (plus live-clearing on input, once a field is already
+// showing an error) for `fieldIds`, all driven by `getErrors()` — the page's own
+// getValidationErrors()-shaped function, returning [{ field, message }, ...]. Reusing that as
+// the single source of truth means the inline messages and the page's own error banner can never
+// drift out of sync, and cross-field rules (e.g. "retirement age after current age") resolve
+// correctly no matter which of the two fields the user actually edits.
+function initInlineValidation(fieldIds, getErrors) {
+  function sync() {
+    const byField = new Map();
+    getErrors().forEach(e => { if (e.field && !byField.has(e.field)) byField.set(e.field, e.message); });
+    fieldIds.forEach(id => setFieldError(id, byField.get(id) || null));
+  }
+  fieldIds.forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    el.addEventListener('blur', sync);
+    el.addEventListener('input', () => {
+      const field = el.closest('.field');
+      if (field && field.classList.contains('has-error')) sync();
+    });
+  });
+}
+
+// ==================================================================
 // Soft (non-blocking) sanity warnings — distinct from a page's own hard-error validation.
 // Renders into the given container using the same visual language as the stale-data banner,
 // so a typo'd rate or an out-of-range percentage gets flagged without stopping the user.

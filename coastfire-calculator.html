@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://api.frankfurter.dev">
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=6e721a35">
+  <link rel="stylesheet" href="styles.css?v=23093a60">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -1043,7 +1043,15 @@
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=0122715b"></script>
+  <div class="sticky-result-bar" id="stickyResultBar" hidden>
+    <div class="srb-stat">
+      <span class="srb-label">Combined portfolio</span>
+      <span class="srb-value" id="srbValue">—</span>
+    </div>
+    <a href="#results" class="srb-cta" id="srbCta">See results ↓</a>
+  </div>
+
+  <script src="shared.js?v=6b370c18"></script>
   <script>
     (function () {
       initTheme();
@@ -1154,23 +1162,35 @@
         quickUpdate();
       });
       $('withdrawalRateSlider').addEventListener('change', () => { saveInputs(); validateAndRender(); });
-      // Typing directly into the number fields keeps the sliders in sync too
+      // Typing directly into the number fields keeps the sliders in sync too, and — matching
+      // what dragging the slider already does — live-previews on every keystroke (quickUpdate)
+      // and fully re-renders once the value is committed (change, which fires on blur for a
+      // number input). Previously this block only synced the slider's position/label, so typing
+      // a new value here left the chart/stats stale until Enter or a slider drag.
       $('returnRate').addEventListener('input', () => {
         $('returnRateSlider').value = num('returnRate');
         $('returnRateSliderVal').textContent = num('returnRate') + '%';
+        quickUpdate();
       });
+      $('returnRate').addEventListener('change', () => { saveInputs(); validateAndRender(); });
       $('retireAge').addEventListener('input', () => {
         $('retireAgeSlider').value = num('retireAge');
         $('retireAgeSliderVal').textContent = num('retireAge');
+        quickUpdate();
       });
+      $('retireAge').addEventListener('change', () => { saveInputs(); validateAndRender(); });
       $('inflationRate').addEventListener('input', () => {
         $('inflationRateSlider').value = num('inflationRate');
         $('inflationRateSliderVal').textContent = num('inflationRate') + '%';
+        quickUpdate();
       });
+      $('inflationRate').addEventListener('change', () => { saveInputs(); validateAndRender(); });
       $('withdrawalRate').addEventListener('input', () => {
         $('withdrawalRateSlider').value = num('withdrawalRate');
         $('withdrawalRateSliderVal').textContent = num('withdrawalRate') + '%';
+        quickUpdate();
       });
+      $('withdrawalRate').addEventListener('change', () => { saveInputs(); validateAndRender(); });
 
       function updateOasHint() {
         const yrs = Math.min(40, Math.max(0, num('oasYears')));
@@ -1285,25 +1305,32 @@
       // Each validation error is tagged with the wizard step it belongs to (1-4), so the wizard's
       // "Continue" button can validate just the current step. Classic full-form validation (no argument)
       // still returns every error, exactly as before.
+      const BALANCE_FIELD_LABELS = {
+        rrspBal: 'RRSP', tfsaBal: 'TFSA', nonregCadBal: 'Non-registered (CAD)', fhsaBal: 'FHSA',
+        respBal: 'RESP', k401Bal: '401(k)', iraBal: 'IRA', rothBal: 'Roth IRA',
+        taxableUsdBal: 'Taxable (USD)', hsaBal: 'HSA'
+      };
       function getValidationErrors() {
         const allErrors = [];
         const currentAge = num('currentAge'), retireAge = num('retireAge'), benefitsStartAge = num('benefitsStartAge');
-        if (currentAge <= 0) allErrors.push({ step: 1, message: 'Current age must be greater than 0.' });
-        if (retireAge <= currentAge) allErrors.push({ step: 1, message: 'Retirement age must be after your current age.' });
-        if (num('monthlyExpenses') < 0) allErrors.push({ step: 1, message: 'Monthly expenses cannot be negative.' });
+        if (currentAge <= 0) allErrors.push({ step: 1, field: 'currentAge', message: 'Current age must be greater than 0.' });
+        if (retireAge <= currentAge) allErrors.push({ step: 1, field: 'retireAge', message: 'Retirement age must be after your current age.' });
+        if (num('monthlyExpenses') < 0) allErrors.push({ step: 1, field: 'monthlyExpenses', message: 'Monthly expenses cannot be negative.' });
 
-        ['rrspBal', 'tfsaBal', 'nonregCadBal', 'fhsaBal', 'respBal', 'k401Bal', 'iraBal', 'rothBal', 'taxableUsdBal', 'hsaBal'].forEach(id => {
-          if (num(id) < 0) allErrors.push({ step: 2, message: 'Balances cannot be negative (' + id + ').' });
+        Object.keys(BALANCE_FIELD_LABELS).forEach(id => {
+          if (num(id) < 0) allErrors.push({ step: 2, field: id, message: BALANCE_FIELD_LABELS[id] + ' balance cannot be negative.' });
         });
 
-        if (num('exchangeRate') <= 0) allErrors.push({ step: 3, message: 'Exchange rate must be greater than 0.' });
-        if (num('withdrawalRate') <= 0) allErrors.push({ step: 3, message: 'Annual withdrawal rate must be greater than 0%.' });
-        if (num('returnRate') < -50) allErrors.push({ step: 3, message: 'Expected annual investment return looks too extreme — double check it.' });
+        if (num('exchangeRate') <= 0) allErrors.push({ step: 3, field: 'exchangeRate', message: 'Exchange rate must be greater than 0.' });
+        if (num('withdrawalRate') <= 0) allErrors.push({ step: 3, field: 'withdrawalRate', message: 'Annual withdrawal rate must be greater than 0%.' });
+        if (num('returnRate') < -50) allErrors.push({ step: 3, field: 'returnRate', message: 'Expected annual investment return looks too extreme — double check it.' });
 
-        if (benefitsStartAge < currentAge) allErrors.push({ step: 4, message: 'Government benefits start age should be at or after your current age.' });
+        if (benefitsStartAge < currentAge) allErrors.push({ step: 4, field: 'benefitsStartAge', message: 'Government benefits start age should be at or after your current age.' });
 
         return allErrors;
       }
+      initInlineValidation(['currentAge', 'retireAge', 'monthlyExpenses', ...Object.keys(BALANCE_FIELD_LABELS),
+        'exchangeRate', 'withdrawalRate', 'returnRate', 'benefitsStartAge'], getValidationErrors);
       function validate(stepScope) {
         const allErrors = getValidationErrors();
         if (stepScope === undefined) return allErrors.map(e => e.message);
@@ -2197,6 +2224,17 @@
         }
       }
 
+      // Mirrors the headline "combined portfolio" stat into the mobile sticky bar (CSS suppresses
+      // it above 760px regardless). Reveals the bar on first call — once results exist, it stays
+      // visible for the rest of the session, same as the results section itself.
+      function updateStickyResultBar(res, first) {
+        $('srbValue').textContent = fmt(first.combined, res.reportCurrency);
+        if ($('stickyResultBar').hidden) {
+          $('stickyResultBar').hidden = false;
+          document.body.classList.add('has-sticky-result-bar');
+        }
+      }
+
       function updateStatDual(res, first) {
         const otherCurrency = res.reportCurrency === 'USD' ? 'CAD' : 'USD';
         const otherAmount = convertToReport(first.cadTotal, first.usdTotal, otherCurrency, res.exchangeRate);
@@ -2210,6 +2248,7 @@
         const fmtStat = n => fmt(n, res.reportCurrency);
         animateValue($('statCurrent'), lastStatValues.current, first.combined, fmtStat, 400);
         updateStatDual(res, first);
+        updateStickyResultBar(res, first);
         animateValue($('statRequired'), lastStatValues.required, res.requiredAtRetirement, fmtStat, 400);
         animateValue($('statCoastNumber'), lastStatValues.coastNumber, res.coastNumberToday, fmtStat, 400);
         lastStatValues = { current: first.combined, required: res.requiredAtRetirement, coastNumber: res.coastNumberToday };
@@ -2239,6 +2278,7 @@
         const fmtStat = n => fmt(n, res.reportCurrency);
         animateValue($('statCurrent'), lastStatValues.current, first.combined, fmtStat, 400);
         updateStatDual(res, first);
+        updateStickyResultBar(res, first);
         $('statCurrencyNote').textContent = 'CAD converted at 1 CAD = ' + res.exchangeRate + ' USD';
         animateValue($('statRequired'), lastStatValues.required, res.requiredAtRetirement, fmtStat, 400);
         animateValue($('statCoastNumber'), lastStatValues.coastNumber, res.coastNumberToday, fmtStat, 400);
