@@ -1,0 +1,14 @@
+{
+  "name": "Two Currencies, One Number",
+  "short_name": "Two Currencies",
+  "description": "Cross-border financial planning tools for Canadians living in the US.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F6F1E4",
+  "theme_color": "#F6F1E4",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

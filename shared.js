@@ -1812,12 +1812,24 @@ function simulateDrawdown(overrides, strategyName) {
   return { years, totalTaxPaid, endingBalance, depletionAge, strategyName, filingStatus };
 }
 
+// ==================================================================
+// PWA — every page already loads shared.js, so registering here means no per-page call site is
+// needed. Guarded the same way the file's own Node-export check below is, since this file also
+// runs under `node --test` where `window`/`navigator` don't exist.
+// ==================================================================
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* offline, unsupported, etc. — non-fatal */ });
+  });
+}
+
 // Node-testable exports of the pure helpers (no `document`/`window` dependency once called with
 // a complete `overrides` object). Browser behavior is unaffected — `module` is undefined there.
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     escapeHtml, sanitizeImportedName, parseNum, parseLifeEvents,
     compute, stepAccounts, convertToReport, simulateDrawdown,
+    simulateMonteCarlo, cppFactor, oasFactor, ssFactor,
     SENSITIVE_SHARE_FIELDS, buildSharePayload, parseShareParamsString,
     SENSITIVE_STORE_FIELDS, transformV2StateToV3,
     CAD_TO_USD_PLAUSIBLE, validatedRate,
