@@ -1987,6 +1987,47 @@ function simulateDrawdown(overrides, strategyName) {
 }
 
 // ==================================================================
+// Roth conversion window — a read-only "where's the tax-bracket headroom" detector, not a
+// ladder simulator. Deliberately doesn't model an actual conversion ladder (dated lots, the
+// per-conversion 5-year penalty-free clock, the account's separate 5-year clock for tax-free
+// earnings) — this engine has no age-59½/early-withdrawal-penalty modeling anywhere yet (see
+// drawdownYear()/taxOnWithdrawals()), so simulating penalty-avoidance mechanics on top of a
+// penalty-blind engine would be false precision layered on an unresolved gap. Instead this
+// just reads the bracket headroom already sitting in each pre-benefits year of an existing
+// simulateDrawdown() run — zero new balance representation, zero persistence impact, works
+// on any strategy's years[] as-is.
+//
+// 401(k)/IRA only for what could be converted — RRSP stays out of the "headroom to convert"
+// framing (though its withdrawals still count toward the taxable-income baseline, same as
+// taxOnWithdrawals() itself): RRSP-to-Roth conversion crosses the Canada-US treaty and carries
+// its own withholding/reporting complexity this general-purpose tool isn't positioned to model
+// precisely.
+function analyzeConversionWindow(years, filingStatus) {
+  const brackets = US_TAX_BRACKETS_2026[filingStatus] || US_TAX_BRACKETS_2026.single;
+  const standardDeduction = US_STANDARD_DEDUCTION_2026[filingStatus] || US_STANDARD_DEDUCTION_2026.single;
+  const rows = years
+    .filter(y => y.govBenefit === 0 && !y.depleted)
+    .map(y => {
+      const ordinaryGross = y.withdrawals.k401 + y.withdrawals.ira + y.withdrawals.rrsp;
+      const taxableOrdinaryIncome = Math.max(0, ordinaryGross - standardDeduction);
+      const bracket = brackets.find(b => taxableOrdinaryIncome <= b.upTo) || brackets[brackets.length - 1];
+      const headroom = bracket.upTo === Infinity ? null : Math.max(0, bracket.upTo - taxableOrdinaryIncome);
+      return { age: y.age, year: y.year, taxableOrdinaryIncome, marginalRate: bracket.rate, bracketTop: bracket.upTo, headroom };
+    });
+  const windowStartAge = rows.length ? rows[0].age : null;
+  const windowEndAge = rows.length ? rows[rows.length - 1].age : null;
+  // The tightest year drives the headline claim ("you can convert up to $X without leaving
+  // the Y% bracket in any window year") — a row with unbounded (top-bracket) headroom never
+  // wins this comparison, which is the correct behavior since it's never the binding constraint.
+  const tightestRow = rows.reduce((tightest, r) => {
+    if (r.headroom === null) return tightest;
+    if (!tightest || tightest.headroom === null || r.headroom < tightest.headroom) return r;
+    return tightest;
+  }, null);
+  return { filingStatus, rows, windowStartAge, windowEndAge, tightestRow };
+}
+
+// ==================================================================
 // PWA — every page already loads shared.js, so registering here means no per-page call site is
 // needed. Guarded the same way the file's own Node-export check below is, since this file also
 // runs under `node --test` where `window`/`navigator` don't exist.
@@ -2003,7 +2044,8 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     escapeHtml, sanitizeImportedName, parseNum, parseLifeEvents,
     compute, stepAccounts, convertToReport, simulateDrawdown, buildDecumulationOverrides,
-    simulateMonteCarlo, simulateHistoricalBacktest, SP500_REAL_RETURNS, cppFactor, oasFactor, ssFactor,
+    simulateMonteCarlo, simulateHistoricalBacktest, SP500_REAL_RETURNS, analyzeConversionWindow,
+    cppFactor, oasFactor, ssFactor,
     SENSITIVE_SHARE_FIELDS, buildSharePayload, parseShareParamsString,
     SENSITIVE_STORE_FIELDS, transformV2StateToV3,
     CAD_TO_USD_PLAUSIBLE, validatedRate,

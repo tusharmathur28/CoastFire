@@ -246,6 +246,11 @@
         <div class="ci-body" id="ddoLifeEventsBody"></div>
       </div>
 
+      <div class="consideration-item level-good" id="ddoConversionWindowNote" hidden>
+        <div class="ci-title"><span class="ci-icon">✅</span>Roth conversion window <span class="ci-badge">401(k)/IRA only</span></div>
+        <div class="ci-body" id="ddoConversionWindowBody"></div>
+      </div>
+
       <div class="consideration-item level-info">
         <div class="ci-title"><span class="ci-icon">ℹ️</span>RRSP withdrawals are modeled with a simplified foreign
           tax credit</div>
@@ -334,7 +339,7 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Your financial inputs are processed entirely on your device and are never uploaded by us.</footer>
   </div>
 
-  <script src="shared.js?v=602b58a2"></script>
+  <script src="shared.js?v=efbbffd8"></script>
   <script>
     (function () {
       initTheme();
@@ -505,6 +510,7 @@
         if (totalBal <= 0) {
           $('ddoNote').className = 'deferral-note auto';
           $('ddoNote').textContent = 'Enter at least one account balance above (or fill in the CoastFIRE Calculator first) to see a recommended withdrawal order.';
+          $('ddoConversionWindowNote').hidden = true;
           $('ddoStrategyTable').innerHTML = '';
           $('ddoYearsBody').innerHTML = '';
           ['ddoTotalTax', 'ddoEndingBalance', 'ddoDepletion', 'ddoTaxSaved'].forEach(id => $(id).textContent = '—');
@@ -537,6 +543,31 @@
           $('ddoNote').className = 'deferral-note security';
         } else {
           $('ddoNote').textContent = `✅ The "${DRAWDOWN_STRATEGIES[best.name].label}" order covers your spending all the way to age ${planToAge}, paying an estimated ${fmtUsd(recommended.totalTaxPaid)} in lifetime tax — about ${fmtUsd(Math.max(0, taxSaved))} less than the worst of the strategies compared below.`;
+        }
+
+        // Roth conversion window: a read-only bracket-headroom detector (see
+        // analyzeConversionWindow() in shared.js for why it's deliberately not a ladder
+        // simulator), driven off the same recommended.years this page already computes.
+        const convWindow = analyzeConversionWindow(recommended.years, recommended.filingStatus);
+        const cwNote = $('ddoConversionWindowNote');
+        if (convWindow.tightestRow) {
+          cwNote.hidden = false;
+          const yearWord = convWindow.windowStartAge === convWindow.windowEndAge ? 'year' : 'years';
+          // lint-sinks-ok: every interpolated value is fmtUsd()/Math.round() numeric output or a fixed rate label
+          $('ddoConversionWindowBody').innerHTML = `From age ${convWindow.windowStartAge} to ${convWindow.windowEndAge}
+            (${convWindow.rows.length} ${yearWord} before your government benefits start), the recommended order
+            still leaves as much as ${fmtUsd(convWindow.tightestRow.headroom)} of headroom in the
+            ${Math.round(convWindow.tightestRow.marginalRate * 100)}% US bracket in your tightest year (age
+            ${convWindow.tightestRow.age}) — room to convert some 401(k)/IRA to Roth at that rate instead of paying
+            it later. Two different 5-year clocks apply to Roth money: each conversion has its own 5-year wait
+            before that principal can come out penalty-free, separate from the account's own 5-year clock for
+            tax-free earnings. This is a detector, not a ladder simulation — it doesn't model an actual conversion
+            schedule or track individual conversions' timing, since this tool doesn't model the age-59½
+            early-withdrawal penalty anywhere yet. RRSP is left out of what to convert (though its withdrawals
+            still count toward the bracket above) — RRSP-to-Roth conversion crosses the Canada-US treaty and
+            carries its own withholding complexity.`;
+        } else {
+          cwNote.hidden = true;
         }
 
         const sortedForTable = [...sims].sort((a, b) => a.sim.totalTaxPaid - b.sim.totalTaxPaid);

@@ -906,6 +906,11 @@
           <div class="ci-body">This calculator doesn't model cross-border taxes, so treat "Required at Retirement" as a
             pre-tax figure and build in a margin for tax drag on both sides of the border.</div>
         </div>
+
+        <div class="consideration-item level-good" id="convWindowNote" hidden>
+          <div class="ci-title"><span class="ci-icon">✅</span>Roth conversion window <span class="ci-badge">401(k)/IRA only</span></div>
+          <div class="ci-body" id="convWindowBody"></div>
+        </div>
         </div>
         </div>
       </details>
@@ -1105,7 +1110,7 @@
     <a href="#results" class="srb-cta" id="srbCta">See results ↓</a>
   </div>
 
-  <script src="shared.js?v=602b58a2"></script>
+  <script src="shared.js?v=efbbffd8"></script>
   <script>
     (function () {
       initTheme();
@@ -1688,7 +1693,11 @@
           rows: res.rows.concat(decRows),
           retireIndex: res.rows.length - 1,
           strategyLabel: DRAWDOWN_STRATEGIES[best.name].label,
-          depletionAge: best.sim.depletionAge
+          depletionAge: best.sim.depletionAge,
+          // Full per-year detail from the chosen strategy's sim, kept around so callers (the
+          // Roth conversion-window note) can derive from it without a second simulateDrawdown()
+          // run — same rides-the-bridge pattern the chart segment itself already uses.
+          years: best.sim.years, filingStatus: best.sim.filingStatus
         };
       }
 
@@ -1722,6 +1731,34 @@
         }
         el.textContent = notes.join(' ');
         el.style.display = 'block';
+      }
+
+      // Roth conversion window: a read-only bracket-headroom detector (see
+      // analyzeConversionWindow() in shared.js for why it's deliberately not a ladder
+      // simulator), reusing the decumulation extension's own sim output — no second
+      // simulateDrawdown() run. `ext` is null whenever the chart isn't extended (planToAge too
+      // close to retireAge, or a live slider drag currently suppressing it) — hide the note in
+      // either case rather than showing stale content.
+      function updateConversionWindowNote(ext) {
+        const noteEl = $('convWindowNote');
+        if (!ext) { noteEl.hidden = true; return; }
+        const win = analyzeConversionWindow(ext.years, ext.filingStatus);
+        if (!win.tightestRow) { noteEl.hidden = true; return; }
+        noteEl.hidden = false;
+        const yearWord = win.windowStartAge === win.windowEndAge ? 'year' : 'years';
+        // lint-sinks-ok: every interpolated value is fmt()/Math.round() numeric output or a fixed rate label
+        $('convWindowBody').innerHTML = `From age ${win.windowStartAge} to ${win.windowEndAge}
+          (${win.rows.length} ${yearWord} before your government benefits start), the chart's post-retirement
+          segment still leaves as much as ${fmt(win.tightestRow.headroom, 'USD')} of headroom in the
+          ${Math.round(win.tightestRow.marginalRate * 100)}% US bracket in your tightest year (age
+          ${win.tightestRow.age}) — room to convert some 401(k)/IRA to Roth at that rate instead of paying it
+          later. Two different 5-year clocks apply to Roth money: each conversion has its own 5-year wait before
+          that principal can come out penalty-free, separate from the account's own 5-year clock for tax-free
+          earnings. This is a detector, not a ladder simulation — it doesn't model an actual conversion schedule,
+          since this tool doesn't model the age-59½ early-withdrawal penalty anywhere yet. RRSP is left out of
+          what to convert (though its withdrawals still count toward the bracket above) — RRSP-to-Roth conversion
+          crosses the Canada-US treaty and carries its own withholding complexity. Full year-by-year detail on the
+          <a href="/drawdown-optimizer">Drawdown Optimizer</a>.`;
       }
 
       function drawChart(rows, reportCurrency, retireIndex) {
@@ -2492,6 +2529,7 @@
 
         renderMainChart(res, true, null);
         renderRoadmap(res);
+        updateConversionWindowNote(lastDecum);
         drawIncomeStack(res);
         updateSnapshotBar();
       }
@@ -2549,6 +2587,7 @@
 
         renderMainChart(res);
         renderRoadmap(res);
+        updateConversionWindowNote(lastDecum);
         renderDonut(res, donutMode);
         drawIncomeStack(res);
 
