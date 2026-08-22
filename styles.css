@@ -1005,7 +1005,7 @@ h2.results-title {
 /* ---- Yearly breakdown: table on desktop, stacked cards on mobile ---- */
 .yearly-cards { display: none; }
 @media(max-width: 760px) {
-  #breakdownDetails .table-scroll { display: none; }
+  #breakdownDetails .table-scroll, #ddoTableScroll { display: none; }
   .yearly-cards { display: block; }
 }
 
@@ -1014,6 +1014,7 @@ h2.results-title {
   padding: 14px 16px; margin-bottom: 10px;
 }
 .year-card.coast-row { border-color: var(--gold); border-width: 1.5px; }
+.year-card.warn-row { border-color: var(--warn); border-width: 1.5px; background: var(--warn-soft); }
 .year-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .year-card-year { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; }
 .year-card-age { font-size: 12px; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; }

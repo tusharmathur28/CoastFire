@@ -982,27 +982,35 @@ function initShareLinkButton(btnId, feedbackId) {
 }
 
 // ==================================================================
-// Inbound shared-link consent gate — a link (current fragment format, or a legacy query-string
-// one) is parsed and immediately scrubbed from the address bar regardless of what the user
-// decides, but is NOT applied or persisted until they explicitly confirm. Declining leaves
-// localStorage byte-identical. Accepting snapshots the prior raw state first so an "Undo" toast
-// can restore it exactly.
+// Undo-toast infrastructure — originally built just for the inbound shared-link consent gate
+// below, now also used by every page's Reset/Reload-example button and (on the CoastFIRE
+// Calculator) Load scenario and Import. All three destructive actions follow the same shape:
+// snapshotForUndo() right before the mutation, offerUndoToast(message) right after it's saved.
+// A shared-link apply is parsed and immediately scrubbed from the address bar regardless of what
+// the user decides, but is NOT applied or persisted until they explicitly confirm; declining
+// leaves localStorage byte-identical.
 // ==================================================================
 const SHARE_UNDO_KEY_PREFIX = 'ccfire:undo:';
 
+// Snapshots both localStorage keys any of these actions can touch (current inputs, and — for
+// Import specifically — the separate saved-scenarios store) so undo can restore either or both
+// exactly, keyed by page path. A caller that never touches SCENARIOS_KEY just restores it
+// unchanged, so it's always safe to snapshot both rather than tracking per-caller which key(s)
+// actually changed.
 function snapshotForUndo() {
   if (!hasStorage) return;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    sessionStorage.setItem(SHARE_UNDO_KEY_PREFIX + window.location.pathname, JSON.stringify({ raw }));
+    const scenariosRaw = localStorage.getItem(SCENARIOS_KEY);
+    sessionStorage.setItem(SHARE_UNDO_KEY_PREFIX + window.location.pathname, JSON.stringify({ raw, scenariosRaw }));
   } catch (e) { /* quota/private mode — proceed without undo */ }
 }
-function offerUndoToast() {
+function offerUndoToast(message) {
   const el = document.createElement('div');
   el.className = 'sample-banner';
   const text = document.createElement('div');
   text.className = 'sb-text';
-  text.textContent = 'Applied data from a shared link, replacing what was here before.';
+  text.textContent = message || 'Applied data from a shared link, replacing what was here before.';
   const undoBtn = document.createElement('button');
   undoBtn.type = 'button';
   undoBtn.textContent = 'Undo';
@@ -1011,8 +1019,9 @@ function offerUndoToast() {
       const key = SHARE_UNDO_KEY_PREFIX + window.location.pathname;
       const snap = sessionStorage.getItem(key);
       if (snap !== null) {
-        const { raw } = JSON.parse(snap);
+        const { raw, scenariosRaw } = JSON.parse(snap);
         if (raw === null) localStorage.removeItem(STORAGE_KEY); else localStorage.setItem(STORAGE_KEY, raw);
+        if (scenariosRaw === null) localStorage.removeItem(SCENARIOS_KEY); else localStorage.setItem(SCENARIOS_KEY, scenariosRaw);
         sessionStorage.removeItem(key);
       }
     } catch (e) { /* ignore — worst case the undo silently no-ops */ }
@@ -1025,6 +1034,9 @@ function offerUndoToast() {
   dismissBtn.addEventListener('click', () => el.remove());
   el.append(text, undoBtn, dismissBtn);
   document.body.insertBefore(el, document.body.firstChild);
+  // The triggering button can be anywhere on a long page (e.g. the scenarios panel near the
+  // bottom) — scroll the toast into view rather than leaving it silently off-screen above.
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Runs the full consent flow for a page's inbound shared link, if one is present. Returns true

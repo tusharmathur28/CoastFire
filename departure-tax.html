@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://api.frankfurter.dev">
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=1239bbd8">
+  <link rel="stylesheet" href="styles.css?v=6e721a35">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -264,7 +264,7 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Your financial inputs are processed entirely on your device and are never uploaded by us.</footer>
   </div>
 
-  <script src="shared.js?v=76df0259"></script>
+  <script src="shared.js?v=0122715b"></script>
   <script>
     (function () {
       initTheme();
@@ -295,10 +295,12 @@
         try { if (hasStorage) localStorage.setItem(BANNER_DISMISS_KEY, '1'); } catch (e) { }
       });
       $('loadExampleBtn').addEventListener('click', () => {
+        snapshotForUndo();
         FIELD_IDS.forEach(id => { const el = $(id); if (el && DEFAULT_FIELD_VALUES[id] !== undefined) { el.value = DEFAULT_FIELD_VALUES[id]; if (COMMA_FIELDS.has(id)) formatCommaFieldValue(el); } });
         showBanner();
         saveInputs();
         renderDepartureTax();
+        offerUndoToast('Reset to the example scenario, replacing what was here before.');
       });
 
       const DEFERRAL_TAX_THRESHOLD = 16500; // approx. federal tax owing (~$100k gain) before CRA requires security

@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://api.frankfurter.dev">
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=1239bbd8">
+  <link rel="stylesheet" href="styles.css?v=6e721a35">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -1043,7 +1043,7 @@
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=76df0259"></script>
+  <script src="shared.js?v=0122715b"></script>
   <script>
     (function () {
       initTheme();
@@ -1406,6 +1406,7 @@
         if (!name) { showScenarioFeedback('Select a scenario to load first.'); return; }
         const store = loadScenariosStore();
         if (!store[name]) return;
+        snapshotForUndo();
         applyScenario(store[name]);
         $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
         updateOasHint();
@@ -1414,6 +1415,7 @@
         saveInputs();
         validateAndRender();
         showScenarioFeedback(`Loaded "${name}".`);
+        offerUndoToast(`Loaded "${name}", replacing what was here before.`);
       });
 
       $('deleteScenarioBtn').addEventListener('click', () => {
@@ -1480,8 +1482,9 @@
           const confirmMsg = `Import this file?\n\n` +
             (hasCurrentInputs ? '• Your current form inputs will be replaced with the ones in this file.\n' : '') +
             (scenarioCount > 0 ? `• ${scenarioCount} saved scenario${scenarioCount === 1 ? '' : 's'} will be added, overwriting any with the same name.\n` : '') +
-            `\nThis can't be undone.`;
+            `\nYou'll get a chance to undo right after.`;
           if (!window.confirm(confirmMsg)) { $('importAllFile').value = ''; return; }
+          snapshotForUndo();
 
           if (hasScenarios) {
             const store = loadScenariosStore();
@@ -1507,6 +1510,7 @@
 
           $('importAllFile').value = '';
           showScenarioFeedback('Import complete.');
+          offerUndoToast('Imported data, replacing what was here before.');
         };
         reader.onerror = () => {
           alert("Couldn't read that file — try again.");
@@ -2463,6 +2467,7 @@
         try { if (hasStorage) localStorage.setItem(BANNER_DISMISS_KEY, '1'); } catch (e) { }
       });
       $('loadExampleBtn').addEventListener('click', () => {
+        snapshotForUndo();
         applyScenario(DEFAULT_FIELD_VALUES);
         $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
         updateOasHint();
@@ -2472,6 +2477,7 @@
         saveInputs();
         validateAndRender();
         window.scrollTo({ top: $('calcForm').offsetTop - 20, behavior: 'smooth' });
+        offerUndoToast('Reset to the example scenario, replacing what was here before.');
       });
 
       // ---- Generic "use average" quick-fill buttons ----

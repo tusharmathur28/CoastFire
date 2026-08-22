@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://api.frankfurter.dev">
   <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=1239bbd8">
+  <link rel="stylesheet" href="styles.css?v=6e721a35">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -271,7 +271,7 @@
           <span class="toggle-icon"></span>
         </summary>
         <div class="card-collapsible-body">
-          <div class="table-scroll">
+          <div class="table-scroll" id="ddoTableScroll">
             <table class="compare-table">
               <thead>
                 <tr>
@@ -282,6 +282,7 @@
               <tbody id="ddoYearsBody"></tbody>
             </table>
           </div>
+          <div class="yearly-cards" id="ddoYearlyCardsContainer"></div>
         </div>
       </details>
     </div>
@@ -331,7 +332,7 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Your financial inputs are processed entirely on your device and are never uploaded by us.</footer>
   </div>
 
-  <script src="shared.js?v=76df0259"></script>
+  <script src="shared.js?v=0122715b"></script>
   <script>
     (function () {
       initTheme();
@@ -383,10 +384,12 @@
         try { if (hasStorage) localStorage.setItem(BANNER_DISMISS_KEY, '1'); } catch (e) { }
       });
       $('loadExampleBtn').addEventListener('click', () => {
+        snapshotForUndo();
         FIELD_IDS.forEach(id => { const el = $(id); if (el && DEFAULT_FIELD_VALUES[id] !== undefined) { el.value = DEFAULT_FIELD_VALUES[id]; if (COMMA_FIELDS.has(id)) formatCommaFieldValue(el); } });
         showBanner();
         saveInputs();
         renderDrawdown();
+        offerUndoToast('Reset to the example scenario, replacing what was here before.');
       });
 
       window.onThemeChange = () => {
@@ -553,6 +556,41 @@
           <td>${fmtUsd(y.usTax)}</td><td>${fmtUsd(y.cdnWithholding)}</td><td>${fmtUsd(y.totalTax)}</td>
           <td>${fmtUsd(Object.values(y.endBalances).reduce((s, v) => s + v, 0))}</td>
         </tr>`).join('');
+
+        // Same data as the table above, restructured as stacked cards for narrow screens —
+        // mirrors the CoastFIRE Calculator's .year-card pattern.
+        // lint-sinks-ok: y.depleted is a boolean; the rest of this card is fmtUsd()/numeric output
+        $('ddoYearlyCardsContainer').innerHTML = recommended.years.map(y => {
+          const endBalance = Object.values(y.endBalances).reduce((s, v) => s + v, 0);
+          return `
+      <div class="year-card${y.depleted ? ' warn-row' : ''}">
+        <div class="year-card-top">
+          <div>
+            <div class="year-card-year">${y.year}</div>
+            <div class="year-card-age">Age ${y.age}</div>
+          </div>
+          <div class="year-card-combined">
+            <div class="ycc-label">End balance</div>
+            <div class="ycc-value">${fmtUsd(endBalance)}</div>
+          </div>
+        </div>
+        <div class="year-card-coast">Total tax this year: <strong>${fmtUsd(y.totalTax)}</strong></div>
+        ${y.depleted ? `<div class="year-card-notes">Portfolio depleted</div>` : ''}
+        <details class="year-card-detail">
+          <summary>Withdrawal breakdown</summary>
+          <div class="year-card-detail-grid">
+            <div class="ycd-row"><span>401(k)/IRA</span><span>${fmtUsd(y.withdrawals.k401 + y.withdrawals.ira)}</span></div>
+            <div class="ycd-row"><span>RRSP</span><span>${fmtUsd(y.withdrawals.rrsp)}</span></div>
+            <div class="ycd-row"><span>Taxable</span><span>${fmtUsd(y.withdrawals.nonregCad + y.withdrawals.taxableUsd)}</span></div>
+            <div class="ycd-row"><span>TFSA/Roth</span><span>${fmtUsd(y.withdrawals.tfsa + y.withdrawals.roth)}</span></div>
+            <div class="ycd-group-label">Tax</div>
+            <div class="ycd-row"><span>US Tax</span><span>${fmtUsd(y.usTax)}</span></div>
+            <div class="ycd-row"><span>CDN Withholding</span><span>${fmtUsd(y.cdnWithholding)}</span></div>
+            <div class="ycd-row ycd-subtotal"><span>Total Tax</span><span>${fmtUsd(y.totalTax)}</span></div>
+          </div>
+        </details>
+      </div>`;
+        }).join('');
 
         drawWithdrawalStack(recommended);
       }
