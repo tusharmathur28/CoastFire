@@ -242,7 +242,7 @@ h1 {
 }
 .hero-cta:hover { background: #0c141c; }
 
-.trust-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.trust-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
 .trust-badge {
   display: inline-flex; align-items: center;
   font-size: 12px; font-weight: 600; color: var(--ink-soft);
