@@ -1047,7 +1047,7 @@
 
   <button type="button" class="back-to-top" id="backToTopBtn" aria-label="Back to top" title="Back to top">↑</button>
 
-  <script src="shared.js?v=558d47a0"></script>
+  <script src="shared.js?v=755d72bc"></script>
   <script>
     (function () {
       initTheme();
@@ -1332,6 +1332,7 @@
       function showErrors(errors) {
         const banner = $('errorBanner');
         if (errors.length === 0) { banner.classList.remove('show'); return false; }
+        // lint-sinks-ok: e is always one of the hardcoded validation-error strings in getValidationErrors()
         $('errorList').innerHTML = errors.map(e => `<li>${e}</li>`).join('');
         banner.classList.add('show');
         banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1689,6 +1690,7 @@
         });
 
         const legend = $('chartLegendMulti');
+        // lint-sinks-ok: s.color/s.label come from a hardcoded seriesList literal (PRESETS/preset labels), never user text
         legend.innerHTML = seriesList.map(s => `<span><span class="legend-dot" style="background:${s.color};"></span>${s.label}</span>`).join('');
       }
 
@@ -1941,6 +1943,7 @@
           const below = idx % 2 === 1;
           div.className = 'roadmap-marker' + (below ? ' below' : '');
           div.style.left = pct + '%';
+          // lint-sinks-ok: it.color/it.label come from a hardcoded roadmap items array ('Now'/'CoastFIRE'/'Retire'/etc.)
           div.innerHTML = `<div class="roadmap-dot" style="background:${it.color}"></div>
             <div class="roadmap-label-group"><div class="rm-label">${it.label}</div><div class="rm-age">Age ${it.age}</div></div>`;
           track.appendChild(div);
@@ -1993,6 +1996,7 @@
         });
         $('donutChart').style.background = data.length ? `conic-gradient(${stops.join(',')})` : cssVar('--paper-2');
         $('donutCenterValue').textContent = fmt(total, res.reportCurrency);
+        // lint-sinks-ok: d.color/d.name come from the hardcoded getCompositionData() account/bucket labels
         $('donutLegend').innerHTML = data.map(d => `<li><span class="dl-name"><span class="dl-dot" style="background:${d.color}"></span>${d.name}</span><span class="dl-val">${fmt(d.value, res.reportCurrency)} · ${Math.round((d.value / total) * 100)}%</span></li>`).join('');
         $('donutCaveat').textContent = mode === 'tax'
           ? '*TFSA growth is taxable to the IRS while Roth IRA and HSA growth are generally tax-free federally — grouping them together simplifies different US tax treatments. FHSA and RESP have no clear IRS guidance, so they\'re kept separate as "uncertain."'
@@ -2049,6 +2053,7 @@
         const resultEl = $('gsContribResult');
 
         if (targetAge <= currentAge) {
+          // lint-sinks-ok: currentAge is always a number (num())
           resultEl.innerHTML = `<div class="reassurance-box warn"><strong>Target age must be after your current age (${currentAge}).</strong></div>`;
           return;
         }
@@ -2061,6 +2066,7 @@
         const atCurrent = compute({ retireAge: targetAge });
         const curMonthly = totalMonthlyContrib(1, atCurrent.reportCurrency, atCurrent.exchangeRate);
         if (atCurrent.coastYearIndex !== null) {
+          // lint-sinks-ok: currentAge/atCurrent.coastYearIndex/targetAge/fmt() output are all numeric
           resultEl.innerHTML = `<div class="reassurance-box"><strong>You're already on track.</strong> At your current ${fmt(curMonthly, atCurrent.reportCurrency)}/month in combined contributions, you're projected to reach CoastFIRE by age ${currentAge + atCurrent.coastYearIndex} — at or before your target of ${targetAge}.</div>`;
           return;
         }
@@ -2079,6 +2085,7 @@
         const reqMonthly = totalMonthlyContrib(hi, atCurrent.reportCurrency, atCurrent.exchangeRate);
         const delta = reqMonthly - curMonthly;
         const pct = curMonthly > 0 ? Math.round((delta / curMonthly) * 100) : null;
+        // lint-sinks-ok: targetAge/fmt()/pct output are all numeric
         resultEl.innerHTML = `<div class="reassurance-box"><strong>To reach CoastFIRE by age ${targetAge}</strong>, increase your total combined contributions from about ${fmt(curMonthly, atCurrent.reportCurrency)}/month to about ${fmt(reqMonthly, atCurrent.reportCurrency)}/month${pct !== null ? ` (+${fmt(delta, atCurrent.reportCurrency)}/mo, about +${pct}%)` : ''} — split across the accounts above however makes sense for you.</div>`;
       });
 
@@ -2095,6 +2102,7 @@
           return;
         }
         const yrs = found - currentAge;
+        // lint-sinks-ok: found/yrs are always numbers
         resultEl.innerHTML = `<div class="reassurance-box"><strong>Earliest retirement age: ${found}</strong> (${yrs} year${yrs === 1 ? '' : 's'} from now) — the earliest age at which your projected portfolio, at your current contribution rate, covers what you'd need starting then.</div>`;
       });
 
@@ -2169,17 +2177,20 @@
           const yearsBefore = res.retireAge - coastAge;
           el.classList.remove('not-yet');
           if (yearsBefore > 0) {
+            // lint-sinks-ok: coastAge/coastYear/yearsBefore are always numbers
             el.innerHTML = `<span class="rh-icon">🎉</span>You're on track to stop actively contributing around
               <strong>age ${coastAge} (${coastYear})</strong> — about ${yearsBefore} year${yearsBefore === 1 ? '' : 's'}
               before you plan to retire at ${res.retireAge}. From there, growth alone should carry your portfolio the
               rest of the way to supporting ${monthlyExp}/month in retirement.`;
           } else {
+            // lint-sinks-ok: res.retireAge is always a number
             el.innerHTML = `<span class="rh-icon">✅</span>You're on track to reach your CoastFIRE number right
               around your planned retirement age of <strong>${res.retireAge}</strong> — it works, but there's not
               much room to spare. A little more saved now would give you breathing room.`;
           }
         } else {
           el.classList.add('not-yet');
+          // lint-sinks-ok: res.retireAge is always a number
           el.innerHTML = `<span class="rh-icon">📈</span>At today's pace, you're <strong>not yet on track</strong>
             to reach your CoastFIRE number before retiring at age ${res.retireAge}. Saving a bit more each month,
             planning to retire a little later, or revisiting your expected return would help close the gap.`;
@@ -2300,6 +2311,7 @@
           insights.push({ type: 'info', text: `${inRange.length} of your ${lifeEventsState.length} life event${lifeEventsState.length === 1 ? '' : 's'} fall${inRange.length === 1 ? 's' : ''} within this projection (age ${res.currentAge}-${res.retireAge}) and ${inRange.length === 1 ? 'is' : 'are'} applied at ${inRange.length === 1 ? 'its' : 'their'} scheduled age — an event larger than the account's balance at that time simply empties it rather than going negative.` });
         }
         const insightIcons = { good: '✅', warning: '⚠️', info: 'ℹ️' };
+        // lint-sinks-ok: ins.type/ins.text come from hardcoded insight templates interpolating only numeric/fmt() values
         $('insightsList').innerHTML = insights.map(ins => `<li class="insight-${ins.type}"><span class="mark">${insightIcons[ins.type]}</span><span>${ins.text}</span></li>`).join('');
 
         const baseRate = res.exchangeRate;
@@ -2323,6 +2335,7 @@
         }).join('');
 
         const tbody = $('tableBody');
+        // lint-sinks-ok: r.notes is set only to fixed strings by compute(), never user text
         tbody.innerHTML = res.rows.map(r => `
       <tr class="${r.isCoastRow ? 'coast-row' : ''}">
         <td>${r.year}</td><td>${r.age}</td>
@@ -2336,6 +2349,7 @@
         // Same data as the table above, restructured as stacked cards for narrow screens — a wide
         // horizontally-scrolling table is a poor fit for mobile, so this is a genuinely different layout,
         // not just a CSS reflow of the same markup.
+        // lint-sinks-ok: r.notes is set only to fixed strings by compute(), never user text
         $('yearlyCardsContainer').innerHTML = res.rows.map(r => `
       <div class="year-card${r.isCoastRow ? ' coast-row' : ''}">
         <div class="year-card-top">
@@ -2972,7 +2986,12 @@
           }
         } catch (err) {
           console.error('Error fetching exchange rate:', err);
-          hintEl.textContent = "Couldn't fetch a live rate — enter one manually (your bank or Bank of Canada both publish current rates).";
+          const cached = cachedFxRateIfFresh();
+          if (cached !== null) {
+            hintEl.textContent = `Couldn't reach the live rate — showing 1 CAD = ${cached.toFixed(4)} USD${fxFetchedAtLabel()}, the last one fetched.`;
+          } else {
+            hintEl.textContent = "Couldn't fetch a live rate — enter one manually (your bank or Bank of Canada both publish current rates).";
+          }
         } finally {
           btnEl.disabled = false;
         }

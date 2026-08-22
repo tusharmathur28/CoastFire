@@ -268,7 +268,7 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=558d47a0"></script>
+  <script src="shared.js?v=755d72bc"></script>
   <script>
     (function () {
       initTheme();
@@ -344,6 +344,7 @@
         let excludedList = `your RRSP (${fmt(rrsp, 'CAD')}) and TFSA (${fmt(tfsa, 'CAD')})`;
         if (fhsa > 0) excludedList += `, FHSA (${fmt(fhsa, 'CAD')})`;
         if (resp > 0) excludedList += `, RESP (${fmt(resp, 'CAD')})`;
+        // lint-sinks-ok: excludedList is built from fmt()-formatted numbers and hardcoded account-name labels
         $('departureExemptBox').innerHTML = `<strong>Excluded from departure tax:</strong> ${excludedList} from the
           CoastFIRE Calculator — plus Canadian real estate, CPP/QPP entitlements, employer pension rights, and
           personal-use property under $10,000. None of that is included in the estimate below.`;

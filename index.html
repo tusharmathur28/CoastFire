@@ -264,7 +264,7 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=558d47a0"></script>
+  <script src="shared.js?v=755d72bc"></script>
   <script>
     initTheme();
     hydrateChromeIcons();
@@ -401,6 +401,7 @@
           if (persona) {
             const config = QUIZ_PERSONAS[persona];
             document.getElementById('quizStep2Heading').textContent = config.heading;
+            // lint-sinks-ok: o.next/o.icon/o.label come from the hardcoded QUIZ_PERSONAS config object
             document.getElementById('quizStep2Options').innerHTML = config.options.map(o => `
               <button type="button" class="quiz-option" data-next="${o.next}">
                 <span class="qo-icon">${o.icon}</span>

@@ -335,7 +335,7 @@
     </footer>
   </div>
 
-  <script src="shared.js?v=558d47a0"></script>
+  <script src="shared.js?v=755d72bc"></script>
   <script>
     (function () {
       initTheme();
@@ -547,6 +547,7 @@
           </tr>`;
         }).join('');
 
+        // lint-sinks-ok: y.depleted is a boolean; the rest of this row is fmtUsd()/numeric output
         $('ddoYearsBody').innerHTML = recommended.years.map(y => `<tr class="${y.depleted ? 'warn-row' : ''}">
           <td>${y.age}</td><td>${y.year}</td>
           <td>${fmtUsd(y.withdrawals.k401 + y.withdrawals.ira)}</td>

@@ -1,18 +1,9 @@
 #!/usr/bin/env bash
-# Dependency-free tripwire against XSS regressions: flags any innerHTML assignment that
-# interpolates a template literal without going through escapeHtml() on the same line.
-# This is a single-line heuristic, not a proof — it will not catch a sink that spans multiple
-# lines (see git history: coastfire-calculator.html's scenario-select bug was exactly that
-# shape) and it will flag interpolations that are actually safe (numbers, internal constants).
-# Treat every hit as something to read, not something to silence: either wrap it in
-# escapeHtml()/convert it to textContent, or leave a comment explaining why the value can only
-# ever be internal/numeric so the next reader doesn't have to re-derive that from scratch.
+# Thin wrapper so `bash scripts/lint_sinks.sh` keeps working as the CI entry point — the actual
+# multiline-aware scan lives in lint_sinks.mjs (see its header for what changed and why: this
+# used to be a single-line grep, which is exactly the shape of bug it would have missed —
+# coastfire-calculator.html's scenario-select bug, fixed in the SEC-01 XSS-remediation pass,
+# spanned two lines). This is now a hard CI gate, not just a warning: every currently-safe hit is
+# allowlisted inline with a `lint-sinks-ok:` comment on the line above it.
 set -euo pipefail
-hits=$(grep -rnE 'innerHTML[[:space:]]*[+]?=[^;]*\$\{' \
-        --include='*.html' --include='*.js' . \
-      | grep -v 'escapeHtml(' || true)
-if [ -n "$hits" ]; then
-  echo "::warning::innerHTML interpolation without escapeHtml() on the same line — review each, this is a single-line heuristic:"
-  echo "$hits"
-fi
-exit 0
+node "$(dirname "$0")/lint_sinks.mjs"

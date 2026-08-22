@@ -169,6 +169,7 @@ function initStaleBanner() {
   if (days < STALE_THRESHOLD_DAYS || Date.now() < snoozeUntil) return;
 
   const monthsAgo = Math.round(days / 30);
+  // lint-sinks-ok: monthsAgo/days are Math.round/Math.floor results, never a raw string
   el.innerHTML = `
     <div class="sb-icon"><span class="icon" data-icon="clock" aria-hidden="true">🕓</span></div>
     <div class="sb-text"><strong>Your numbers are getting stale.</strong> You last updated your inputs
@@ -231,6 +232,7 @@ function openGtermPopover(trigger) {
     gtermPopoverEl.addEventListener('mouseleave', scheduleGtermHide);
     document.body.appendChild(gtermPopoverEl);
   }
+  // lint-sinks-ok: entry comes from the internal GLOSSARY dict, keyed by a fixed data-term attribute
   gtermPopoverEl.innerHTML = `<strong>${entry.label}</strong><br>${entry.def}`;
   gtermPopoverEl.hidden = false;
   const r = trigger.getBoundingClientRect();
@@ -402,6 +404,7 @@ function renderSoftWarning(containerId, checks) {
   if (!el) return;
   const messages = checks.filter(c => c.condition).map(c => c.message);
   if (!messages.length) { el.hidden = true; return; }
+  // lint-sinks-ok: every caller passes a hardcoded message string interpolating only num()/fmt() output
   el.innerHTML = `<div class="sb-icon">⚠️</div><div class="sb-text">${messages.join(' ')}</div>`;
   el.className = 'sample-banner warn-banner';
   el.hidden = false;
@@ -411,13 +414,37 @@ function renderSoftWarning(containerId, checks) {
 // Live FX rate — network call only; each page owns its own UI state (hint text, button
 // labels, caching) around this, same as before the CoastFIRE Calculator's own fetch flow.
 // ==================================================================
+
+// Wide guardrail against a corrupted or malicious API response, not a real-world forecast — this
+// endpoint returns CAD->USD (e.g. ~0.73), so 0.50-2.00 comfortably brackets it in either direction
+// while still catching garbage like 0, a negative number, or a wildly wrong decimal shift.
+const CAD_TO_USD_PLAUSIBLE = { min: 0.50, max: 2.00 };
+// Pure — throws on anything that isn't a finite number inside the plausible range.
+function validatedRate(data) {
+  const r = Number(data?.rates?.USD);
+  if (!Number.isFinite(r) || r < CAD_TO_USD_PLAUSIBLE.min || r > CAD_TO_USD_PLAUSIBLE.max) {
+    throw new Error('implausible_fx_rate');
+  }
+  return r;
+}
 async function fetchLiveFxRate() {
   const response = await fetch('https://api.frankfurter.dev/v1/latest?from=CAD&to=USD');
   if (!response.ok) throw new Error('API response not OK');
   const data = await response.json();
-  const rate = data.rates.USD;
-  if (!rate || typeof rate !== 'number') throw new Error('Invalid rate format');
-  return rate;
+  return validatedRate(data);
+}
+
+// If the last-saved exchangeRate came from a live fetch (stamped by stampFxFetched()) within the
+// last FX_CACHE_MAX_AGE_DAYS, returns it — used so a failed live fetch can fall back to a recent
+// real rate instead of jumping straight to the static DEFAULT_FIELD_VALUES.exchangeRate.
+const FX_CACHE_MAX_AGE_DAYS = 7;
+function cachedFxRateIfFresh() {
+  if (!hasStorage) return null;
+  let ts;
+  try { ts = parseInt(localStorage.getItem(FX_FETCHED_AT_KEY), 10); } catch (e) { return null; }
+  if (!ts || Date.now() - ts > FX_CACHE_MAX_AGE_DAYS * 86400000) return null;
+  const rate = parseFloat(readRawStore().exchangeRate);
+  return Number.isFinite(rate) ? rate : null;
 }
 
 // Timestamp of the last time a live-fetched rate was actually applied to exchangeRate — distinct
@@ -456,6 +483,7 @@ function renderFxIndicator(containerId) {
   const el = $(containerId);
   if (!el) return;
   const rate = parseFloat(readStoredInputs().exchangeRate) || 0.73;
+  // lint-sinks-ok: rate.toFixed(4) and fxFetchedAtLabel() are always numeric/internal
   el.innerHTML = `Using 1 CAD = ${rate.toFixed(4)} USD${fxFetchedAtLabel()} · <a href="/coastfire-calculator#exchangeRate">edit on the CoastFIRE Calculator</a>`;
 }
 
@@ -1519,5 +1547,6 @@ if (typeof module !== 'undefined' && module.exports) {
     compute, stepAccounts, convertToReport, simulateDrawdown,
     SENSITIVE_SHARE_FIELDS, buildSharePayload, parseShareParamsString,
     SENSITIVE_STORE_FIELDS, transformV2StateToV3,
+    CAD_TO_USD_PLAUSIBLE, validatedRate,
   };
 }
