@@ -2,7 +2,7 @@
   "note": "Regression baseline recorded before the security remediation work (pre-security-baseline tag). None of the changes in P0/P1 touch compute()/stepAccounts()/simulateDrawdown() — this file exists to prove that stays true through every later phase too.",
   "overrides": {
     "early-career": {
-      "contribFreq": "annual", "stopAtCoast": "no", "reportCurrency": "CAD", "exchangeRate": 0.73,
+      "contribFreq": "annual", "stopAtCoast": "no", "taxDragEnabled": "no", "reportCurrency": "CAD", "exchangeRate": 0.73,
       "monthlyExpenses": 4000, "cppMonthly": 1200, "oasMonthly": 700, "ssMonthly": 1500,
       "returnRate": 7, "inflationRate": 2.5, "withdrawalRate": 4, "lifeEvents": "[]",
       "rrspBal": 15000, "tfsaBal": 20000, "nonregCadBal": 0, "fhsaBal": 0, "respBal": 0,
@@ -12,7 +12,7 @@
       "currentAge": 28, "retireAge": 65, "benefitsStartAge": 67
     },
     "mid-career": {
-      "contribFreq": "annual", "stopAtCoast": "no", "reportCurrency": "CAD", "exchangeRate": 0.73,
+      "contribFreq": "annual", "stopAtCoast": "no", "taxDragEnabled": "no", "reportCurrency": "CAD", "exchangeRate": 0.73,
       "monthlyExpenses": 4000, "cppMonthly": 1200, "oasMonthly": 700, "ssMonthly": 1500,
       "returnRate": 7, "inflationRate": 2.5, "withdrawalRate": 4, "lifeEvents": "[]",
       "rrspBal": 220000, "tfsaBal": 95000, "nonregCadBal": 40000, "fhsaBal": 0, "respBal": 0,
@@ -22,7 +22,7 @@
       "currentAge": 45, "retireAge": 62, "benefitsStartAge": 65
     },
     "near-retirement": {
-      "contribFreq": "annual", "stopAtCoast": "no", "reportCurrency": "CAD", "exchangeRate": 0.73,
+      "contribFreq": "annual", "stopAtCoast": "no", "taxDragEnabled": "no", "reportCurrency": "CAD", "exchangeRate": 0.73,
       "monthlyExpenses": 4000, "cppMonthly": 1200, "oasMonthly": 700, "ssMonthly": 1500,
       "returnRate": 7, "inflationRate": 2.5, "withdrawalRate": 4, "lifeEvents": "[]",
       "rrspBal": 650000, "tfsaBal": 130000, "nonregCadBal": 90000, "fhsaBal": 0, "respBal": 0,
