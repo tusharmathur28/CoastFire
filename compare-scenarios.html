@@ -140,9 +140,12 @@
       <canvas id="compareChart" height="260" role="img" aria-label="Line chart comparing the two scenarios' combined portfolio value over time"></canvas>
     </div>
 
-    <details class="help-section">
-      <summary>❓ How this comparison works</summary>
-      <div class="help-body">
+    <details class="help-section card-collapsible">
+      <summary>
+        <h3>❓ How this comparison works</h3>
+        <span class="toggle-icon"></span>
+      </summary>
+      <div class="card-collapsible-body help-body">
         <p style="font-size:13.5px;color:var(--ink-soft);margin:0;">Each saved scenario is re-run through the same
           CoastFIRE projection engine as the calculator itself, using exactly the inputs it had when you saved it
           — including its own exchange rate and reporting currency. Changing your current inputs on the calculator
