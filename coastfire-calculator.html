@@ -178,6 +178,21 @@
             </select>
           </div>
         </div>
+        <div class="grid3" data-step="1" style="margin-top:16px;">
+          <div class="field">
+            <label for="hasSpouse">Planning with a spouse or partner? <span class="info"
+                title="When enabled, adds a second independent age and government-benefit claiming schedule. Accounts stay pooled as one household total, not tracked per person — see the Cross-Border Considerations note below once enabled.">?</span></label>
+            <select id="hasSpouse">
+              <option value="no" selected>No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <div class="field" id="spouseCurrentAgeField" hidden>
+            <label for="spouseCurrentAge">Spouse's/partner's current age <span class="info"
+                title="Can differ from your own age — used to work out when their own CPP/OAS/Social Security kicks in relative to your shared retirement date.">?</span></label>
+            <input type="number" inputmode="numeric" id="spouseCurrentAge" value="34" min="16" max="90" step="1">
+          </div>
+        </div>
         <div class="section-explainer" style="margin-top:16px;">What you expect to spend each month once retired,
           in today's dollars — we'll automatically adjust this for inflation between now and your retirement date.</div>
         <div class="grid3" data-step="1">
@@ -480,6 +495,42 @@
             until benefits start — that gap is funded from your portfolio in the calculation below. Don't know your
             numbers yet? Leave these at 0 — the calculator will just assume no government benefits, which is a safe,
             conservative starting point.</div>
+
+          <div id="spouseBenefitsBlock" hidden>
+            <div class="section-explainer" style="margin-top:16px;">Your spouse's/partner's own government benefits —
+              gated independently from yours, since real households aren't guaranteed to have both people's CPP/OAS/
+              Social Security start on the same date.</div>
+            <div class="grid2 border-crossing" data-step="4">
+              <div class="country-col left">
+                <div class="country-head"><span class="chip ca">CA</span>
+                  <h3>Spouse's CPP &amp; OAS</h3>
+                </div>
+                <div class="field">
+                  <label for="spouseCppMonthly">Spouse's expected monthly CPP ($ CAD)</label>
+                  <input type="text" inputmode="decimal" id="spouseCppMonthly" value="0" min="0" step="10">
+                </div>
+                <div class="field">
+                  <label for="spouseOasMonthly">Spouse's expected monthly OAS ($ CAD) <span class="tag watch">Income-tested</span></label>
+                  <input type="text" inputmode="decimal" id="spouseOasMonthly" value="0" min="0" step="1">
+                </div>
+              </div>
+              <div class="country-col right">
+                <div class="country-head"><span class="chip us">US</span>
+                  <h3>Spouse's Social Security</h3>
+                </div>
+                <div class="field">
+                  <label for="spouseSsMonthly">Spouse's expected monthly Social Security ($ USD)</label>
+                  <input type="text" inputmode="decimal" id="spouseSsMonthly" value="0" min="0" step="10">
+                </div>
+                <div class="field">
+                  <label for="spouseBenefitsStartAge">Spouse's government benefits start age <span class="info"
+                      title="Applied uniformly to your spouse's CPP, OAS, and Social Security, same simplification as your own benefits start age — independent from yours, since spouses often claim at different ages.">?</span></label>
+                  <div class="label-plain">The age your spouse/partner will start collecting their own CPP, OAS, and Social Security</div>
+                  <input type="number" inputmode="numeric" id="spouseBenefitsStartAge" value="65" min="55" max="70" step="1">
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </details>
 
@@ -911,6 +962,22 @@
           <div class="ci-title"><span class="ci-icon">✅</span>Roth conversion window <span class="ci-badge">401(k)/IRA only</span></div>
           <div class="ci-body" id="convWindowBody"></div>
         </div>
+
+        <div class="consideration-item level-info" id="spousePooledAccountsNote" hidden>
+          <div class="ci-title"><span class="ci-icon">ℹ️</span>Pooled household accounts <span class="ci-badge">Spouse mode</span></div>
+          <div class="ci-body">Accounts are modeled as one combined household balance per type, not tracked per
+            spouse — this tool doesn't enforce per-person contribution limits (RRSP/TFSA room, 401(k)/IRA limits) or
+            model each spouse's RMDs separately. Treat balances and contributions above as household totals.</div>
+        </div>
+
+        <div class="consideration-item level-info" id="spouseSurvivorBenefitNote" hidden>
+          <div class="ci-title"><span class="ci-icon">ℹ️</span>Survivor benefits not modeled <span class="ci-badge">Spouse mode</span></div>
+          <div class="ci-body">Household benefit income doesn't step down at the first death the way it would in
+            reality: Social Security's survivor benefit is the <em>higher</em> of the two checks, not the sum; CPP
+            converts partly into a survivor pension rather than continuing unchanged; OAS simply ends for the
+            deceased spouse. This tool models both spouses' benefits as continuing in full for the life of the plan —
+            treat post-claiming income as an upper bound, not a guarantee, after either spouse's death.</div>
+        </div>
         </div>
         </div>
       </details>
@@ -1110,7 +1177,7 @@
     <a href="#results" class="srb-cta" id="srbCta">See results ↓</a>
   </div>
 
-  <script src="shared.js?v=efbbffd8"></script>
+  <script src="shared.js?v=bb07dc70"></script>
   <script>
     (function () {
       initTheme();
@@ -1282,6 +1349,24 @@
         if ($('extraAccountsBody').hidden) expandExtraAccounts();
         else collapseExtraAccounts();
       });
+
+      // ---- Spouse/partner mode toggle ----
+      // Unlike extraAccountsToggle above (a pure UI collapse-state, never persisted), hasSpouse
+      // is itself a stored FIELD_IDS value — so this needs to run once after restoreInputs()/
+      // the share-link consent flow settles (see the call site further down), not just on the
+      // select's own change event, or a returning spouse-mode user would see the spouse fields
+      // flash open empty before restoration fills them in, or hidden entirely if this check runs
+      // before hasSpouse's own restored value has landed in the DOM.
+      function updateSpouseFieldsVisibility() {
+        const show = $('hasSpouse').value === 'yes';
+        $('spouseCurrentAgeField').hidden = !show;
+        $('spouseBenefitsBlock').hidden = !show;
+        const pooledNote = $('spousePooledAccountsNote');
+        if (pooledNote) pooledNote.hidden = !show;
+        const survivorNote = $('spouseSurvivorBenefitNote');
+        if (survivorNote) survivorNote.hidden = !show;
+      }
+      $('hasSpouse').addEventListener('change', () => { updateSpouseFieldsVisibility(); saveInputs(); validateAndRender(); });
 
       // ---- Life events (one-time lump sums) ----
       // lifeEventsState is populated later, once restoreInputs()/initSharedParamsConsentFlow() has settled
@@ -2416,9 +2501,14 @@
         }
         const years = [];
         for (let age = startAge; age <= endAge; age++) {
-          const afterBenefits = age >= res.benefitsStartAge;
-          const gov = afterBenefits ? Math.min(res.annualGovBenefit, res.futureAnnualExpense) : 0;
-          years.push({ age, gov, portfolio: Math.max(0, res.futureAnnualExpense - gov) });
+          // Two independently-gated streams, same pattern as simulateDrawdown()'s per-year loop —
+          // this chart has its own loop rather than calling simulateDrawdown(), so it needs the
+          // identical hasSpouse-gated sum, not just simulateDrawdown()'s fix.
+          const spouseAge = age - (res.currentAge - res.spouseCurrentAge);
+          const gov = (age >= res.benefitsStartAge ? res.annualGovBenefit : 0)
+            + (res.hasSpouse && spouseAge >= res.spouseBenefitsStartAge ? res.spouseAnnualGovBenefit : 0);
+          const govClamped = Math.min(gov, res.futureAnnualExpense);
+          years.push({ age, gov: govClamped, portfolio: Math.max(0, res.futureAnnualExpense - govClamped) });
         }
         const maxVal = res.futureAnnualExpense * 1.1 || 1;
         const yFor = v => padT + h - (v / maxVal) * h;
@@ -2611,8 +2701,8 @@
         if (res.bridgeYears > 0) {
           insights.push({ type: 'info', text: `Government benefits start ${res.bridgeYears} year${res.bridgeYears === 1 ? '' : 's'} after your planned retirement age — that gap is funded 100% from your portfolio in this model before CPP, OAS, and Social Security kick in.` });
         }
-        if (res.annualGovBenefit > 0) {
-          insights.push({ type: 'good', text: `Once claimed, your combined CPP + OAS + Social Security is projected to cover ${fmt(res.annualGovBenefit / 12, res.reportCurrency)}/month of your ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month expense target (today's dollars) — reducing how much your portfolio alone needs to fund.` });
+        if (res.householdAnnualGovBenefit > 0) {
+          insights.push({ type: 'good', text: `Once claimed, your combined CPP + OAS + Social Security${res.hasSpouse ? ' (both of you)' : ''} is projected to cover ${fmt(res.householdAnnualGovBenefit / 12, res.reportCurrency)}/month of your ${fmt(num('monthlyExpenses'), res.reportCurrency)}/month expense target (today's dollars) — reducing how much your portfolio alone needs to fund.` });
         }
         if (lifeEventsState.length) {
           const inRange = lifeEventsState.filter(ev => ev.age >= res.currentAge && ev.age <= res.retireAge);
@@ -3291,6 +3381,7 @@
       // local autosave, but only after the user explicitly consents — see initSharedParamsConsentFlow().
       const loadedFromLink = initSharedParamsConsentFlow();
       if (!loadedFromLink) restoreInputs();
+      updateSpouseFieldsVisibility();
       initCurrencyInputFormatting();
       $('expenseCurrencyLabel').textContent = $('reportCurrency').value;
       updateOasHint();

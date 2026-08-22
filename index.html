@@ -277,7 +277,7 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Your financial inputs are processed entirely on your device and are never uploaded by us.</footer>
   </div>
 
-  <script src="shared.js?v=efbbffd8"></script>
+  <script src="shared.js?v=bb07dc70"></script>
   <script>
     initTheme();
     hydrateChromeIcons();
@@ -305,7 +305,7 @@
       $('snapCoastStatus').textContent = res.coastYearIndex !== null
         ? (res.coastYearIndex === 0 ? 'Already there' : `In ~${res.coastYearIndex} yrs (age ${res.currentAge + res.coastYearIndex})`)
         : 'Not yet on track';
-      $('snapGovBenefit').textContent = fmt(res.annualGovBenefit, res.reportCurrency) + '/yr';
+      $('snapGovBenefit').textContent = fmt(res.householdAnnualGovBenefit, res.reportCurrency) + '/yr';
 
       // Same small inline formulas as the CoastFIRE Calculator's PDF export and the RRSP
       // Withholding tool — kept local rather than centralized, matching how those two already

@@ -177,6 +177,62 @@
       <div class="sample-banner warn-banner" id="dtWarnBanner" hidden></div>
     </div>
 
+    <div class="tool-card" id="spouseDtSection" hidden>
+      <h3>Spouse's/partner's departure tax</h3>
+      <div class="card-sub">Deemed disposition applies per taxpayer — your spouse's own gain, cost base, and
+        marginal rate, independent from yours above. No spousal-rollover/joint-election math is modeled here (see
+        the "Spousal rollover option" note below) — this is two independent calculations, summed for a household
+        total.</div>
+
+      <div class="grid3">
+        <div class="field">
+          <label for="dtSpouseNonregFmv">Spouse's non-registered CAD investments — fair market value</label>
+          <input type="text" inputmode="decimal" id="dtSpouseNonregFmv" value="0" min="0" step="100">
+        </div>
+        <div class="field">
+          <label for="dtSpouseNonregAcb">Spouse's non-registered CAD investments — adjusted cost base</label>
+          <input type="text" inputmode="decimal" id="dtSpouseNonregAcb" value="0" min="0" step="100">
+        </div>
+        <div class="field"></div>
+        <div class="field">
+          <label for="dtSpouseOtherFmv">Spouse's other property — fair market value</label>
+          <input type="text" inputmode="decimal" id="dtSpouseOtherFmv" value="0" min="0" step="100">
+        </div>
+        <div class="field">
+          <label for="dtSpouseOtherAcb">Spouse's other property — adjusted cost base</label>
+          <input type="text" inputmode="decimal" id="dtSpouseOtherAcb" value="0" min="0" step="100">
+        </div>
+        <div class="field"></div>
+        <div class="field">
+          <label for="dtSpouseMarginalRate">Spouse's expected marginal tax rate in your departure year (%)</label>
+          <input type="number" inputmode="decimal" id="dtSpouseMarginalRate" value="35" min="0" max="60" step="1">
+        </div>
+      </div>
+      <div class="slider-panel">
+        <h4>Quick adjust — drag to see the estimate update live</h4>
+        <div class="slider-row">
+          <label for="dtSpouseMarginalRateSlider">Spouse's marginal tax rate (%)</label>
+          <input type="range" id="dtSpouseMarginalRateSlider" min="0" max="60" step="1" value="35">
+          <span class="slider-val" id="dtSpouseMarginalRateSliderVal">35%</span>
+        </div>
+      </div>
+      <div class="result-strip" style="margin-top:16px;">
+        <div class="rs-stat">
+          <div class="rs-label">Spouse's capital gain</div>
+          <div class="rs-value" id="dtSpouseGain">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Spouse's taxable amount (50%)</div>
+          <div class="rs-value" id="dtSpouseTaxable">—</div>
+        </div>
+        <div class="rs-stat">
+          <div class="rs-label">Spouse's estimated tax owing</div>
+          <div class="rs-value" id="dtSpouseTaxOwing">—</div>
+        </div>
+      </div>
+      <div class="deferral-note" id="dtSpouseDeferralNote">—</div>
+    </div>
+
     <div class="tool-card">
       <h3>Estimated departure tax</h3>
       <div class="card-sub">Canada's capital gains inclusion rate is 50% for 2026 — half of your gain is added to
@@ -193,6 +249,10 @@
         <div class="rs-stat">
           <div class="rs-label">Estimated tax owing</div>
           <div class="rs-value" id="dtTaxOwing">—</div>
+        </div>
+        <div class="rs-stat" id="dtHouseholdTotalStat" hidden>
+          <div class="rs-label">Household total tax owing</div>
+          <div class="rs-value" id="dtHouseholdTotal">—</div>
         </div>
       </div>
       <div class="deferral-note" id="dtDeferralNote">—</div>
@@ -266,7 +326,7 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Your financial inputs are processed entirely on your device and are never uploaded by us.</footer>
   </div>
 
-  <script src="shared.js?v=efbbffd8"></script>
+  <script src="shared.js?v=bb07dc70"></script>
   <script>
     (function () {
       initTheme();
@@ -348,11 +408,49 @@
         $('departureExemptBox').innerHTML = `<strong>Excluded from departure tax:</strong> ${excludedList} from the
           CoastFIRE Calculator — plus Canadian real estate, CPP/QPP entitlements, employer pension rights, and
           personal-use property under $10,000. None of that is included in the estimate below.`;
+
+        if ($('spouseDtSection').hidden) { $('dtHouseholdTotalStat').hidden = true; return; }
+
+        // Independent calculation, own inputs — deemed disposition is per taxpayer, so this never
+        // combines with the primary's gain/rate before computing tax, only after.
+        const spNonregGain = Math.max(0, num('dtSpouseNonregFmv') - num('dtSpouseNonregAcb'));
+        const spOtherGain = Math.max(0, num('dtSpouseOtherFmv') - num('dtSpouseOtherAcb'));
+        const spTotalGain = spNonregGain + spOtherGain;
+        const spTaxable = spTotalGain * 0.5;
+        const spRate = Math.max(0, Math.min(100, num('dtSpouseMarginalRate'))) / 100;
+        const spTaxOwing = spTaxable * spRate;
+
+        $('dtSpouseGain').textContent = fmt(spTotalGain, 'CAD');
+        $('dtSpouseTaxable').textContent = fmt(spTaxable, 'CAD');
+        $('dtSpouseTaxOwing').textContent = fmt(spTaxOwing, 'CAD');
+
+        // The $16,500 deferral threshold (DEFERRAL_TAX_THRESHOLD) is applied per person here, not
+        // to the combined household total — Form T1244 deferral is filed per taxpayer, each spouse
+        // qualifies (or doesn't) independently of the other's tax owing.
+        const spNote = $('dtSpouseDeferralNote');
+        if (spTaxOwing === 0) {
+          spNote.className = 'deferral-note auto';
+          spNote.textContent = 'No estimated gain, no estimated tax — nothing to defer.';
+        } else if (spTaxOwing < DEFERRAL_TAX_THRESHOLD) {
+          spNote.className = 'deferral-note auto';
+          spNote.textContent = `✅ Under roughly $${DEFERRAL_TAX_THRESHOLD.toLocaleString()} CAD — your spouse would likely qualify for automatic deferral under subsection 220(4.5) by filing their own Form T1244, with no security required.`;
+        } else {
+          spNote.className = 'deferral-note security';
+          spNote.textContent = `📋 Above roughly $${DEFERRAL_TAX_THRESHOLD.toLocaleString()} CAD — your spouse can still elect to defer under their own Form T1244, but the CRA will likely require them to post security.`;
+        }
+
+        $('dtHouseholdTotalStat').hidden = false;
+        $('dtHouseholdTotal').textContent = fmt(taxOwing + spTaxOwing, 'CAD');
       }
 
-      ['dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'dtMarginalRate'].forEach(id => {
+      ['dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'dtMarginalRate',
+        'dtSpouseNonregFmv', 'dtSpouseNonregAcb', 'dtSpouseOtherFmv', 'dtSpouseOtherAcb', 'dtSpouseMarginalRate'].forEach(id => {
         $(id).addEventListener('input', () => { saveInputs(); renderDepartureTax(); });
       });
+
+      // hasSpouse itself is only editable on the CoastFIRE Calculator — this page just reads its
+      // last-saved value once, since there's no live hasSpouse toggle here to react to.
+      if (readStoredInputs().hasSpouse === 'yes') { $('spouseDtSection').hidden = false; }
 
       // ---- Live slider (quick-adjust) for marginal rate, synced both ways with the number field ----
       function syncDtSliderFromField() {
@@ -367,6 +465,19 @@
       $('dtMarginalRateSlider').addEventListener('change', () => { saveInputs(); });
       $('dtMarginalRate').addEventListener('input', syncDtSliderFromField);
       syncDtSliderFromField();
+
+      function syncDtSpouseSliderFromField() {
+        $('dtSpouseMarginalRateSlider').value = num('dtSpouseMarginalRate');
+        $('dtSpouseMarginalRateSliderVal').textContent = num('dtSpouseMarginalRate') + '%';
+      }
+      $('dtSpouseMarginalRateSlider').addEventListener('input', () => {
+        $('dtSpouseMarginalRate').value = $('dtSpouseMarginalRateSlider').value;
+        $('dtSpouseMarginalRateSliderVal').textContent = $('dtSpouseMarginalRateSlider').value + '%';
+        renderDepartureTax();
+      });
+      $('dtSpouseMarginalRateSlider').addEventListener('change', () => { saveInputs(); });
+      $('dtSpouseMarginalRate').addEventListener('input', syncDtSpouseSliderFromField);
+      syncDtSpouseSliderFromField();
 
       renderDepartureTax();
     })();

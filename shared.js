@@ -74,7 +74,11 @@ const COMMA_FIELDS = new Set([
   'dtNonregFmv', 'dtNonregAcb', 'dtOtherFmv', 'dtOtherAcb', 'rwRrspAtRetirement',
   'claimCppBase', 'claimOasBase', 'claimSsBase',
   'ddoRrspBal', 'ddoTfsaBal', 'ddoNonregCadBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoTaxableUsdBal',
-  'mbNetWorth', 'mbTaxLiability'
+  'mbNetWorth', 'mbTaxLiability',
+  // Spouse/partner mode
+  'spouseCppMonthly', 'spouseOasMonthly', 'spouseSsMonthly',
+  'dtSpouseNonregFmv', 'dtSpouseNonregAcb', 'dtSpouseOtherFmv', 'dtSpouseOtherAcb',
+  'spouseClaimCppBase', 'spouseClaimOasBase', 'spouseClaimSsBase'
 ]);
 function formatCommaFieldValue(el) {
   const n = parseNum(el.value);
@@ -763,6 +767,12 @@ const FIELD_IDS = ['currentAge', 'retireAge', 'contribFreq', 'rrspBal', 'rrspCon
   // Drawdown-Order Optimizer
   'ddoPlanToAge', 'ddoFilingStatus', 'ddoCapGainsRate',
   'ddoRrspBal', 'ddoTfsaBal', 'ddoK401Bal', 'ddoIraBal', 'ddoRothBal', 'ddoNonregCadBal', 'ddoTaxableUsdBal',
+  // Spouse/partner mode — accounts stay pooled (see shared.js's compute()/simulateDrawdown() comments);
+  // only age + independent benefit-claiming schedule are tracked per spouse. hasSpouse gates all of it,
+  // default 'no', so every downstream consumer must treat these as inert unless hasSpouse === 'yes'.
+  'hasSpouse', 'spouseCurrentAge', 'spouseCppMonthly', 'spouseOasMonthly', 'spouseSsMonthly', 'spouseBenefitsStartAge',
+  'dtSpouseNonregFmv', 'dtSpouseNonregAcb', 'dtSpouseOtherFmv', 'dtSpouseOtherAcb', 'dtSpouseMarginalRate',
+  'spouseClaimCppBase', 'spouseClaimOasBase', 'spouseClaimSsBase', 'spouseClaimCppAge', 'spouseClaimOasAge', 'spouseClaimSsAge',
   // One-time life events (CoastFIRE Calculator) — JSON-encoded array, see parseLifeEvents()
   'lifeEvents'];
 
@@ -785,6 +795,9 @@ const DEFAULT_FIELD_VALUES = {
   rwWithdrawalType: '0.25', rwRrspAtRetirement: '0',
   ddoPlanToAge: '90', ddoFilingStatus: 'single', ddoCapGainsRate: '15',
   ddoRrspBal: '0', ddoTfsaBal: '0', ddoK401Bal: '0', ddoIraBal: '0', ddoRothBal: '0', ddoNonregCadBal: '0', ddoTaxableUsdBal: '0',
+  hasSpouse: 'no', spouseCurrentAge: '34', spouseCppMonthly: '0', spouseOasMonthly: '0', spouseSsMonthly: '0', spouseBenefitsStartAge: '65',
+  dtSpouseNonregFmv: '0', dtSpouseNonregAcb: '0', dtSpouseOtherFmv: '0', dtSpouseOtherAcb: '0', dtSpouseMarginalRate: '35',
+  spouseClaimCppBase: '0', spouseClaimOasBase: '0', spouseClaimSsBase: '0', spouseClaimCppAge: '65', spouseClaimOasAge: '65', spouseClaimSsAge: '67',
   lifeEvents: '[]'
 };
 
@@ -1300,10 +1313,73 @@ function applyLifeEventsForAge(bal, events, age, exchangeRate, usdConverted) {
   });
 }
 
+// Spouse/partner mode: turns one or two independently-gated benefit-income streams into a
+// single required-at-retirement PV. Generalizes the single-stream 2-segment formula (bridge
+// years + post-benefit annuity) that compute()/computeAtRate()/simulateMonteCarlo()/
+// simulateHistoricalBacktest() all used to duplicate inline — every one of those four call sites
+// (plus drawIncomeStack() in coastfire-calculator.html, which sums per-year rather than calling
+// this) must route through here, or spouse mode goes silently inconsistent across the app.
+//
+// benefitEvents: [{ startYears, annualAmount }, ...] — startYears is years-from-retirement,
+// already clamped to >= 0 by the caller (a benefit already flowing at retirement is a
+// startYears: 0 event, never negative). 1 entry without a spouse (the exact single-stream case
+// this must degenerate to), up to 2 with one.
+//
+// Segment semantics: events are sorted and MERGED by startYears first (two spouses can share a
+// start age — that's one boundary with both amounts summed, not two zero-width segments). Each
+// segment's need is max(0, futureAnnualExpense - activeBenefit), recomputed fresh from the
+// running total at that point — never combined additively across segments. Each finite segment
+// discounts its own annuity-PV back to its own start year; the final segment is capitalized at
+// withdrawalRate exactly like the original single-stream formula.
+function computeCoastNumber({ futureAnnualExpense, returnRate, withdrawalRate, benefitEvents }) {
+  // Only the primary's event (index 0) always creates a boundary — a structural feature of the
+  // original single-stream formula (it switches from annuity-PV to the withdrawalRate perpetuity
+  // approximation exactly at benefitsStartAge, regardless of amount) that must be preserved
+  // exactly for hasSpouse:'no' to degenerate correctly. Every additional event (the spouse's)
+  // only creates a boundary when it carries a nonzero amount — a $0 spouse stream must be a true
+  // no-op. Without this filter, a zero-amount spouse event landing after the primary's own event
+  // would still split what should stay one perpetuity-approximated "forever" segment into an
+  // annuity segment plus a shorter perpetuity segment — two different formulas that do NOT sum to
+  // the same total, silently changing requiredAtRetirement even though no real money moved.
+  const effectiveEvents = benefitEvents.filter((e, i) => i === 0 || e.annualAmount > 0);
+  const boundaries = [...new Set(effectiveEvents.map(e => e.startYears))].sort((a, b) => a - b);
+  let pv = 0, cursor = 0, activeBenefit = 0;
+  for (const boundary of boundaries) {
+    const segYears = boundary - cursor;
+    if (segYears > 0) {
+      const gap = Math.max(0, futureAnnualExpense - activeBenefit);
+      const segPV = returnRate > 0
+        ? gap * (1 - Math.pow(1 + returnRate, -segYears)) / returnRate
+        : gap * segYears;
+      pv += segPV / Math.pow(1 + returnRate, cursor);
+    }
+    activeBenefit += effectiveEvents
+      .filter(e => e.startYears === boundary)
+      .reduce((s, e) => s + e.annualAmount, 0);
+    cursor = boundary;
+  }
+  const finalGap = Math.max(0, futureAnnualExpense - activeBenefit);
+  pv += (finalGap / withdrawalRate) / Math.pow(1 + returnRate, cursor);
+  const requiredAtRetirement = pv;
+  const bridgeYears = boundaries[0] || 0;
+  return {
+    requiredAtRetirement,
+    bridgeYears,
+    coastNumberAt: yrsRemaining => requiredAtRetirement / Math.pow(1 + returnRate, Math.max(0, yrsRemaining))
+  };
+}
+
 function compute(overrides) {
   overrides = overrides || {};
   const raw = id => (overrides[id] !== undefined ? overrides[id] : $(id).value);
   const val = id => parseNum(raw(id));
+  // Spouse fields only — falls back to a caller-supplied default instead of $(id) when running
+  // outside a browser (e.g. node --test), since every existing test fixture supplies a complete
+  // overrides object and never exercises the $(id) fallback that raw()/val() above still use for
+  // every pre-existing field. See rawOrDefault's other call sites for the same guard.
+  const rawOrDefault = (id, dflt) =>
+    overrides[id] !== undefined ? overrides[id]
+      : (typeof document !== 'undefined' && $(id)) ? $(id).value : dflt;
 
   const currentAge = val('currentAge');
   const retireAge = val('retireAge');
@@ -1319,6 +1395,12 @@ function compute(overrides) {
   const cppMonthly = val('cppMonthly'), oasMonthly = val('oasMonthly'), ssMonthly = val('ssMonthly');
   const benefitsStartAge = val('benefitsStartAge');
   const lifeEvents = parseLifeEvents(raw('lifeEvents'));
+  const hasSpouse = rawOrDefault('hasSpouse', 'no') === 'yes';
+  const spouseCurrentAge = parseNum(rawOrDefault('spouseCurrentAge', '0'));
+  const spouseCppMonthly = parseNum(rawOrDefault('spouseCppMonthly', '0'));
+  const spouseOasMonthly = parseNum(rawOrDefault('spouseOasMonthly', '0'));
+  const spouseSsMonthly = parseNum(rawOrDefault('spouseSsMonthly', '0'));
+  const spouseBenefitsStartAge = parseNum(rawOrDefault('spouseBenefitsStartAge', '65'));
   const dragKeys = raw('taxDragEnabled') === 'yes' ? TAX_DRAG_ACCOUNT_KEYS : undefined;
 
   let bal = {
@@ -1341,19 +1423,22 @@ function compute(overrides) {
   // entered as the amount you'd expect when you claim them).
   const annualGovBenefit = convertToReport((cppMonthly + oasMonthly) * 12, ssMonthly * 12, reportCurrency, exchangeRate);
   const annualGapAfterBenefits = Math.max(0, futureAnnualExpense - annualGovBenefit);
-  const bridgeYears = Math.max(0, benefitsStartAge - retireAge);
-
-  // Bridge years (retirement -> benefits start): portfolio funds 100% of expenses.
-  const pvBridge = bridgeYears > 0
-    ? (returnRate > 0
-      ? futureAnnualExpense * (1 - Math.pow(1 + returnRate, -bridgeYears)) / returnRate
-      : futureAnnualExpense * bridgeYears)
+  const spouseAnnualGovBenefit = hasSpouse
+    ? convertToReport((spouseCppMonthly + spouseOasMonthly) * 12, spouseSsMonthly * 12, reportCurrency, exchangeRate)
     : 0;
-  // After benefits start: portfolio only needs to cover the gap, valued back to retirement age.
-  const pvPostBenefit = (annualGapAfterBenefits / withdrawalRate) / Math.pow(1 + returnRate, bridgeYears);
+  const householdAnnualGovBenefit = annualGovBenefit + spouseAnnualGovBenefit;
 
-  const requiredAtRetirement = pvBridge + pvPostBenefit;
-  const coastNumberAt = yrsRemaining => requiredAtRetirement / Math.pow(1 + returnRate, Math.max(0, yrsRemaining));
+  // One benefit event for the primary, plus a second for the spouse when hasSpouse is on —
+  // computeCoastNumber() handles 1 or 2 events identically, degenerating term-for-term to the
+  // original single-stream formula when there's only one. spouseAgeAtRetirement converts the
+  // spouse's own claiming age into years-from-the-shared-retirement-date, since spouses share one
+  // retireAge but keep independent current ages (see plan: shared-retirement-date decision).
+  const benefitEvents = [{ startYears: Math.max(0, benefitsStartAge - retireAge), annualAmount: annualGovBenefit }];
+  if (hasSpouse) {
+    const spouseAgeAtRetirement = spouseCurrentAge + n;
+    benefitEvents.push({ startYears: Math.max(0, spouseBenefitsStartAge - spouseAgeAtRetirement), annualAmount: spouseAnnualGovBenefit });
+  }
+  const { requiredAtRetirement, bridgeYears, coastNumberAt } = computeCoastNumber({ futureAnnualExpense, returnRate, withdrawalRate, benefitEvents });
 
   const currentYear = new Date().getFullYear();
   let coastedFlag = false, coastYearIndex = null;
@@ -1397,7 +1482,13 @@ function compute(overrides) {
     coastNumberToday: coastNumberAt(n), rows, coastYearIndex, currentYear, stopAtCoast,
     annualGovBenefit, annualGapAfterBenefits, bridgeYears, futureAnnualExpense,
     cppMonthly, oasMonthly, ssMonthly, returnRate, withdrawalRate, benefitsStartAge, inflationRate,
-    cadTotalToday: rows[0].cadTotal, usdTotalToday: rows[0].usdTotal, startBal
+    cadTotalToday: rows[0].cadTotal, usdTotalToday: rows[0].usdTotal, startBal,
+    // Spouse/partner mode — annualGovBenefit above keeps its existing primary-only meaning for
+    // backward compatibility; householdAnnualGovBenefit is the new "once both are claiming"
+    // total. hasSpouse === false makes every spouse field here inert (spouseAnnualGovBenefit is
+    // 0, householdAnnualGovBenefit === annualGovBenefit).
+    hasSpouse, spouseCurrentAge, spouseCppMonthly, spouseOasMonthly, spouseSsMonthly,
+    spouseBenefitsStartAge, spouseAnnualGovBenefit, householdAnnualGovBenefit
   };
 }
 
@@ -1406,15 +1497,21 @@ function compute(overrides) {
 function computeAtRate(res, rate) {
   const combined = convertToReport(res.cadTotalToday, res.usdTotalToday, res.reportCurrency, rate);
   const annualGov = convertToReport((res.cppMonthly + res.oasMonthly) * 12, res.ssMonthly * 12, res.reportCurrency, rate);
-  const annualGap = Math.max(0, res.futureAnnualExpense - annualGov);
-  const pvBridge = res.bridgeYears > 0
-    ? (res.returnRate > 0
-      ? res.futureAnnualExpense * (1 - Math.pow(1 + res.returnRate, -res.bridgeYears)) / res.returnRate
-      : res.futureAnnualExpense * res.bridgeYears)
+  // Spouse's benefit amount must be re-converted at the new rate too, not reused from
+  // res.spouseAnnualGovBenefit (computed at the originally-stored rate) — FX sensitivity is this
+  // function's entire purpose, so reusing a stale conversion would silently misreport it.
+  const spouseAnnualGov = res.hasSpouse
+    ? convertToReport((res.spouseCppMonthly + res.spouseOasMonthly) * 12, res.spouseSsMonthly * 12, res.reportCurrency, rate)
     : 0;
-  const pvPostBenefit = (annualGap / res.withdrawalRate) / Math.pow(1 + res.returnRate, res.bridgeYears);
-  const required = pvBridge + pvPostBenefit;
-  const coastNumber = required / Math.pow(1 + res.returnRate, res.n);
+  const benefitEvents = [{ startYears: Math.max(0, res.benefitsStartAge - res.retireAge), annualAmount: annualGov }];
+  if (res.hasSpouse) {
+    const spouseAgeAtRetirement = res.spouseCurrentAge + res.n;
+    benefitEvents.push({ startYears: Math.max(0, res.spouseBenefitsStartAge - spouseAgeAtRetirement), annualAmount: spouseAnnualGov });
+  }
+  const { requiredAtRetirement } = computeCoastNumber({
+    futureAnnualExpense: res.futureAnnualExpense, returnRate: res.returnRate, withdrawalRate: res.withdrawalRate, benefitEvents
+  });
+  const coastNumber = requiredAtRetirement / Math.pow(1 + res.returnRate, res.n);
   return { combined, coastNumber };
 }
 
@@ -1435,6 +1532,9 @@ function simulateMonteCarlo(overrides, trials, stdevReturn) {
   overrides = overrides || {};
   const raw = id => (overrides[id] !== undefined ? overrides[id] : $(id).value);
   const val = id => parseNum(raw(id));
+  const rawOrDefault = (id, dflt) =>
+    overrides[id] !== undefined ? overrides[id]
+      : (typeof document !== 'undefined' && $(id)) ? $(id).value : dflt;
 
   const currentAge = val('currentAge');
   const retireAge = val('retireAge');
@@ -1451,6 +1551,12 @@ function simulateMonteCarlo(overrides, trials, stdevReturn) {
   const benefitsStartAge = val('benefitsStartAge');
   const lifeEvents = parseLifeEvents(raw('lifeEvents'));
   const dragKeys = raw('taxDragEnabled') === 'yes' ? TAX_DRAG_ACCOUNT_KEYS : undefined;
+  const hasSpouse = rawOrDefault('hasSpouse', 'no') === 'yes';
+  const spouseCurrentAge = parseNum(rawOrDefault('spouseCurrentAge', '0'));
+  const spouseCppMonthly = parseNum(rawOrDefault('spouseCppMonthly', '0'));
+  const spouseOasMonthly = parseNum(rawOrDefault('spouseOasMonthly', '0'));
+  const spouseSsMonthly = parseNum(rawOrDefault('spouseSsMonthly', '0'));
+  const spouseBenefitsStartAge = parseNum(rawOrDefault('spouseBenefitsStartAge', '65'));
 
   const startBal = {
     rrsp: val('rrspBal'), tfsa: val('tfsaBal'), nonregCad: val('nonregCadBal'), fhsa: val('fhsaBal'), resp: val('respBal'),
@@ -1465,16 +1571,15 @@ function simulateMonteCarlo(overrides, trials, stdevReturn) {
 
   const futureAnnualExpense = monthlyExpenses * Math.pow(1 + inflationRate, n) * 12;
   const annualGovBenefit = convertToReport((cppMonthly + oasMonthly) * 12, ssMonthly * 12, reportCurrency, exchangeRate);
-  const annualGapAfterBenefits = Math.max(0, futureAnnualExpense - annualGovBenefit);
-  const bridgeYears = Math.max(0, benefitsStartAge - retireAge);
-  const pvBridge = bridgeYears > 0
-    ? (meanReturn > 0
-      ? futureAnnualExpense * (1 - Math.pow(1 + meanReturn, -bridgeYears)) / meanReturn
-      : futureAnnualExpense * bridgeYears)
+  const spouseAnnualGovBenefit = hasSpouse
+    ? convertToReport((spouseCppMonthly + spouseOasMonthly) * 12, spouseSsMonthly * 12, reportCurrency, exchangeRate)
     : 0;
-  const pvPostBenefit = (annualGapAfterBenefits / withdrawalRate) / Math.pow(1 + meanReturn, bridgeYears);
-  const requiredAtRetirement = pvBridge + pvPostBenefit;
-  const coastNumberAt = yrsRemaining => requiredAtRetirement / Math.pow(1 + meanReturn, Math.max(0, yrsRemaining));
+  const benefitEvents = [{ startYears: Math.max(0, benefitsStartAge - retireAge), annualAmount: annualGovBenefit }];
+  if (hasSpouse) {
+    const spouseAgeAtRetirement = spouseCurrentAge + n;
+    benefitEvents.push({ startYears: Math.max(0, spouseBenefitsStartAge - spouseAgeAtRetirement), annualAmount: spouseAnnualGovBenefit });
+  }
+  const { requiredAtRetirement, coastNumberAt } = computeCoastNumber({ futureAnnualExpense, returnRate: meanReturn, withdrawalRate, benefitEvents });
 
   const currentYear = new Date().getFullYear();
   const paths = []; // trials x (n+1) combined-balance series
@@ -1562,6 +1667,9 @@ function simulateHistoricalBacktest(overrides, series) {
   overrides = overrides || {};
   const raw = id => (overrides[id] !== undefined ? overrides[id] : $(id).value);
   const val = id => parseNum(raw(id));
+  const rawOrDefault = (id, dflt) =>
+    overrides[id] !== undefined ? overrides[id]
+      : (typeof document !== 'undefined' && $(id)) ? $(id).value : dflt;
 
   const currentAge = val('currentAge');
   const retireAge = val('retireAge');
@@ -1580,6 +1688,12 @@ function simulateHistoricalBacktest(overrides, series) {
   const benefitsStartAge = val('benefitsStartAge');
   const lifeEvents = parseLifeEvents(raw('lifeEvents'));
   const dragKeys = raw('taxDragEnabled') === 'yes' ? TAX_DRAG_ACCOUNT_KEYS : undefined;
+  const hasSpouse = rawOrDefault('hasSpouse', 'no') === 'yes';
+  const spouseCurrentAge = parseNum(rawOrDefault('spouseCurrentAge', '0'));
+  const spouseCppMonthly = parseNum(rawOrDefault('spouseCppMonthly', '0'));
+  const spouseOasMonthly = parseNum(rawOrDefault('spouseOasMonthly', '0'));
+  const spouseSsMonthly = parseNum(rawOrDefault('spouseSsMonthly', '0'));
+  const spouseBenefitsStartAge = parseNum(rawOrDefault('spouseBenefitsStartAge', '65'));
 
   const startBal = {
     rrsp: val('rrspBal'), tfsa: val('tfsaBal'), nonregCad: val('nonregCadBal'), fhsa: val('fhsaBal'), resp: val('respBal'),
@@ -1594,16 +1708,15 @@ function simulateHistoricalBacktest(overrides, series) {
 
   const futureAnnualExpense = monthlyExpenses * Math.pow(1 + inflationRate, n) * 12;
   const annualGovBenefit = convertToReport((cppMonthly + oasMonthly) * 12, ssMonthly * 12, reportCurrency, exchangeRate);
-  const annualGapAfterBenefits = Math.max(0, futureAnnualExpense - annualGovBenefit);
-  const bridgeYears = Math.max(0, benefitsStartAge - retireAge);
-  const pvBridge = bridgeYears > 0
-    ? (meanReturn > 0
-      ? futureAnnualExpense * (1 - Math.pow(1 + meanReturn, -bridgeYears)) / meanReturn
-      : futureAnnualExpense * bridgeYears)
+  const spouseAnnualGovBenefit = hasSpouse
+    ? convertToReport((spouseCppMonthly + spouseOasMonthly) * 12, spouseSsMonthly * 12, reportCurrency, exchangeRate)
     : 0;
-  const pvPostBenefit = (annualGapAfterBenefits / withdrawalRate) / Math.pow(1 + meanReturn, bridgeYears);
-  const requiredAtRetirement = pvBridge + pvPostBenefit;
-  const coastNumberAt = yrsRemaining => requiredAtRetirement / Math.pow(1 + meanReturn, Math.max(0, yrsRemaining));
+  const benefitEvents = [{ startYears: Math.max(0, benefitsStartAge - retireAge), annualAmount: annualGovBenefit }];
+  if (hasSpouse) {
+    const spouseAgeAtRetirement = spouseCurrentAge + n;
+    benefitEvents.push({ startYears: Math.max(0, spouseBenefitsStartAge - spouseAgeAtRetirement), annualAmount: spouseAnnualGovBenefit });
+  }
+  const { requiredAtRetirement, coastNumberAt } = computeCoastNumber({ futureAnnualExpense, returnRate: meanReturn, withdrawalRate, benefitEvents });
 
   const currentYear = new Date().getFullYear();
   const windowCount = series.length - n;
@@ -1888,7 +2001,16 @@ function buildDecumulationOverrides(res, storedInputs) {
     cppMonthly: res.cppMonthly, oasMonthly: res.oasMonthly, ssMonthly: res.ssMonthly,
     benefitsStartAge: res.benefitsStartAge, lifeEvents: storedInputs.lifeEvents,
     ddoRrspBal: last.rrsp, ddoTfsaBal: last.tfsa, ddoNonregCadBal: last.nonregCad,
-    ddoK401Bal: last.k401, ddoIraBal: last.ira, ddoRothBal: last.roth, ddoTaxableUsdBal: last.taxableUsd
+    ddoK401Bal: last.k401, ddoIraBal: last.ira, ddoRothBal: last.roth, ddoTaxableUsdBal: last.taxableUsd,
+    // Spouse/partner mode — mirrors how cppMonthly/oasMonthly/ssMonthly/benefitsStartAge above
+    // are already bridged from the compute() result rather than re-read from storage.
+    // res.hasSpouse is a real JS boolean (compute()'s own return-object convenience typing) but
+    // simulateDrawdown() reads it with strict `=== 'yes'` string equality, matching every other
+    // FIELD_IDS-string field — `true === 'yes'` is false, so this must be re-stringified here or
+    // the spouse's benefit silently drops out of the CoastFIRE chart's decumulation extension.
+    hasSpouse: res.hasSpouse ? 'yes' : 'no', spouseCurrentAge: res.spouseCurrentAge,
+    spouseCppMonthly: res.spouseCppMonthly, spouseOasMonthly: res.spouseOasMonthly, spouseSsMonthly: res.spouseSsMonthly,
+    spouseBenefitsStartAge: res.spouseBenefitsStartAge
   };
 }
 
@@ -1914,6 +2036,12 @@ function simulateDrawdown(overrides, strategyName) {
   const filingStatus = raw('ddoFilingStatus') === 'mfj' ? 'mfj' : 'single';
   const capGainsRate = Math.max(0, val('ddoCapGainsRate')) / 100;
   const lifeEvents = parseLifeEvents(raw('lifeEvents'));
+  // No DOM fallback here (raw = id => overrides[id], not $(id).value) — missing spouse keys just
+  // resolve to undefined/0/false below, so no rawOrDefault guard is needed in this function.
+  const hasSpouse = raw('hasSpouse') === 'yes';
+  const spouseCurrentAge = val('spouseCurrentAge');
+  const spouseCppMonthly = val('spouseCppMonthly'), spouseOasMonthly = val('spouseOasMonthly'), spouseSsMonthly = val('spouseSsMonthly');
+  const spouseBenefitsStartAge = val('spouseBenefitsStartAge');
 
   const brackets = US_TAX_BRACKETS_2026[filingStatus];
   const standardDeduction = US_STANDARD_DEDUCTION_2026[filingStatus];
@@ -1930,6 +2058,8 @@ function simulateDrawdown(overrides, strategyName) {
   const annualGovBenefitReport = convertToReport((cppMonthly + oasMonthly) * 12, ssMonthly * 12, reportCurrency, exchangeRate);
   const futureAnnualExpense = toUsd(futureAnnualExpenseReport, reportCurrency, exchangeRate);
   const annualGovBenefit = toUsd(annualGovBenefitReport, reportCurrency, exchangeRate);
+  const spouseAnnualGovBenefitReport = convertToReport((spouseCppMonthly + spouseOasMonthly) * 12, spouseSsMonthly * 12, reportCurrency, exchangeRate);
+  const spouseAnnualGovBenefit = toUsd(spouseAnnualGovBenefitReport, reportCurrency, exchangeRate);
 
   const strategy = DRAWDOWN_STRATEGIES[strategyName] || DRAWDOWN_STRATEGIES.greedy;
   const currentYear = new Date().getFullYear();
@@ -1939,7 +2069,14 @@ function simulateDrawdown(overrides, strategyName) {
   for (let i = 0; i <= n; i++) {
     const age = retireAge + i;
     applyLifeEventsForAge(bal, lifeEvents, age, exchangeRate, true);
-    const govBenefit = age >= benefitsStartAge ? annualGovBenefit : 0;
+    // Spouses share one retirement date but keep independent ages — spouseAge preserves the
+    // gap between the two rather than assuming they're the same age (see plan's shared-
+    // retirement-date decision). The hasSpouse guard is required, not redundant with zero
+    // defaults: a user who toggles spouse mode off after filling in spouse fields leaves those
+    // fields nonzero in storage, and only this explicit gate makes hasSpouse:false actually inert.
+    const spouseAge = age - (currentAge - spouseCurrentAge);
+    const govBenefit = (age >= benefitsStartAge ? annualGovBenefit : 0)
+      + (hasSpouse && spouseAge >= spouseBenefitsStartAge ? spouseAnnualGovBenefit : 0);
     const netNeed = Math.max(0, futureAnnualExpense - govBenefit);
 
     // The withdrawal itself is taxed, so pulling exactly `netNeed` would leave less than
@@ -2043,7 +2180,7 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     escapeHtml, sanitizeImportedName, parseNum, parseLifeEvents,
-    compute, stepAccounts, convertToReport, simulateDrawdown, buildDecumulationOverrides,
+    compute, computeAtRate, computeCoastNumber, stepAccounts, convertToReport, simulateDrawdown, buildDecumulationOverrides,
     simulateMonteCarlo, simulateHistoricalBacktest, SP500_REAL_RETURNS, analyzeConversionWindow,
     cppFactor, oasFactor, ssFactor,
     SENSITIVE_SHARE_FIELDS, buildSharePayload, parseShareParamsString,

@@ -179,6 +179,60 @@
       <div class="assumptions-note" id="claimBreakevenNote"></div>
     </div>
 
+    <div id="spouseClaimSection" hidden>
+      <div class="tool-card">
+        <div class="prefill-note"><span class="pn-icon">↺</span>Your spouse's/partner's own amounts — independent
+          from yours above, since real households aren't guaranteed to claim on the same schedule.</div>
+        <div class="grid3">
+          <div class="field">
+            <label for="spouseClaimCppBase">Spouse's CPP amount at age 65 ($ CAD)</label>
+            <input type="text" inputmode="decimal" id="spouseClaimCppBase" value="0" min="0" step="10">
+          </div>
+          <div class="field">
+            <label for="spouseClaimOasBase">Spouse's OAS amount at age 65 ($ CAD)</label>
+            <input type="text" inputmode="decimal" id="spouseClaimOasBase" value="0" min="0" step="1">
+          </div>
+          <div class="field">
+            <label for="spouseClaimSsBase">Spouse's Social Security amount at full retirement age 67 ($ USD)</label>
+            <input type="text" inputmode="decimal" id="spouseClaimSsBase" value="0" min="0" step="10">
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <h3>Pick a claiming age for each — spouse</h3>
+        <div class="claim-grid">
+          <div class="claim-col">
+            <h4><span class="chip ca">CA</span> CPP (60-70)</h4>
+            <input type="range" id="spouseClaimCppAge" min="60" max="70" step="1" value="65" aria-label="Age spouse claims CPP" style="width:100%;accent-color:var(--harbor);">
+            <div class="slider-val" id="spouseClaimCppAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 65</div>
+            <div class="claim-amount" id="spouseClaimCppAmount">—</div>
+            <div class="claim-factor" id="spouseClaimCppFactor">—</div>
+          </div>
+          <div class="claim-col">
+            <h4><span class="chip ca">CA</span> OAS (65-70)</h4>
+            <input type="range" id="spouseClaimOasAge" min="65" max="70" step="1" value="65" aria-label="Age spouse claims OAS" style="width:100%;accent-color:var(--harbor);">
+            <div class="slider-val" id="spouseClaimOasAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 65</div>
+            <div class="claim-amount" id="spouseClaimOasAmount">—</div>
+            <div class="claim-factor" id="spouseClaimOasFactor">—</div>
+          </div>
+          <div class="claim-col">
+            <h4><span class="chip us">US</span> Social Security (62-70)</h4>
+            <input type="range" id="spouseClaimSsAge" min="62" max="70" step="1" value="67" aria-label="Age spouse claims Social Security" style="width:100%;accent-color:var(--harbor);">
+            <div class="slider-val" id="spouseClaimSsAgeVal" style="text-align:center;font-family:'IBM Plex Mono',monospace;">Age 67</div>
+            <div class="claim-amount" id="spouseClaimSsAmount">—</div>
+            <div class="claim-factor" id="spouseClaimSsFactor">—</div>
+          </div>
+        </div>
+        <div class="card-sub" style="margin-top:8px;">Uses the same "plan to age" assumption as above.</div>
+      </div>
+
+      <div class="tool-card">
+        <h3>Spouse: earliest vs. standard vs. latest vs. your choice</h3>
+        <div id="spouseClaimStrategyTables"></div>
+      </div>
+    </div>
+
     <div class="tool-card">
       <h3>Use these choices in your CoastFIRE plan</h3>
       <div class="card-sub">This saves your chosen ages and adjusted amounts into the CoastFIRE Calculator's
@@ -233,7 +287,7 @@
     <footer>Two Currencies, One Number · Not tax, legal, or immigration advice · 🔒 Your financial inputs are processed entirely on your device and are never uploaded by us.</footer>
   </div>
 
-  <script src="shared.js?v=efbbffd8"></script>
+  <script src="shared.js?v=bb07dc70"></script>
   <script>
     (function () {
       initTheme();
@@ -341,9 +395,38 @@
         if (cppBE) note += `If you delay CPP from 60 to 70, delaying comes out ahead once you live past about age ${Math.round(cppBE)}. `;
         if (ssBE) note += `For Social Security, delaying from 62 to 70 comes out ahead once you live past about age ${Math.round(ssBE)}.`;
         $('claimBreakevenNote').textContent = note || 'Adjust the sliders above to compare strategies.';
+
+        if ($('spouseClaimSection').hidden) return;
+        const spCppAge = parseInt($('spouseClaimCppAge').value, 10);
+        const spOasAge = parseInt($('spouseClaimOasAge').value, 10);
+        const spSsAge = parseInt($('spouseClaimSsAge').value, 10);
+
+        $('spouseClaimCppAgeVal').textContent = 'Age ' + spCppAge;
+        $('spouseClaimOasAgeVal').textContent = 'Age ' + spOasAge;
+        $('spouseClaimSsAgeVal').textContent = 'Age ' + spSsAge;
+
+        const spCppBase = num('spouseClaimCppBase'), spOasBase = num('spouseClaimOasBase'), spSsBase = num('spouseClaimSsBase');
+        const spCppF = cppFactor(spCppAge), spOasF = oasFactor(spOasAge), spSsF = ssFactor(spSsAge);
+
+        $('spouseClaimCppAmount').textContent = fmt(spCppBase * spCppF, 'CAD') + '/mo';
+        $('spouseClaimOasAmount').textContent = fmt(spOasBase * spOasF, 'CAD') + '/mo';
+        $('spouseClaimSsAmount').textContent = fmt(spSsBase * spSsF, 'USD') + '/mo';
+        $('spouseClaimCppFactor').textContent = (spCppF >= 1 ? '+' : '') + Math.round((spCppF - 1) * 100) + '% vs. age 65';
+        $('spouseClaimOasFactor').textContent = (spOasF >= 1 ? '+' : '') + Math.round((spOasF - 1) * 100) + '% vs. age 65';
+        $('spouseClaimSsFactor').textContent = (spSsF >= 1 ? '+' : '') + Math.round((spSsF - 1) * 100) + '% vs. age 67';
+
+        $('spouseClaimStrategyTables').innerHTML =
+          strategyTableHtml('CPP', spCppBase, cppFactor, 60, 70, spCppAge, planToAge, 'CAD') +
+          strategyTableHtml('OAS', spOasBase, oasFactor, 65, 70, spOasAge, planToAge, 'CAD') +
+          strategyTableHtml('Social Security', spSsBase, ssFactor, 62, 70, spSsAge, planToAge, 'USD');
       }
 
-      ['claimCppAge', 'claimOasAge', 'claimSsAge', 'claimCppBase', 'claimOasBase', 'claimSsBase', 'claimPlanToAge'].forEach(id => {
+      // hasSpouse itself is only editable on the CoastFIRE Calculator — this page just reads its
+      // last-saved value once, since there's no live hasSpouse toggle here to react to.
+      if (readStoredInputs().hasSpouse === 'yes') { $('spouseClaimSection').hidden = false; }
+
+      ['claimCppAge', 'claimOasAge', 'claimSsAge', 'claimCppBase', 'claimOasBase', 'claimSsBase', 'claimPlanToAge',
+        'spouseClaimCppAge', 'spouseClaimOasAge', 'spouseClaimSsAge', 'spouseClaimCppBase', 'spouseClaimOasBase', 'spouseClaimSsBase'].forEach(id => {
         $(id).addEventListener('input', () => { saveInputs(); renderClaimingTool(); });
       });
 
@@ -355,12 +438,26 @@
         const cppAge = parseInt($('claimCppAge').value, 10);
         const oasAge = parseInt($('claimOasAge').value, 10);
         const ssAge = parseInt($('claimSsAge').value, 10);
-        writeStoredInputs({
+        const patch = {
           cppMonthly: String(Math.round(num('claimCppBase') * cppFactor(cppAge))),
           oasMonthly: String(Math.round(num('claimOasBase') * oasFactor(oasAge))),
           ssMonthly: String(Math.round(num('claimSsBase') * ssFactor(ssAge))),
           benefitsStartAge: String(Math.max(cppAge, oasAge, ssAge))
-        });
+        };
+        // Only write spouse fields when the spouse card is actually visible — an independent
+        // Math.max() collapse of the spouse's own 3 ages, never mixed with the primary's. Gating
+        // the write (not just relying on the read-side hasSpouse guard elsewhere) keeps a stray
+        // nonzero spouse value from appearing on every single Apply click.
+        if (!$('spouseClaimSection').hidden) {
+          const spCppAge = parseInt($('spouseClaimCppAge').value, 10);
+          const spOasAge = parseInt($('spouseClaimOasAge').value, 10);
+          const spSsAge = parseInt($('spouseClaimSsAge').value, 10);
+          patch.spouseCppMonthly = String(Math.round(num('spouseClaimCppBase') * cppFactor(spCppAge)));
+          patch.spouseOasMonthly = String(Math.round(num('spouseClaimOasBase') * oasFactor(spOasAge)));
+          patch.spouseSsMonthly = String(Math.round(num('spouseClaimSsBase') * ssFactor(spSsAge)));
+          patch.spouseBenefitsStartAge = String(Math.max(spCppAge, spOasAge, spSsAge));
+        }
+        writeStoredInputs(patch);
         const fb = $('applyClaimingFeedback');
         fb.innerHTML = 'Applied — <a href="/coastfire-calculator">open your updated CoastFIRE plan →</a>';
         fb.style.opacity = 1;
