@@ -1299,12 +1299,34 @@ button.export:hover {
 .gterm-popover strong { color: var(--harbor); }
 .gterm-popover[hidden] { display: none; }
 
+.gterm-backdrop { position: fixed; inset: 0; z-index: 240; background: rgba(0, 0, 0, .4); }
+.gterm-backdrop[hidden] { display: none; }
+.gterm-close {
+  float: right; background: none; border: none; color: var(--ink-soft); cursor: pointer;
+  font-size: 16px; line-height: 1; padding: 4px; margin: -4px -4px 0 8px;
+}
+.gterm-close:hover { color: var(--ink); }
+
+/* Below 560px a glossary popover becomes a bottom sheet (reusing the mobile drawer's backdrop
+   + fixed-bottom pattern from Phase 3) instead of a small floating tooltip — some definitions
+   run long enough that a corner popover would overflow or clip on a narrow screen. */
+@media(max-width: 560px) {
+  .gterm-popover {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 250;
+    max-width: none; width: 100%; max-height: 60vh; overflow-y: auto;
+    border-radius: 14px 14px 0 0;
+    padding: 18px 20px calc(20px + env(safe-area-inset-bottom));
+    font-size: 14.5px;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, .25);
+  }
+}
+
 /* ==================================================================
    Site bar — sticky header replacing the old flat page-nav. Frozen at 5 elements: brand,
    Tools dropdown, Guides, search, theme. Below 760px, Tools/Guides collapse into a
    hamburger-driven slide-in drawer (further down this file).
    ================================================================== */
-:root { --nav-h: 56px; }
+:root { --nav-h: calc(56px + env(safe-area-inset-top)); }
 
 .site-bar {
   position: sticky; top: 0; z-index: 90;
@@ -1315,7 +1337,7 @@ button.export:hover {
 @supports not (backdrop-filter: blur(1px)) {
   .site-bar { background: var(--paper); }
 }
-.site-bar-inner { display: flex; align-items: center; gap: 20px; height: var(--nav-h); }
+.site-bar-inner { display: flex; align-items: center; gap: 20px; min-height: 56px; padding-top: env(safe-area-inset-top); }
 
 .brand { display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--ink); flex: none; }
 .brand .brand-plus { color: var(--ink-soft); font-weight: 400; font-size: 13px; }
@@ -1394,7 +1416,8 @@ a.nav-item[aria-current="page"] { color: var(--ink); }
   width: min(85vw, 360px);
   background: var(--paper); border-left: 1px solid var(--line);
   box-shadow: -8px 0 30px rgba(0, 0, 0, .2);
-  overflow-y: auto; padding: 18px 16px;
+  overflow-y: auto;
+  padding: 18px calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) 16px;
 }
 body.drawer-open { overflow: hidden; }
 
@@ -1475,7 +1498,7 @@ body.drawer-open { overflow: hidden; }
 }
 
 .back-to-top {
-  position: fixed; bottom: 22px; right: 22px; z-index: 30;
+  position: fixed; bottom: calc(22px + env(safe-area-inset-bottom)); right: calc(22px + env(safe-area-inset-right)); z-index: 30;
   width: 46px; height: 46px; border-radius: 50%;
   background: var(--ink); color: var(--paper); border: none;
   font-size: 18px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25);

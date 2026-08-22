@@ -187,11 +187,17 @@ const GLOSSARY = {
 };
 
 let gtermPopoverEl = null;
+let gtermBackdropEl = null;
 let gtermHideTimer = null;
+// Below this width, openGtermPopover() renders a bottom sheet (CSS handles the fixed-bottom
+// layout) instead of positioning a small tooltip near the trigger — see the matching
+// @media(max-width: 560px) block in styles.css.
+const GTERM_SHEET_QUERY = '(max-width: 560px)';
 function closeGtermPopover() {
   clearTimeout(gtermHideTimer);
   if (!gtermPopoverEl || gtermPopoverEl.hidden) return;
   gtermPopoverEl.hidden = true;
+  if (gtermBackdropEl) gtermBackdropEl.hidden = true;
   const openTrigger = document.querySelector('.gterm[aria-expanded="true"]');
   if (openTrigger) { openTrigger.setAttribute('aria-expanded', 'false'); openTrigger.removeAttribute('aria-describedby'); }
 }
@@ -209,14 +215,33 @@ function openGtermPopover(trigger) {
     gtermPopoverEl.addEventListener('mouseenter', () => clearTimeout(gtermHideTimer));
     gtermPopoverEl.addEventListener('mouseleave', scheduleGtermHide);
     document.body.appendChild(gtermPopoverEl);
+
+    gtermBackdropEl = document.createElement('div');
+    gtermBackdropEl.className = 'gterm-backdrop';
+    gtermBackdropEl.hidden = true;
+    gtermBackdropEl.addEventListener('click', closeGtermPopover);
+    document.body.appendChild(gtermBackdropEl);
   }
+  const isSheet = window.matchMedia(GTERM_SHEET_QUERY).matches;
   // lint-sinks-ok: entry comes from the internal GLOSSARY dict, keyed by a fixed data-term attribute
-  gtermPopoverEl.innerHTML = `<strong>${entry.label}</strong><br>${entry.def}`;
+  gtermPopoverEl.innerHTML = isSheet
+    ? `<button type="button" class="gterm-close" aria-label="Close">✕</button><strong>${entry.label}</strong><br>${entry.def}`
+    : `<strong>${entry.label}</strong><br>${entry.def}`;
   gtermPopoverEl.hidden = false;
-  const r = trigger.getBoundingClientRect();
-  gtermPopoverEl.style.top = (window.scrollY + r.bottom + 6) + 'px';
-  const maxLeft = window.scrollX + document.documentElement.clientWidth - gtermPopoverEl.offsetWidth - 8;
-  gtermPopoverEl.style.left = Math.max(8, Math.min(window.scrollX + r.left, maxLeft)) + 'px';
+  if (isSheet) {
+    // CSS positions the sheet at a fixed bottom offset — clear any inline top/left left over
+    // from a desktop-width open before the viewport shrank.
+    gtermPopoverEl.style.top = '';
+    gtermPopoverEl.style.left = '';
+    gtermBackdropEl.hidden = false;
+    gtermPopoverEl.querySelector('.gterm-close').addEventListener('click', closeGtermPopover);
+  } else {
+    gtermBackdropEl.hidden = true;
+    const r = trigger.getBoundingClientRect();
+    gtermPopoverEl.style.top = (window.scrollY + r.bottom + 6) + 'px';
+    const maxLeft = window.scrollX + document.documentElement.clientWidth - gtermPopoverEl.offsetWidth - 8;
+    gtermPopoverEl.style.left = Math.max(8, Math.min(window.scrollX + r.left, maxLeft)) + 'px';
+  }
   document.querySelectorAll('.gterm[aria-expanded="true"]').forEach(b => { if (b !== trigger) b.setAttribute('aria-expanded', 'false'); });
   trigger.setAttribute('aria-expanded', 'true');
   trigger.setAttribute('aria-describedby', 'gtermPopover');
@@ -353,10 +378,14 @@ function renderDrawer() {
 
 // A tiny coordination point so opening one kind of chrome overlay (search modal, Tools panel,
 // mobile drawer) closes the others instead of stacking behind it — simpler than each controller
-// tracking every other controller's open/closed state directly. Glossary popovers are excluded
-// on purpose: they're small inline tooltips triggered by hover/focus deep in page content, and
-// closing the nav drawer every time someone hovers a glossary term would steal focus for no reason.
+// tracking every other controller's open/closed state directly. Glossary popovers aren't wired
+// as a trigger here — they're small inline tooltips triggered by hover/focus deep in page
+// content, and closing the nav drawer every time someone hovers a glossary term would steal
+// focus for no reason — but they ARE closed as a target: below 560px a glossary popover renders
+// as its own bottom sheet with a backdrop (see openGtermPopover()), so it should still get out
+// of the way if the user then opens search/tools/drawer.
 function closeAllOverlays(except) {
+  closeGtermPopover();
   if (except !== 'search') closeToolSearch();
   if (except !== 'tools') { const p = $('toolsPanel'); if (p && !p.hidden) { p.hidden = true; const b = $('toolsMenuBtn'); if (b) b.setAttribute('aria-expanded', 'false'); } }
   if (except !== 'drawer') { const d = $('mobileDrawer'); if (d && !d.hidden) { d.hidden = true; document.body.classList.remove('drawer-open'); const b = $('navToggleBtn'); if (b) b.setAttribute('aria-expanded', 'false'); } }
