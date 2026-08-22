@@ -1718,6 +1718,38 @@ function taxOnWithdrawals(withdrawals, standardDeduction, brackets, capGainsRate
   return { usTaxOnOrdinary, cdnWithholding, totalTax: effectiveOrdinaryTax + capGainsTax };
 }
 
+// Bridges a live compute() result into the flat overrides shape simulateDrawdown() expects —
+// the single place that turns "balances at retirement" into a decumulation input, so the main
+// chart and (eventually) the PDF export can't drift apart on how that conversion works. Feeds
+// simulateDrawdown() the *live* projected balances at retireAge (res.rows' last row), not the
+// separately-stored ddo*Bal fields on the Drawdown Optimizer page — those stay a distinct,
+// manually-editable surface for that page only, never read here, so this always reflects the
+// user's current CoastFIRE inputs rather than a possibly-stale snapshot from a past visit.
+// FHSA/RESP/HSA are dropped, same as the Drawdown Optimizer itself: pre-retirement,
+// beneficiary-owned, or medical-conditional accounts that don't fit a standard decumulation
+// sequence — callers with nonzero balances there should surface that as a caveat, not silently
+// carry the money forward or drop it uncounted.
+// `storedInputs` supplies the fields compute() doesn't return on its result object (ddoPlanToAge/
+// ddoFilingStatus/ddoCapGainsRate, monthlyExpenses, lifeEvents) — normally readStoredInputs().
+function buildDecumulationOverrides(res, storedInputs) {
+  storedInputs = storedInputs || {};
+  const last = res.rows[res.rows.length - 1];
+  return {
+    currentAge: res.currentAge, retireAge: res.retireAge,
+    ddoPlanToAge: storedInputs.ddoPlanToAge, ddoFilingStatus: storedInputs.ddoFilingStatus,
+    ddoCapGainsRate: storedInputs.ddoCapGainsRate,
+    // res.returnRate/inflationRate are already /100'd by compute() — simulateDrawdown() does its
+    // own /100 on raw overrides, so these need to go back to plain percentages here.
+    returnRate: res.returnRate * 100, inflationRate: res.inflationRate * 100,
+    reportCurrency: res.reportCurrency, exchangeRate: res.exchangeRate,
+    monthlyExpenses: storedInputs.monthlyExpenses,
+    cppMonthly: res.cppMonthly, oasMonthly: res.oasMonthly, ssMonthly: res.ssMonthly,
+    benefitsStartAge: res.benefitsStartAge, lifeEvents: storedInputs.lifeEvents,
+    ddoRrspBal: last.rrsp, ddoTfsaBal: last.tfsa, ddoNonregCadBal: last.nonregCad,
+    ddoK401Bal: last.k401, ddoIraBal: last.ira, ddoRothBal: last.roth, ddoTaxableUsdBal: last.taxableUsd
+  };
+}
+
 // Full year-by-year retirement simulation for one withdrawal-order strategy. `overrides` is a
 // flat {fieldId: value} snapshot (e.g. from readStoredInputs(), plus the ddo* fields) — never
 // reads the DOM directly so it can run for any strategy without a live page.
@@ -1828,7 +1860,7 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     escapeHtml, sanitizeImportedName, parseNum, parseLifeEvents,
-    compute, stepAccounts, convertToReport, simulateDrawdown,
+    compute, stepAccounts, convertToReport, simulateDrawdown, buildDecumulationOverrides,
     simulateMonteCarlo, cppFactor, oasFactor, ssFactor,
     SENSITIVE_SHARE_FIELDS, buildSharePayload, parseShareParamsString,
     SENSITIVE_STORE_FIELDS, transformV2StateToV3,
